@@ -23,7 +23,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700&display=swap"
     rel="stylesheet" />
 
   <link rel="icon" type="image/svg+xml"
@@ -220,314 +220,6 @@
       }
     }
 
-    
-    /* ═══════════════════════ GLOBAL OVERLAY LOADER ═══════════════════════ */
-    .global-overlay-loader {
-      position: fixed;
-      inset: 0;
-      z-index: 999999;
-      background: rgba(8, 4, 18, 0.78);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: all;
-      cursor: wait;
-      animation: golFadeIn 0.22s ease-out;
-    }
-
-    @keyframes golFadeIn {
-      from { opacity: 0; transform: scale(0.97); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-    .gol-card {
-      background: linear-gradient(135deg, rgba(28, 16, 62, 0.95), rgba(15, 8, 35, 0.98));
-      border: 1px solid rgba(168, 85, 247, 0.35);
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 45px rgba(168, 85, 247, 0.25);
-      border-radius: 24px;
-      padding: 34px 44px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      max-width: 380px;
-      width: 90%;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .gol-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, #a855f7, #ec4899, #06b6d4, #a855f7);
-      background-size: 200% 100%;
-      animation: golShimmer 2s linear infinite;
-    }
-
-    @keyframes golShimmer {
-      0% { background-position: 0% 0; }
-      100% { background-position: 200% 0; }
-    }
-
-    .gol-spinner-wrap {
-      position: relative;
-      width: 68px;
-      height: 68px;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .gol-ring {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 3px solid rgba(168, 85, 247, 0.15);
-      border-top-color: #a855f7;
-      border-right-color: #ec4899;
-      animation: golSpin 0.85s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite;
-    }
-
-    .gol-ring-inner {
-      position: absolute;
-      inset: 8px;
-      border-radius: 50%;
-      border: 2.5px solid transparent;
-      border-bottom-color: #06b6d4;
-      animation: golSpin 1.3s linear infinite reverse;
-    }
-
-    .gol-icon {
-      font-size: 24px;
-      animation: golPulse 1.4s ease-in-out infinite alternate;
-    }
-
-    @keyframes golSpin {
-      to { transform: rotate(360deg); }
-    }
-
-    @keyframes golPulse {
-      from { transform: scale(0.88); opacity: 0.8; }
-      to { transform: scale(1.16); opacity: 1; }
-    }
-
-    .gol-title {
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 700;
-      font-size: 17px;
-      color: #f8fafc;
-      margin-bottom: 6px;
-      letter-spacing: -0.3px;
-    }
-
-    .gol-sub {
-      font-size: 13px;
-      color: #a89bc9;
-      line-height: 1.5;
-    }
-
-    body.loading-active {
-      pointer-events: none !important;
-      user-select: none !important;
-    }
-    body.loading-active #globalOverlayLoader {
-      pointer-events: all !important;
-    }
-
-    /* ═══════════════════════ UNIFIED CINEMA PLAYER ═══════════════════════ */
-    .cinema-player {
-      display: none;
-      width: 100%;
-      margin: 16px 0 20px;
-      border-radius: 20px;
-      background: #020108;
-      border: 1px solid rgba(168, 85, 247, 0.35);
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85), 0 0 35px rgba(168, 85, 247, 0.2);
-      overflow: hidden;
-      position: relative;
-      animation: playerAppear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    @keyframes playerAppear {
-      from { opacity: 0; transform: translateY(-10px) scale(0.98); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    .player-top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 10px 16px;
-      background: rgba(18, 10, 42, 0.95);
-      border-bottom: 1px solid rgba(168, 85, 247, 0.22);
-      flex-wrap: wrap;
-    }
-
-    .player-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 0;
-      flex: 1;
-    }
-
-    .player-status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 11px;
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.35);
-      border-radius: 9999px;
-      font-size: 11px;
-      font-weight: 700;
-      color: #34d399;
-      white-space: nowrap;
-    }
-
-    .player-title {
-      font-weight: 700;
-      font-size: 13.5px;
-      color: #f1f5f9;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-family: 'Space Grotesk', sans-serif;
-    }
-
-    .player-btn-group {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      flex-shrink: 0;
-    }
-
-    .p-btn {
-      padding: 6px 13px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(168, 85, 247, 0.25);
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 600;
-      color: #e2e8f0;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      transition: all 0.2s;
-      font-family: inherit;
-    }
-
-    .p-btn:hover {
-      background: rgba(168, 85, 247, 0.25);
-      border-color: rgba(168, 85, 247, 0.55);
-      color: #fff;
-      transform: translateY(-1px);
-    }
-
-    .p-btn-close {
-      background: rgba(244, 63, 94, 0.15);
-      border-color: rgba(244, 63, 94, 0.35);
-      color: #fca5a5;
-    }
-
-    .p-btn-close:hover {
-      background: rgba(244, 63, 94, 0.3);
-      border-color: #f43f5e;
-      color: #fff;
-    }
-
-    .player-screen {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16/9;
-      background: #000;
-      overflow: hidden;
-    }
-
-    .player-screen video,
-    .player-screen iframe {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-      object-fit: contain;
-    }
-
-    /* ═══════════════════════ VIDEO CENTER LOADER ═══════════════════════ */
-    .video-center-loader {
-      position: absolute;
-      inset: 0;
-      background: rgba(4, 2, 10, 0.94);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      animation: vclIn 0.2s ease-out;
-    }
-
-    @keyframes vclIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    .vcl-spinner-box {
-      position: relative;
-      width: 66px;
-      height: 66px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .vcl-glow {
-      position: absolute;
-      width: 84px;
-      height: 84px;
-      background: radial-gradient(circle, rgba(168, 85, 247, 0.45) 0%, transparent 70%);
-      filter: blur(14px);
-      animation: vclGlow 2s ease-in-out infinite alternate;
-    }
-
-    @keyframes vclGlow {
-      from { opacity: 0.4; transform: scale(0.9); }
-      to { opacity: 0.95; transform: scale(1.2); }
-    }
-
-    .vcl-spinner {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      border: 3.5px solid rgba(255, 255, 255, 0.1);
-      border-top-color: #a855f7;
-      border-right-color: #06b6d4;
-      animation: golSpin 0.8s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
-    }
-
-    .vcl-title {
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 700;
-      font-size: 15px;
-      color: #fff;
-      letter-spacing: -0.2px;
-      margin-bottom: 4px;
-    }
-
-    .vcl-sub {
-      font-size: 12px;
-      color: #94a3b8;
-    }
-  
     /* ═══════════════════════ SKELETON ═══════════════════════ */
     .skeleton {
       background: linear-gradient(90deg, var(--glass) 25%, var(--glass-s) 50%, var(--glass) 75%);
@@ -1676,74 +1368,26 @@
       border: none;
     }
 
-    .player-close-btn {
+    .close-player {
       position: absolute;
       top: 12px;
       right: 12px;
-      background: rgba(15, 23, 42, 0.82);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      border-radius: 50%;
-      width: 38px;
-      height: 38px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 50;
-      font-size: 18px;
-      font-weight: 700;
-      line-height: 1;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
-      transition: all 0.2s ease;
-    }
-
-    .player-close-btn:hover {
-      background: rgba(239, 68, 68, 0.95);
-      border-color: rgba(248, 113, 113, 0.9);
-      transform: scale(1.1);
-      box-shadow: 0 4px 18px rgba(239, 68, 68, 0.55);
-    }
-
-    .player-external-bar {
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-      margin: 10px 14px 14px 14px;
-      padding: 10px 14px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-    }
-
-    .external-fullscreen-btn {
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
-      color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(0, 0, 0, 0.75);
+      color: white;
+      border: 1px solid var(--border-m);
       border-radius: 10px;
-      padding: 8px 18px;
+      padding: 7px 16px;
       cursor: pointer;
-      font-size: 13px;
+      z-index: 10;
+      font-size: 12px;
       font-weight: 700;
       font-family: inherit;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
-      transition: all 0.2s ease;
+      transition: var(--transition);
     }
 
-    .external-fullscreen-btn:hover {
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5);
-    }
-
-    .external-fullscreen-btn:active {
-      transform: translateY(0);
+    .close-player:hover {
+      border-color: rgba(244, 63, 94, 0.5);
+      color: #fca5a5;
     }
 
     .videoCard {
@@ -2354,20 +1998,6 @@
     <iframe id="pdfFrame" style="width:100%;height:100%;border:none" title="PDF Document"></iframe>
   </div>
 
-  
-  <!-- ═══════════════════ GLOBAL OVERLAY LOADER ═══════════════════ -->
-  <div id="globalOverlayLoader" class="global-overlay-loader" style="display:none;" aria-live="polite">
-    <div class="gol-card">
-      <div class="gol-spinner-wrap">
-        <div class="gol-ring"></div>
-        <div class="gol-ring-inner"></div>
-        <div class="gol-icon" id="golIcon">⚡</div>
-      </div>
-      <div class="gol-title" id="golTitle">Loading...</div>
-      <div class="gol-sub" id="golSubtitle">Please wait a moment</div>
-    </div>
-  </div>
-  
   <div id="courseView" style="display:none">
     <div class="tabs" role="tablist">
       <button class="tab active" id="tLive" onclick="showLive()" role="tab" aria-selected="true">🔴 Live</button>
@@ -2376,26 +2006,18 @@
       <button class="tab" id="tFolderPro" onclick="showFolderPro()" role="tab" aria-selected="false">📂 Folders</button>
     </div>
 
-    <div id="player" style="display:none">
+    <div id="player" role="region" aria-label="Video player">
       <button class="close-player" onclick="closePlayer()" aria-label="Close player">✕ Close</button>
       <video id="video" controls autoplay playsinline></video>
     </div>
-    <div id="player-wrapper" style="display:none;"><div id="player-host"></div></div>
-    <div id="player-external-controls" class="player-external-bar" style="display:none;">
-      <span id="player-status-label" style="font-size:12px; color:var(--text-dim); font-weight:600; display:flex; align-items:center; gap:6px;">
-        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981;"></span>
-        Video Player
-      </span>
-      <div style="display:flex; align-items:center; gap:8px;">
-        <a id="player-yt-link" href="#" target="_blank" rel="noopener noreferrer" class="external-fullscreen-btn" style="display:none; text-decoration:none; background:rgba(239,68,68,0.2); border-color:rgba(239,68,68,0.4); color:#ef4444;" aria-label="Open on YouTube" title="Open on YouTube">
-          ▶ Open on YouTube
-        </a>
-        <button class="external-fullscreen-btn" onclick="goFullScreen()" aria-label="Full Screen" title="Full Screen">
-          ⛶ Fullscreen
-        </button>
-      </div>
+
+    <div id="player-wrapper">
+      <button class="close-player" onclick="closeProPlayer()" aria-label="Close player">✕ Close</button>
+      <div id="player-host"></div>
     </div>
-    <div id="custom-controls" style="display:none;"></div>
+    <div id="custom-controls" style="display:none;padding:0 14px 14px">
+      <button class="fullscreen-btn" onclick="goFullScreen()">⛶ Fullscreen</button>
+    </div>
 
     <div id="live-area" style="padding:0 2px"></div>
 
@@ -2414,187 +2036,26 @@
   <script defer src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js"></script>
 
   <script>
-    
-    /* ═══════════════════════ UNIVERSAL LOADING & PLAYER ENGINE ═══════════════════════ */
-    let isGlobalLoading = false;
-    let globalLoadingTimer = null;
-
-    function showLoading(title = "Loading...", subtitle = "Please wait a moment", icon = "⚡") {
-      isGlobalLoading = true;
-      const overlay = document.getElementById("globalOverlayLoader");
-      if (overlay) {
-        const titleEl = document.getElementById("golTitle");
-        const subEl = document.getElementById("golSubtitle");
-        const iconEl = document.getElementById("golIcon");
-        if (titleEl) titleEl.textContent = title;
-        if (subEl) subEl.textContent = subtitle;
-        if (iconEl) iconEl.textContent = icon;
-        overlay.style.display = "flex";
-      }
-      document.body.classList.add("loading-active");
-      clearTimeout(globalLoadingTimer);
-      // Failsafe auto-hide after 14s so the UI never gets stuck
-      globalLoadingTimer = setTimeout(() => {
-        hideLoading();
-      }, 14000);
-    }
-
-    function hideLoading() {
-      isGlobalLoading = false;
-      clearTimeout(globalLoadingTimer);
-      const overlay = document.getElementById("globalOverlayLoader");
-      if (overlay) overlay.style.display = "none";
-      document.body.classList.remove("loading-active");
-    }
-
-    // Universal Wrapper with Debouncing: Prevents rapid double/triple clicking
-    async function runWithLoading(taskFn, title = "Loading...", subtitle = "Please wait a moment", icon = "⚡") {
-      if (isGlobalLoading) {
-        console.log("Request in progress, preventing duplicate click");
-        return;
-      }
-      showLoading(title, subtitle, icon);
-      try {
-        return await taskFn();
-      } catch (err) {
-        console.error("Action error:", err);
-        showToast("Request failed. Please try again.", "error");
-      } finally {
-        hideLoading();
-      }
-    }
-
-    /* ═══════════════════════ IN-VIDEO CENTER LOADER ═══════════════════════ */
-    function showVideoLoader(title = "Connecting Video Stream...", sub = "Buffering high-definition stream") {
-      const loader = document.getElementById("videoCenterLoader");
-      if (loader) {
-        const t = document.getElementById("vclTitle");
-        const s = document.getElementById("vclSub");
-        if (t) t.textContent = title;
-        if (s) s.textContent = sub;
-        loader.style.display = "flex";
-      }
-    }
-
-    function hideVideoLoader() {
-      const loader = document.getElementById("videoCenterLoader");
-      if (loader) {
-        loader.style.display = "none";
-      }
-    }
-
-    // Initialize Video Player listeners on startup
-    window.addEventListener("DOMContentLoaded", () => {
-      const vid = document.getElementById("video");
-      if (vid) {
-        vid.addEventListener("canplay", hideVideoLoader);
-        vid.addEventListener("playing", hideVideoLoader);
-        vid.addEventListener("loadeddata", hideVideoLoader);
-        vid.addEventListener("waiting", () => showVideoLoader("Buffering Video Stream...", "Optimizing buffer for smooth playback"));
-        vid.addEventListener("error", (e) => {
-          hideVideoLoader();
-          console.warn("Video element error:", e);
-        });
-      }
-      const iframe = document.getElementById("playerIframe");
-      if (iframe) {
-        iframe.addEventListener("load", () => {
-          setTimeout(hideVideoLoader, 600);
-        });
-      }
-    });
-
-    /* ═══════════════════════ SECURE PLAYER & LIVE STREAM CONTROLS ═══════════════════════ */
-    function closePlayer() {
-      const p = document.getElementById("player");
-      if (p) p.style.display = "none";
-      const vid = document.getElementById("video");
-      if (vid) {
-        vid.pause();
-        vid.src = "";
-      }
-      if (hls) {
-        try { hls.destroy(); } catch(e){}
-        hls = null;
-      }
-    }
-
-    function closeProPlayer() {
-      if (document.fullscreenElement || document.webkitFullscreenElement) {
-        if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
-        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-      }
-      const pw = document.getElementById("player-wrapper");
-      const ph = document.getElementById("player-host");
-      const pExt = document.getElementById("player-external-controls");
-      if (pw) pw.style.display = "none";
-      if (ph) ph.innerHTML = "";
-      if (pExt) pExt.style.display = "none";
-      const pYtLink = document.getElementById("player-yt-link");
-      if (pYtLink) { pYtLink.style.display = "none"; pYtLink.href = "#"; }
-      const pStatus = document.getElementById("player-status-label");
-      if (pStatus) { pStatus.innerHTML = `<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981;"></span> Video Player`; }
-    }
-
-    function goFullScreen() {
-      const el = document.getElementById("player-wrapper") || document.querySelector("#player-wrapper iframe") || document.getElementById("video");
-      if (!el) return;
-      if (document.fullscreenElement || document.webkitFullscreenElement) {
-        if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
-        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-        return;
-      }
-      if (el.requestFullscreen) {
-        el.requestFullscreen();
-      } else if (el.webkitRequestFullscreen) {
-        el.webkitRequestFullscreen();
-      } else if (el.msRequestFullscreen) {
-        el.msRequestFullscreen();
-      }
-      if (screen.orientation?.lock) {
-        screen.orientation.lock("landscape").catch(() => {});
-      }
-    }
-  
     /* ===== CONFIG ===== */
     const ACADEMY_NAME = "bhainskipathshala";
     const API_BASE = "https://bhainskipathshalaapi.akamai.net.in";
     const STORAGE_PREFIX = `AUBLIC_${ACADEMY_NAME}`;
     const FAV_KEY = `${STORAGE_PREFIX}_favCourses`;
     const APP_VERSION = 1;
-
+    // Auto-proxy Akamai backend APIs to prevent CORS preflight block
+    const _rawFetch = window.fetch;
+    window.fetch = function(url, opts) {
+      if (typeof url === "string" && (url.includes("akamai.net.in") || url.includes("dhyeyliveappapi") || url.includes("bhainskipathshalaapi")) && !url.includes("/proxy?url=")) {
+        url = getProxyUrl(url);
+      }
+      return _rawFetch.call(this, url, opts);
+    };
     const PROXY_BASE = (function() {
       if (typeof window !== "undefined" && window.location && window.location.protocol.startsWith("http")) {
         return window.location.origin + "/proxy?url=";
       }
       return "http://localhost:3000/proxy?url=";
     })();
-
-    function getProxyUrl(url) {
-      if (!url) return "";
-      if (url.startsWith("/proxy?url=") || url.includes("/proxy?url=")) return url;
-      return PROXY_BASE + encodeURIComponent(url);
-    }
-
-    // Auto-proxy all external backend APIs, streams, and CDNs through the Unified Single-Device Proxy
-    const _rawFetch = window.fetch;
-    window.fetch = function(url, opts) {
-      if (typeof url === "string") {
-        if ((url.startsWith("http://") || url.startsWith("https://")) && !url.includes(window.location.host) && !url.includes("/proxy?url=")) {
-          url = getProxyUrl(url);
-        }
-      }
-      return _rawFetch.call(this, url, opts);
-    };
-
-    function syncSessionToServer(token, userid) {
-      if (!token) return;
-      fetch('/api/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ academy: ACADEMY_NAME, token: token, userid: userid || "-2" })
-      }).catch(() => {});
-    }
 
     /* ===== STATE ===== */
     let TOKEN = localStorage.getItem(`${ACADEMY_NAME}_token`) || "";
@@ -2812,6 +2273,12 @@
       }
     }
 
+    function getProxyUrl(url) {
+      if (!url) return "";
+      if (url.startsWith("/proxy?url=") || url.includes("/proxy?url=")) return url;
+      return PROXY_BASE + encodeURIComponent(url);
+    }
+
     function getHeaders() {
       return {
         "Authorization": TOKEN,
@@ -2823,14 +2290,6 @@
         "Auth-Key": "appxapi",
         "User-ID": USERID || "0",
         "device-type": "android",
-        "device-id": "WebBrowser17267591437616qmd1cxx313",
-        "device_id": "WebBrowser17267591437616qmd1cxx313",
-        "mydeviceid": "WebBrowser17267591437616qmd1cxx313",
-        "mydeviceid2": "WebBrowser17267591437616qmd1cxx313",
-        "device-model": "SM-A528B",
-        "device-name": "Samsung Galaxy A52s 5G",
-        "device-make": "Samsung",
-        "device-os": "Android 12",
         "app-version": "1.0.0",
         "source": "android"
       };
@@ -2854,7 +2313,15 @@
       document.getElementById("pdfFrame").src = "";
     }
 
-    // Unified closePlayer() is defined above in player engine
+    function closePlayer() {
+      const player = document.getElementById("player");
+      const vid = document.getElementById("video");
+      if (vid) { vid.pause(); vid.src = ""; }
+      if (hls) { hls.destroy(); hls = null; }
+      player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player">✕ Close</button><video id="video" controls autoplay playsinline></video>`;
+      player.style.display = "none";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
 
     /* ===== DECRYPT ===== */
     function decrypt(enc) {
@@ -2864,21 +2331,6 @@
         const iv = CryptoJS.enc.Utf8.parse("fedcba9876543210");
         return CryptoJS.AES.decrypt({ ciphertext: CryptoJS.enc.Base64.parse(enc) }, key, { iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }).toString(CryptoJS.enc.Utf8);
       } catch (e) { return ""; }
-    }
-
-    function extractYouTubeId(str) {
-      if (!str || typeof str !== "string") return "";
-      str = str.trim();
-      let decrypted = "";
-      try { decrypted = decrypt(str).trim(); } catch (e) {}
-      const candidates = [decrypted, str];
-      for (const cand of candidates) {
-        if (!cand) continue;
-        const urlMatch = cand.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
-        if (urlMatch && urlMatch[1]) return urlMatch[1];
-        if (/^[a-zA-Z0-9_-]{11}$/.test(cand)) return cand;
-      }
-      return "";
     }
 
     function decryptPDF(enc, keyEnc) {
@@ -2930,7 +2382,6 @@
         USERID = uid || "-2";
         localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
         localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
-        syncSessionToServer(TOKEN, USERID);
         document.getElementById("loginScreen").style.display = "none";
         showTokenPopup(TOKEN);
         startApp();
@@ -2942,24 +2393,15 @@
         try {
           const res = await fetch(`${API_BASE}/post/userLogin`, {
             method: "POST",
-            headers: { 
-              "Auth-Key": "appxapi", 
-              "User-Id": "-2", 
-              "Content-Type": "application/x-www-form-urlencoded",
-              "device-type": "android",
-              "device-id": "WebBrowser17267591437616qmd1cxx313",
-              "source": "android"
-            },
-            body: `email=${encodeURIComponent(mobile)}&password=${encodeURIComponent(pass)}&device_id=WebBrowser17267591437616qmd1cxx313&mydeviceid=WebBrowser17267591437616qmd1cxx313&device-type=android`
+            headers: { "Auth-Key": "appxapi", "User-Id": "-2", "Content-Type": "application/x-www-form-urlencoded" },
+            body: `email=${encodeURIComponent(mobile)}&password=${encodeURIComponent(pass)}`
           });
           const j = await res.json();
           if (j.status == 200) {
-            const userObj = j.data || j.user || j;
-            TOKEN = userObj.token || userObj.Token;
-            USERID = userObj.userid || userObj.userId || "-2";
+            TOKEN = j.data.token;
+            USERID = j.data.userid;
             localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
             localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
-            syncSessionToServer(TOKEN, USERID);
             document.getElementById("loginScreen").style.display = "none";
             document.getElementById("drawerLogoutBtn").style.display = "flex";
             showTokenPopup(TOKEN);
@@ -2967,7 +2409,7 @@
             startApp();
             return;
           }
-          showToast(j.message || "Login Failed - Invalid credentials", "error");
+          showToast("Login Failed - Invalid credentials", "error");
         } catch (e) { showToast("Login Error - Network issue", "error"); }
         return;
       }
@@ -2975,85 +2417,38 @@
     }
 
     async function sendOTP() {
-      const mobileInput = document.getElementById("otpMobileInput");
-      let mobile = mobileInput ? mobileInput.value.trim() : '';
-      if (!mobile.includes('@')) {
-        mobile = mobile.replace(/[^0-9]/g, '');
-        if (mobile.length === 12 && mobile.startsWith('91')) mobile = mobile.substring(2);
-        else if (mobile.length === 11 && mobile.startsWith('0')) mobile = mobile.substring(1);
-      }
-
-      if (!mobile || mobile.length < 4) return showToast("Enter a valid Mobile number or Email", "error");
+      const mobile = document.getElementById("otpMobileInput").value.trim();
+      if (!mobile) return showToast("Enter Mobile Number", "error");
       const btn = document.getElementById("sendOtpBtn");
       btn.disabled = true;
       btn.innerText = "Sending...";
       try {
-        const res = await fetch(`${API_BASE}/get/sendotp?phone=${encodeURIComponent(mobile)}`, {
+        await fetch(`${API_BASE}/get/sendotp?phone=${mobile}`, {
           headers: { "Client-Service": "Appx", "Auth-Key": "appxapi", source: "website" }
         });
-        const j = await res.json();
-        if (j.status == 200) {
-          btn.innerText = "✓ OTP Sent";
-          showToast(j.message || "OTP sent successfully! Check your SMS.", "success");
-          const otpInp = document.getElementById("otpCodeInput");
-          if (otpInp) otpInp.focus();
-
-          let countdown = 30;
-          const timer = setInterval(() => {
-            countdown--;
-            if (countdown > 0) {
-              btn.innerText = `Resend in ${countdown}s`;
-            } else {
-              clearInterval(timer);
-              btn.disabled = false;
-              btn.innerText = "📩 Resend OTP";
-            }
-          }, 1000);
-        } else {
-          btn.disabled = false;
-          btn.innerText = "📩 Send OTP";
-          showToast(j.message || "Failed to send OTP", "error");
-        }
+        btn.innerText = "✓ OTP Sent";
+        showToast("OTP sent successfully!", "success");
       } catch (e) {
         btn.disabled = false;
         btn.innerText = "📩 Send OTP";
-        showToast("Failed to send OTP - Check network", "error");
+        showToast("Failed to send OTP", "error");
       }
     }
 
     async function verifyOTP() {
-      const mobileInput = document.getElementById("otpMobileInput");
-      let mobile = mobileInput ? mobileInput.value.trim() : '';
-      if (!mobile.includes('@')) {
-        mobile = mobile.replace(/[^0-9]/g, '');
-        if (mobile.length === 12 && mobile.startsWith('91')) mobile = mobile.substring(2);
-        else if (mobile.length === 11 && mobile.startsWith('0')) mobile = mobile.substring(1);
-      }
-
+      const mobile = document.getElementById("otpMobileInput").value.trim();
       const otp = document.getElementById("otpCodeInput").value.trim();
-      if (!mobile || !otp) return showToast("Enter Mobile/Email + OTP", "error");
+      if (!mobile || !otp) return showToast("Enter Mobile + OTP", "error");
       try {
-        const res = await fetch(`${API_BASE}/get/otpverify?useremail=${encodeURIComponent(mobile)}&otp=${encodeURIComponent(otp)}&device_id=WebBrowser17267591437616qmd1cxx313&mydeviceid=WebBrowser17267591437616qmd1cxx313&mydeviceid2=WebBrowser17267591437616qmd1cxx313`, {
-          headers: { 
-            "Client-Service": "Appx", 
-            "Auth-Key": "appxapi", 
-            "source": "website",
-            "device-type": "android",
-            "device-id": "WebBrowser17267591437616qmd1cxx313"
-          }
+        const res = await fetch(`${API_BASE}/get/otpverify?useremail=${mobile}&otp=${otp}&device_id=WebBrowser17267591437616qmd1cxx313&mydeviceid=&mydeviceid2=`, {
+          headers: { "Client-Service": "Appx", "Auth-Key": "appxapi", source: "website" }
         });
         const j = await res.json();
         if (j.status == 200) {
-          const userObj = j.data || j.user || j;
-          TOKEN = userObj.token || userObj.Token;
-          USERID = userObj.userid || userObj.userId || userObj.id || "-2";
-          if (!TOKEN) {
-            showToast("Login session token missing", "error");
-            return;
-          }
+          TOKEN = j.user.token;
+          USERID = j.user.userid || "-2";
           localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
           localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
-          syncSessionToServer(TOKEN, USERID);
           document.getElementById("otpScreen").style.display = "none";
           document.getElementById("loginScreen").style.display = "none";
           document.getElementById("drawerLogoutBtn").style.display = "flex";
@@ -3062,7 +2457,7 @@
           startApp();
           return;
         }
-        showToast(j.message || "OTP is invalid or expired", "error");
+        showToast("OTP Verification Failed", "error");
       } catch (e) { showToast("OTP Verify Error", "error"); }
     }
 
@@ -3272,22 +2667,20 @@
 
     /* ===== OPEN / BACK COURSE ===== */
     function openCourse(c) {
-      runWithLoading(async () => {
-        lastScrollY = window.scrollY;
-        CURRENT_COURSE = c.id;
-        currentCourseId = c.id;
-        navStack = [];
-        document.getElementById("headerTitle").innerText = c.course_name;
-        document.getElementById("backBtn").style.display = "flex";
-        document.getElementById("hamburger").style.display = "none";
-        document.getElementById("homeScreen").style.display = "none";
-        document.getElementById("courseView").style.display = "block";
-        document.getElementById("content").innerHTML = "";
-        document.getElementById("content-grid").innerHTML = "";
-        closePlayer(); closeProPlayer();
-        document.getElementById("live-area").innerHTML = "";
-        await showLive();
-      }, "Opening Course...", c.course_name, "🎓");
+      lastScrollY = window.scrollY;
+      CURRENT_COURSE = c.id;
+      currentCourseId = c.id;
+      navStack = [];
+      document.getElementById("headerTitle").innerText = c.course_name;
+      document.getElementById("backBtn").style.display = "flex";
+      document.getElementById("hamburger").style.display = "none";
+      document.getElementById("homeScreen").style.display = "none";
+      document.getElementById("courseView").style.display = "block";
+      document.getElementById("content").innerHTML = "";
+      document.getElementById("content-grid").innerHTML = "";
+      document.getElementById("player").style.display = "none";
+      document.getElementById("live-area").innerHTML = "";
+      showLive();
     }
 
     function goBack() {
@@ -3306,7 +2699,12 @@
       document.getElementById("content").innerHTML = "";
       document.getElementById("content-grid").innerHTML = "";
       document.getElementById("live-area").innerHTML = "";
-      closePlayer(); closeProPlayer();
+      document.getElementById("player").innerHTML = '<button class="close-player" onclick="closePlayer()" aria-label="Close player">✕ Close</button><video id="video" controls autoplay playsinline></video>';
+      const vid = document.getElementById("video");
+      if (vid) { vid.pause(); vid.src = ""; }
+      if (hls) { hls.destroy(); hls = null; }
+      document.getElementById("player").style.display = "none";
+      closeProPlayer();
       document.getElementById("purchasedSection").style.display = "block";
       setTimeout(() => window.scrollTo({ top: lastScrollY, behavior: "instant" }), 50);
     }
@@ -3343,58 +2741,56 @@
     }
 
     async function showLive() {
-      await runWithLoading(async () => {
-        setActiveTab("tLive");
-        document.getElementById("loadMoreRec").style.display = "none";
-        const content = document.getElementById("content");
-        content.innerHTML = '<div class="spinner" style="margin:40px auto"></div>';
-        try {
-          const res = await fetchMultiAll(API_MAP.live.map(e => API_BASE + e.replace("{id}", CURRENT_COURSE)));
-          const data = res.data || [];
-          content.innerHTML = "";
-          const liveList = data.filter(e => e.live_status === "1" || e.is_live === "1");
-          const upcomingList = data.filter(e => e.live_status === "0");
-          if (liveList.length) {
-            const frag = document.createDocumentFragment();
-            liveList.forEach(v => {
-              const d = document.createElement("div");
-              d.className = "videoCard";
-              d.innerHTML = `<div style="display:flex;align-items:center;gap:10px"><span class="live-dot"></span><div><b>${v.Title}</b><br><span style="color:#ef4444;font-size:12px;font-weight:700">LIVE NOW</span></div></div>`;
-              if (v.recording_schedule) d.onclick = () => playLive(v.recording_schedule);
-              frag.appendChild(d);
-            });
-            content.appendChild(frag);
-            return;
-          }
-          if (upcomingList.length) {
-            const frag = document.createDocumentFragment();
-            upcomingList.forEach(v => {
-              const d = document.createElement("div");
-              d.className = "videoCard";
-              d.style.cursor = "default";
-              d.innerHTML = `<div><b>🕒 ${v.Title}</b><br><span style="color:var(--primary);font-size:12px;font-weight:600">📅 ${v.date_and_time}</span></div>`;
-              frag.appendChild(d);
-            });
-            content.appendChild(frag);
-            return;
-          }
-          content.innerHTML = `<div class="empty-state"><div class="es-icon">📡</div><p>No live class right now</p></div>`;
-        } catch(e) {
-          content.innerHTML = `<div class="empty-state"><div class="es-icon">📡</div><p>No live class right now</p></div>`;
-        }
-      }, "Loading Live Classes...", "Checking broadcasts", "🔴");
+      setActiveTab("tLive");
+      document.getElementById("loadMoreRec").style.display = "none";
+      const content = document.getElementById("content");
+      content.innerHTML = '<div class="spinner" style="margin:40px auto"></div>';
+
+      const j = await fetchMultiAll(API_MAP.live.map(e => API_BASE + e.replace("{id}", CURRENT_COURSE)));
+      content.innerHTML = "";
+      let liveList = [], upcomingList = [];
+      if (Array.isArray(j.data)) {
+        j.data.forEach(obj => {
+          if (obj.live && Array.isArray(obj.live)) liveList = liveList.concat(obj.live);
+          if (obj.upcoming && Array.isArray(obj.upcoming)) upcomingList = upcomingList.concat(obj.upcoming);
+          if (obj.material_type || obj.Title) liveList.push(obj);
+        });
+      }
+      if (liveList.length) {
+        const frag = document.createDocumentFragment();
+        liveList.forEach(v => {
+          const d = document.createElement("div");
+          d.className = "videoCard";
+          d.innerHTML = `<div style="display:flex;align-items:center;gap:12px"><div class="live-dot"></div><div><b>${v.Title}</b><br><small style="color:var(--text-dim)">${v.date_and_time || ""}</small></div></div>`;
+          if (v.recording_schedule) d.onclick = () => playLive(v.recording_schedule);
+          frag.appendChild(d);
+        });
+        content.appendChild(frag);
+        return;
+      }
+      if (upcomingList.length) {
+        const frag = document.createDocumentFragment();
+        upcomingList.forEach(v => {
+          const d = document.createElement("div");
+          d.className = "videoCard";
+          d.style.cursor = "default";
+          d.innerHTML = `<div><b>🕒 ${v.Title}</b><br><span style="color:var(--primary);font-size:12px;font-weight:600">📅 ${v.date_and_time}</span></div>`;
+          frag.appendChild(d);
+        });
+        content.appendChild(frag);
+        return;
+      }
+      content.innerHTML = `<div class="empty-state"><div class="es-icon">📡</div><p>No live class right now</p></div>`;
     }
 
     async function showRec() {
-      await runWithLoading(async () => {
-        setActiveTab("tRec");
-        const content = document.getElementById("content");
-        content.innerHTML = '<div class="spinner" style="margin:40px auto"></div>';
-        recStart = 0;
-        document.getElementById("loadMoreRec").style.display = "block";
-        content.innerHTML = "";
-        await loadMoreRecorded();
-      }, "Loading Recorded Lectures...", "Fetching lectures catalog", "📼");
+      setActiveTab("tRec");
+      const content = document.getElementById("content");
+      content.innerHTML = '<div class="spinner" style="margin:40px auto"></div>';
+      recStart = 0;
+      document.getElementById("loadMoreRec").style.display = "block";
+      content.innerHTML = "";
+      await loadMoreRecorded();
     }
 
     async function loadMoreRecorded() {
@@ -3421,94 +2817,90 @@
     }
 
     async function showFolder() {
-      await runWithLoading(async () => {
-        setActiveTab("tFolder");
-        const content = document.getElementById("content");
-        content.innerHTML = "<div class='spinner' style='margin:40px auto'></div>";
-        try {
-          const r = await fetch(API_BASE + API_MAP.folder_subject[0].replace("{id}", CURRENT_COURSE), { headers: getHeaders() });
-          const j = await r.json();
-          content.innerHTML = "";
-          if (!j.data?.length) {
-            content.innerHTML = `<div class="empty-state"><div class="es-icon">📚</div><p>No subjects available</p></div>`;
-            return;
-          }
-          j.data.forEach(subject => {
-            const box = document.createElement("div");
-            box.className = "folder";
-            box.innerHTML = `<div class="folderTitle">📚 ${subject.subject_name}</div><div class="folderGrid" id="grid_${subject.subjectid}"></div>`;
-            content.appendChild(box);
-            fetch(API_BASE + API_MAP.folder_topic[0].replace("{id}", CURRENT_COURSE).replace("{sid}", subject.subjectid), { headers: getHeaders() })
-              .then(r => r.json()).then(j2 => {
-                const grid = document.getElementById(`grid_${subject.subjectid}`);
-                if (!j2.data?.length) { grid.innerHTML = "<p style='padding:10px;font-size:12px;opacity:0.6'>No topics</p>"; return; }
-                const frag = document.createDocumentFragment();
-                j2.data.forEach(topic => {
-                  const tc = document.createElement("div");
-                  tc.className = "videoCard";
-                  tc.style.margin = "0";
-                  tc.innerHTML = `📖 ${topic.topic_name}`;
-                  tc.onclick = () => openTopic(subject.subjectid, topic.topicid, subject.subject_name, topic.topic_name);
-                  frag.appendChild(tc);
-                });
-                grid.appendChild(frag);
+      setActiveTab("tFolder");
+      const content = document.getElementById("content");
+      content.innerHTML = "<div class='spinner' style='margin:40px auto'></div>";
+      try {
+        const r = await fetch(API_BASE + API_MAP.folder_subject[0].replace("{id}", CURRENT_COURSE), { headers: getHeaders() });
+        const j = await r.json();
+        content.innerHTML = "";
+        if (!j.data?.length) {
+          content.innerHTML = `<div class="empty-state"><div class="es-icon">📚</div><p>No subjects available</p></div>`;
+          return;
+        }
+        j.data.forEach(subject => {
+          const box = document.createElement("div");
+          box.className = "folder";
+          box.innerHTML = `<div class="folderTitle">📚 ${subject.subject_name}</div><div class="folderGrid" id="grid_${subject.subjectid}"></div>`;
+          content.appendChild(box);
+          fetch(API_BASE + API_MAP.folder_topic[0].replace("{id}", CURRENT_COURSE).replace("{sid}", subject.subjectid), { headers: getHeaders() })
+            .then(r => r.json()).then(j2 => {
+              const grid = document.getElementById(`grid_${subject.subjectid}`);
+              if (!j2.data?.length) { grid.innerHTML = "<p style='padding:10px;font-size:12px;opacity:0.6'>No topics</p>"; return; }
+              const frag = document.createDocumentFragment();
+              j2.data.forEach(topic => {
+                const tc = document.createElement("div");
+                tc.className = "videoCard";
+                tc.style.margin = "0";
+                tc.innerHTML = `📖 ${topic.topic_name}`;
+                tc.onclick = () => openTopic(subject.subjectid, topic.topicid, subject.subject_name, topic.topic_name);
+                frag.appendChild(tc);
               });
-          });
-        } catch (e) { content.innerHTML = "<p style='padding:15px;opacity:0.6'>Error loading subjects</p>"; }
-      }, "Loading Subjects...", "Fetching subject curriculum", "📁");
+              grid.appendChild(frag);
+            });
+        });
+      } catch (e) { content.innerHTML = "<p style='padding:15px;opacity:0.6'>Error loading subjects</p>"; }
     }
 
     async function openTopic(subjectId, topicId, subjectName, topicName) {
-      await runWithLoading(async () => {
-        const content = document.getElementById("content");
-        content.innerHTML = `
-          <div style="padding:12px">
-            <div class="folder">
-              <div class="folderTitle" id="topicBack" style="cursor:pointer;color:var(--text-mid)">← Back to ${subjectName}</div>
-            </div>
-            <div class="folder" style="margin-top:10px">
-              <div class="folderTitle">📖 ${topicName}</div>
-              <div id="topicVideos" class="folderGrid"></div>
-            </div>
-          </div>`;
-        document.getElementById("topicBack").onclick = () => showFolder();
-        const vc = document.getElementById("topicVideos");
-        try {
-          const r = await fetch(API_BASE + API_MAP.folder_video[0].replace("{id}", CURRENT_COURSE).replace("{sid}", subjectId).replace("{tid}", topicId), { headers: getHeaders() });
-          const j = await r.json();
-          if (!j.data?.length) { vc.innerHTML = "<p style='padding:10px;font-size:12px;opacity:0.6'>No videos</p>"; return; }
-          const frag = document.createDocumentFragment();
-          j.data.forEach(v => {
-            const d = document.createElement("div");
-            d.className = "videoCard";
-            d.style.margin = "0";
-            const pdfEnc = v.pdf_link || v.pdf_link2 || "";
-            const pdfKeyEnc = v.pdf_encryption_key || v.pdf2_encryption_key || "";
-            const hasPdf = pdfEnc && typeof pdfEnc === "string" && pdfEnc.includes(":");
-            d.innerHTML = `
-              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-                <span style="font-size:12px">🎬 ${v.Title}</span>
-                ${hasPdf ? `<button class="dl-btn" id="pdf_${v.id}" aria-label="Open PDF">📄 PDF</button>` : ""}
-              </div>`;
-            d.onclick = () => playRecorded(v.id);
-            const btn = d.querySelector(`#pdf_${v.id}`);
-            if (btn) {
-              btn.addEventListener("click", function (e) {
-                e.stopPropagation();
-                let rawUrl = "";
-                try {
-                  rawUrl = decryptPDF(pdfEnc, pdfKeyEnc);
-                  if (!rawUrl || !rawUrl.startsWith("http")) rawUrl = atob(pdfEnc.split(":")[0]).trim();
-                } catch (e) { rawUrl = atob(pdfEnc.split(":")[0]).trim(); }
-                if (!rawUrl) { showToast("PDF open nahi ho raha ❌", "error"); return; }
-                openPDF(rawUrl);
-              });
-            }
-            frag.appendChild(d);
-          });
-          vc.appendChild(frag);
-        } catch (e) { vc.innerHTML = "<p>Error loading videos</p>"; }
-      }, "Opening Topic...", topicName, "📖");
+      const content = document.getElementById("content");
+      content.innerHTML = `
+        <div style="padding:12px">
+          <div class="folder">
+            <div class="folderTitle" id="topicBack" style="cursor:pointer;color:var(--text-mid)">← Back to ${subjectName}</div>
+          </div>
+          <div class="folder" style="margin-top:10px">
+            <div class="folderTitle">📖 ${topicName}</div>
+            <div id="topicVideos" class="folderGrid"></div>
+          </div>
+        </div>`;
+      document.getElementById("topicBack").onclick = () => showFolder();
+      const vc = document.getElementById("topicVideos");
+      try {
+        const r = await fetch(API_BASE + API_MAP.folder_video[0].replace("{id}", CURRENT_COURSE).replace("{sid}", subjectId).replace("{tid}", topicId), { headers: getHeaders() });
+        const j = await r.json();
+        if (!j.data?.length) { vc.innerHTML = "<p style='padding:10px;font-size:12px;opacity:0.6'>No videos</p>"; return; }
+        const frag = document.createDocumentFragment();
+        j.data.forEach(v => {
+          const d = document.createElement("div");
+          d.className = "videoCard";
+          d.style.margin = "0";
+          const pdfEnc = v.pdf_link || v.pdf_link2 || "";
+          const pdfKeyEnc = v.pdf_encryption_key || v.pdf2_encryption_key || "";
+          const hasPdf = pdfEnc && typeof pdfEnc === "string" && pdfEnc.includes(":");
+          d.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <span style="font-size:12px">🎬 ${v.Title}</span>
+              ${hasPdf ? `<button class="dl-btn" id="pdf_${v.id}" aria-label="Open PDF">📄 PDF</button>` : ""}
+            </div>`;
+          d.onclick = () => playRecorded(v.id);
+          const btn = d.querySelector(`#pdf_${v.id}`);
+          if (btn) {
+            btn.addEventListener("click", function (e) {
+              e.stopPropagation();
+              let rawUrl = "";
+              try {
+                rawUrl = decryptPDF(pdfEnc, pdfKeyEnc);
+                if (!rawUrl || !rawUrl.startsWith("http")) rawUrl = atob(pdfEnc.split(":")[0]).trim();
+              } catch (e) { rawUrl = atob(pdfEnc.split(":")[0]).trim(); }
+              if (!rawUrl) { showToast("PDF open nahi ho raha ❌", "error"); return; }
+              openPDF(rawUrl);
+            });
+          }
+          frag.appendChild(d);
+        });
+        vc.appendChild(frag);
+      } catch (e) { vc.innerHTML = "<p>Error loading videos</p>"; }
     }
 
     function showFolderPro() {
@@ -3601,13 +2993,119 @@
     }
 
     /* ===== PLAYERS ===== */
-    
+    function playLive(id) {
+      const player = document.getElementById("player");
+      player.style.display = "block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (hls) hls.destroy();
+      hls = new Hls({ lowLatencyMode: true });
+      hls.loadSource(`https://liveclasses.cloud-front.in/live/${id}_480p.m3u8?request_llhls=1`);
+      const vid = document.getElementById("video");
+      hls.attachMedia(vid);
+      vid.play();
+    }
+
+    async function resolveAppxVideoUrl(tokenOrUrl) {
+      try {
+        if (!tokenOrUrl) return { url: null, playerUrl: "" };
+        let token = tokenOrUrl;
+        if (typeof token === "string" && token.includes("token=")) {
+          token = token.split("token=")[1].split("&")[0];
+        }
+        const hardcodedPlayerUrl = "https://player.appx.co.in/secure-player-v3?isMobile=true&debug=true&quality=1080p&token=" + token;
+        const proxied = getProxyUrl(hardcodedPlayerUrl);
+        const res = await fetch(proxied);
+        const html = await res.text();
+        const match = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+        if (match) {
+          const nextData = JSON.parse(match[1]);
+          const urls = nextData.props?.pageProps?.urls || [];
+          if (urls.length > 0) {
+            const best = urls.find(u => u.quality === "1080p" && u.path) || urls.find(u => !u.jstr && u.path) || urls[0];
+            if (best && best.path) {
+              return {
+                url: getProxyUrl(best.path),
+                quality: best.quality || "1080p",
+                allUrls: urls,
+                playerUrl: proxied
+              };
+            }
+          }
+        }
+        return { url: null, playerUrl: proxied };
+      } catch (e) {
+        console.warn("Error resolving Appx video:", e);
+        return { url: null, playerUrl: getProxyUrl("https://player.appx.co.in/secure-player-v3?isMobile=true&debug=true&quality=1080p&token=" + (tokenOrUrl || "")) };
+      }
+    }
+
+    async function playRecorded(videoId) {
+      try {
+        const j = await fetchMultiAll(API_MAP.player.map(e => API_BASE + e.replace("{id}", CURRENT_COURSE).replace("{vid}", videoId)));
+        if (!j?.data) { showToast("Video data not found", "error"); return; }
+        const data = Array.isArray(j.data) ? j.data[0] : j.data;
+        if (hls) { hls.destroy(); hls = null; }
+        const player = document.getElementById("player");
+        const vid = document.getElementById("video");
+
+        if (data.video_player_url && data.video_player_token) {
+          const pUrl = data.video_player_url.includes(data.video_player_token)
+            ? data.video_player_url
+            : (data.video_player_url + data.video_player_token);
+          player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player">? Close</button><iframe src="${getProxyUrl(pUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen title="Video Player"></iframe>`;
+          player.style.display = "block";
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+
+        if (data.download_links?.length || data.download_link) {
+          const enc = data.download_links?.[0]?.path || data.download_link;
+          const realLink = decrypt(enc).trim().replace(/\s/g, "");
+          player.style.display = "block";
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          if (Hls.isSupported()) {
+            hls = new Hls({ lowLatencyMode: true });
+            hls.loadSource(getProxyUrl(realLink));
+            hls.attachMedia(vid);
+            vid.play().catch(() => { });
+          }
+          return;
+        }
+
+        if (data.encrypted_links?.length) {
+          const obj = data.encrypted_links[0];
+          let k2 = decode_base64(decrypt(obj.key)), da = decrypt(obj.path);
+          const pUrl = "https://appx-play.classx.co.in/combined-img-player?isMobile=true&videoPlayer=hls&urls=" + encodeURIComponent(da) + "&key=" + encodeURIComponent(k2);
+          player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player">? Close</button><iframe src="${getProxyUrl(pUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen title="Video Player"></iframe>`;
+          player.style.display = "block";
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+      } catch (e) { console.warn(e); showToast("Error playing video", "error"); }
+    }
+
+    async function downloadVideo(e, vid) {
+      e.stopPropagation();
+      showToast("Fetching download link...", "info");
+      const j = await fetchMulti(API_MAP.player.map(ep => API_BASE + ep.replace("{id}", CURRENT_COURSE).replace("{vid}", vid)));
+      const data = j.data;
+      if (!data) { showToast("Video details not found", "error"); return; }
+      try {
+        const enc = data.download_links?.[0]?.path || data.download_link;
+        if (!enc) { showToast("Download link missing", "error"); return; }
+        window.open(decrypt(enc), "_blank");
+        showToast("Download started!", "success");
+      } catch (err) { showToast("Download Error ❌", "error"); }
+    }
+
+    function playLiveInPro(id) {
+      document.getElementById("player-wrapper").style.display = "block";
+      setupHLS(`https://liveclasses.cloud-front.in/live/${id}_480p.m3u8`);
+    }
+
     async function playVideoInPro(vidId) {
       const host = document.getElementById("player-host");
-      const pWrap = document.getElementById("player-wrapper");
-      const pExt = document.getElementById("player-external-controls");
-      if (pWrap) pWrap.style.display = "block";
-      if (pExt) pExt.style.display = "flex";
+      document.getElementById("player-wrapper").style.display = "block";
       document.getElementById("custom-controls").style.display = "block";
       host.innerHTML = `<div class="spinner" style="margin-top:20%"></div>`;
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -3617,140 +3115,70 @@
         const data = j.data;
         if (!data) { host.innerHTML = "<p style='padding:20px;text-align:center;opacity:0.5'>No video data</p>"; return; }
 
-        // 1. YouTube video detection (ytFlag, ytFlagWeb, or decrypted video_id/file_link)
-        const ytId = extractYouTubeId(data.file_link) || 
-                     extractYouTubeId(data.video_id) || 
-                     extractYouTubeId(data.embed_url) || 
-                     extractYouTubeId(data.download_link) || 
-                     extractYouTubeId(vidId);
-        const isYt = (data.ytFlag == 1 || data.ytFlagWeb == 1 || String(data.ytFlag) === "1" || String(data.ytFlagWeb) === "1") || Boolean(ytId);
-        if (isYt && ytId) {
-          const ytEmbedUrl = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1`;
-          const ytWatchUrl = `https://www.youtube.com/watch?v=${ytId}`;
-          const pYtLink = document.getElementById("player-yt-link");
-          if (pYtLink) {
-            pYtLink.href = ytWatchUrl;
-            pYtLink.style.display = "inline-flex";
-          }
-          const pStatus = document.getElementById("player-status-label");
-          if (pStatus) {
-            pStatus.innerHTML = `<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ef4444;"></span> YouTube Video`;
-          }
-          host.innerHTML = `
-            <button class="player-close-btn" onclick="closeProPlayer()" aria-label="Close Player" title="Close Player">✕</button>
-            <iframe src="${ytEmbedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;height:100%;border:none;position:absolute;top:0;left:0" title="${(data.Title || 'YouTube Video Player').replace(/"/g, '&quot;')}"></iframe>
-          `;
+        if (data.video_player_url && data.video_player_token) {
+          const pUrl = data.video_player_url.includes(data.video_player_token)
+            ? data.video_player_url
+            : (data.video_player_url + data.video_player_token);
+          host.innerHTML = `<iframe src="${getProxyUrl(pUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen style="width:100%;height:100%;border:none;position:absolute;top:0;left:0" title="Video Player"></iframe>`;
           return;
-        }
-        if (isYt && (data.embed_url || data.file_link)) {
-          let directUrl = data.embed_url || decrypt(data.file_link) || data.file_link;
-          if (directUrl) {
-            host.innerHTML = `
-              <button class="player-close-btn" onclick="closeProPlayer()" aria-label="Close Player" title="Close Player">✕</button>
-              <iframe src="${directUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;height:100%;border:none;position:absolute;top:0;left:0" title="${(data.Title || 'Video Player').replace(/"/g, '&quot;')}"></iframe>
-            `;
-            return;
-          }
         }
 
-        if (data.video_player_token) {
-          let playerUrl = data.video_player_url || "";
-          if (!playerUrl.includes("secure-player")) {
-            playerUrl = "https://player.appx.co.in/secure-player-v3?isMobile=true&debug=true&token=";
-          }
-          let rawUrl = playerUrl + data.video_player_token;
-          host.innerHTML = `
-            <button class="player-close-btn" onclick="closeProPlayer()" aria-label="Close Player" title="Close Player">✕</button>
-            <iframe src="${getProxyUrl(rawUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen style="width:100%;height:100%;border:none;position:absolute;top:0;left:0" title="Video Player"></iframe>
-          `;
-          return;
-        }
-        if (data.video_player_url) {
-          host.innerHTML = `
-            <button class="player-close-btn" onclick="closeProPlayer()" aria-label="Close Player" title="Close Player">✕</button>
-            <iframe src="${getProxyUrl(data.video_player_url)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen style="width:100%;height:100%;border:none;position:absolute;top:0;left:0" title="Video Player"></iframe>
-          `;
-          return;
-        }
         if (data.download_links?.length || data.download_link) {
           const enc = data.download_links?.[0]?.path || data.download_link;
           setupHLS(getProxyUrl(decrypt(enc).trim().replace(/\s/g, "")));
           return;
         }
+
         if (data.encrypted_links?.length) {
           const obj = data.encrypted_links[0];
-          let k2 = atob(decrypt(obj.key)), da = decrypt(obj.path);
-          const rawUrl = `https://appx-play.classx.co.in/combined-img-player?isMobile=true&videoPlayer=hls&urls=${encodeURIComponent(da)}&key=${encodeURIComponent(k2)}`;
-          host.innerHTML = `
-            <button class="player-close-btn" onclick="closeProPlayer()" aria-label="Close Player" title="Close Player">✕</button>
-            <iframe src="${getProxyUrl(rawUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen style="width:100%;height:100%;border:none;position:absolute;top:0;left:0" title="Video Player"></iframe>
-          `;
+          let k2 = decode_base64(decrypt(obj.key)), da = decrypt(obj.path);
+          const pUrl = "https://appx-play.classx.co.in/combined-img-player?isMobile=true&videoPlayer=hls&urls=" + encodeURIComponent(da) + "&key=" + encodeURIComponent(k2);
+          host.innerHTML = `<iframe src="${getProxyUrl(pUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen style="width:100%;height:100%;border:none;position:absolute;top:0;left:0" title="Video Player"></iframe>`;
           return;
         }
+
         host.innerHTML = "<p style='padding:20px;text-align:center;opacity:0.5'>Video locked / unsupported</p>";
       } catch (e) { host.innerHTML = "<p style='padding:20px;text-align:center;opacity:0.5'>Error loading video</p>"; }
     }
 
-    async function playRecorded(vidId, videoTitle) {
-      await playVideoInPro(vidId);
-    }
-
-    function playLive(id) {
-      runWithLoading(async () => {
-        closeProPlayer();
-        const p = document.getElementById("player");
-        if (!p) return;
-        p.style.display = "block";
-        const liveUrl = getProxyUrl(`https://liveclasses.cloud-front.in/live/${id}_480p.m3u8?request_llhls=1`);
-        setupHLS(liveUrl);
-        window.scrollTo({ top: p.offsetTop - 70, behavior: "smooth" });
-      }, "Connecting Live Class...", "Tuning into low-latency live broadcast", "🔴");
-    }
-
-    function playLiveInPro(id) {
-      playLive(id);
-    }
 
     function setupHLS(url) {
-      const vid = document.getElementById("video");
-      if (!vid) return;
-      if (hls) {
-        try { hls.destroy(); } catch(e){}
-        hls = null;
-      }
+      const host = document.getElementById("player-host");
+      host.innerHTML = `<video id="videoObj" controls autoplay playsinline style="position:absolute;top:0;left:0;width:100%;height:100%"></video>`;
+      const video = document.getElementById("videoObj");
       if (Hls.isSupported()) {
-        hls = new Hls({
-          lowLatencyMode: true,
-          enableWorker: true
-        });
-        hls.loadSource(url);
-        hls.attachMedia(vid);
-        hls.on(Hls.Events.MANIFEST_PARSED, function() {
-          vid.play().catch(() => {});
-        });
-      } else {
-        vid.src = url;
-        vid.play().catch(() => {});
-      }
+        const h = new Hls({ lowLatencyMode: true });
+        h.loadSource(url);
+        h.attachMedia(video);
+      } else { video.src = url; }
+    }
+
+    function closeProPlayer() {
+      document.getElementById("player-wrapper").style.display = "none";
+      document.getElementById("custom-controls").style.display = "none";
+      document.getElementById("player-host").innerHTML = "";
+    }
+
+    function goFullScreen() {
+      const iframe = document.querySelector("#player-host iframe");
+      const video = document.getElementById("videoObj");
+      const elem = iframe || video || document.getElementById("player-wrapper");
+      if (!elem) return;
+      if (elem.requestFullscreen) elem.requestFullscreen();
+      else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+      if (screen.orientation?.lock) screen.orientation.lock("landscape").catch(() => { });
     }
 
     function goToHome() { location.reload(); }
 
-    function setupEnterListeners() {
+    document.addEventListener('DOMContentLoaded', () => {
       ['mobileInput', 'passInput', 'tokenInput'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveLogin(); });
       });
-      const otpMob = document.getElementById('otpMobileInput');
-      if (otpMob) otpMob.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendOTP(); });
       const otpInput = document.getElementById('otpCodeInput');
       if (otpInput) otpInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') verifyOTP(); });
-    }
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', setupEnterListeners);
-    } else {
-      setupEnterListeners();
-    }
+    });
 
     /* ===== INIT ===== */
     function startApp() {
@@ -3763,48 +3191,29 @@
     }
 
     (async function initApp() {
-      // Check for unified single-device shared session if local token is empty
-      if (!TOKEN) {
-        try {
-          const sRes = await fetch(`/api/session?academy=${ACADEMY_NAME}`);
-          if (sRes.ok) {
-            const sData = await sRes.json();
-            if (sData && sData.token) {
-              TOKEN = sData.token;
-              USERID = sData.userid || "-2";
-              localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
-              localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
-              showToast("✓ Unified single-device session active", "success");
-            }
-          }
-        } catch (e) {}
+      let cfg = {};
+      try { cfg = await fetchGithubJSON("config.json"); } catch (e) { }
+
+      if (cfg.maintenance) {
+        document.getElementById("maintMsg").innerText = cfg.message;
+        document.getElementById("maintImg").src = cfg.image;
+        document.getElementById("maintenanceScreen").style.display = "flex";
+        return;
       }
+
+      const blockedByUpdate = await checkUpdate();
+      if (blockedByUpdate) return;
+
+      if (checkBan(cfg)) return;
+      showAnnouncement(cfg);
+      showDailyMessage(cfg);
 
       if (TOKEN && USERID) {
         document.getElementById("loginScreen").style.display = "none";
-        document.getElementById("drawerLogoutBtn").style.display = "flex";
         startApp();
       } else {
         document.getElementById("loginScreen").style.display = "flex";
       }
-
-      // Background config check (non-blocking)
-      (async () => {
-        try {
-          const cfg = await fetchGithubJSON("config.json");
-          if (cfg.maintenance) {
-            document.getElementById("maintMsg").innerText = cfg.message || "Under Maintenance";
-            if (cfg.image) document.getElementById("maintImg").src = cfg.image;
-            document.getElementById("maintenanceScreen").style.display = "flex";
-            return;
-          }
-          const blockedByUpdate = await checkUpdate();
-          if (blockedByUpdate) return;
-          if (checkBan(cfg)) return;
-          showAnnouncement(cfg);
-          showDailyMessage(cfg);
-        } catch (e) {}
-      })();
     })();
   </script>
 </body>
