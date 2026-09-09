@@ -2,25 +2,23 @@
 
 ## Included pages
 
+- `https://YOUR-DOMAIN/APPX.html` (or root `/`)
 - `https://YOUR-DOMAIN/DHYEY.html`
-- `https://YOUR-DOMAIN/bhainshkipathshala.html`
+- `https://YOUR-DOMAIN/bhainsh.html`
 
-The two original HTML files are kept under `attached_assets/`. `vercel.json`
-maps the public URLs above to those files. `/proxy?url=...` is rewritten to
-the Vercel function in `api/proxy.js`.
+The public directory is configured with all static pages, assets, and player icons (`/icons/backwards.svg`, `/icons/forward.svg`, etc.). `vercel.json` maps the public directory to `public` and rewrites `/proxy?url=...`, `/api/*`, and player routes to the Vercel function in `api/proxy.js`.
 
 ## Deploy
 
-1. Extract the ZIP.
-2. Import the extracted folder into Vercel, or run:
+1. Extract the ZIP / push to GitHub.
+2. Import the repository or folder into Vercel, or run:
 
    ```bash
    npx vercel
    ```
 
-3. Deploy with the default settings. No build command or environment variable
-   is required.
-4. Open one of the two page URLs above. Do not open the HTML with `file://`.
+3. Deploy with default settings. The build command `npm run build` will generate the `public` directory automatically. No manual framework configuration is needed.
+4. Open your deployment URL.
 
 ## Important
 

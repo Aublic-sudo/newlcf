@@ -133,6 +133,24 @@ async function forwardUpstream(targetUrlStr, req, res) {
       targetUrlStr = targetUrlStr.replace('/images/undefined/', '/images/watermark/');
     }
 
+    // Instant local serving for player icons (backwards.svg, forward.svg, etc.)
+    // Ensures 10s backward/forward buttons always work even if classx/upstream returns 404
+    if (/\/icons\/(backwards|forward|play|volume|pause)\.svg/i.test(targetUrlStr)) {
+      const iconMatch = targetUrlStr.match(/\/icons\/([^\/\?#]+)/i);
+      const iconFile = iconMatch ? iconMatch[1] : '';
+      const localP = path.join(BASE_DIR, 'icons', iconFile);
+      const publicP = path.join(BASE_DIR, 'public', 'icons', iconFile);
+      const chosenP = fs.existsSync(localP) ? localP : (fs.existsSync(publicP) ? publicP : null);
+      if (chosenP) {
+        sendResponse(res, 200, {
+          'Content-Type': 'image/svg+xml',
+          'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'public, max-age=31536000, immutable'
+        }, fs.readFileSync(chosenP));
+        return;
+      }
+    }
+
     if ((targetUrlStr.includes('/secure-player-v3') || targetUrlStr.includes('/secure-player?')) && targetUrlStr.includes('classx.co.in')) {
       targetUrlStr = targetUrlStr.replace(/https?:\/\/[^\/]+/, 'https://player.appx.co.in');
     }
@@ -423,6 +441,12 @@ async function forwardUpstream(targetUrlStr, req, res) {
     var finalUrl = u;
     if (finalUrl.includes('/images/undefined/')) {
       finalUrl = finalUrl.replace('/images/undefined/', '/images/watermark/');
+    }
+    // Never route /icons/ to classx (classx 404s on player icons)
+    if (finalUrl.includes('/icons/')) {
+      var iconPath = finalUrl.substring(finalUrl.indexOf('/icons/'));
+      finalUrl = 'https://player.appx.co.in' + iconPath;
+      return proxyPrefix + encodeURIComponent(finalUrl);
     }
     if (finalUrl.startsWith(window.location.origin)) {
       finalUrl = targetOrigin + finalUrl.substring(window.location.origin.length);
@@ -929,6 +953,25 @@ async function handleRequest(req, res) {
 
   if (parsedUrl.pathname === '/sw.js') {
     sendResponse(res, 200, { 'Content-Type': 'application/javascript' }, '// sw');
+    return;
+  }
+
+  // 1.8 Dedicated Player Icons (backwards.svg, forward.svg, etc.)
+  if (parsedUrl.pathname.startsWith('/icons/')) {
+    const iconName = path.basename(parsedUrl.pathname);
+    const localIconPath = path.join(BASE_DIR, 'icons', iconName);
+    const publicIconPath = path.join(BASE_DIR, 'public', 'icons', iconName);
+    const targetPath = fs.existsSync(localIconPath) ? localIconPath : (fs.existsSync(publicIconPath) ? publicIconPath : null);
+    if (targetPath) {
+      sendResponse(res, 200, {
+        'Content-Type': 'image/svg+xml',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=31536000, immutable'
+      }, fs.readFileSync(targetPath));
+      return;
+    }
+    // Always fall back to player.appx.co.in for icons (never classx which 404s)
+    await forwardUpstream('https://player.appx.co.in' + parsedUrl.pathname + parsedUrl.search, req, res);
     return;
   }
 

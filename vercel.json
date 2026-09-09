@@ -1,12 +1,25 @@
 {
   "version": 2,
+  "outputDirectory": "public",
   "rewrites": [
     {
       "source": "/",
       "destination": "/APPX.html"
     },
     {
+      "source": "/icons/:path*",
+      "destination": "/icons/:path*"
+    },
+    {
       "source": "/api/portals",
+      "destination": "/api/proxy.js"
+    },
+    {
+      "source": "/api/device",
+      "destination": "/api/proxy.js"
+    },
+    {
+      "source": "/api/session",
       "destination": "/api/proxy.js"
     },
     {

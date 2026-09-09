@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APPX Portal Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070913;
+      --card-bg: rgba(18, 22, 40, 0.7);
+      --card-border: rgba(139, 92, 246, 0.25);
+      --card-border-hover: rgba(168, 85, 247, 0.6);
+      --primary: #a855f7;
+      --primary-glow: rgba(168, 85, 247, 0.35);
+      --cyan: #06b6d4;
+      --cyan-glow: rgba(6, 182, 212, 0.3);
+      --text: #f8fafc;
+      --text-dim: #94a3b8;
+      --font-main: 'Outfit', sans-serif;
+      --font-title: 'Space Grotesk', sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      overflow-x: hidden;
+      padding: 40px 20px 80px;
+    }
+
+    /* Ambient Background Glow */
+    .bg-glow {
+      position: fixed;
+      top: -150px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 700px;
+      height: 450px;
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.18) 0%, rgba(6, 182, 212, 0.1) 45%, transparent 70%);
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 960px;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 44px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #c084fc;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      backdrop-filter: blur(8px);
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      background: #a855f7;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #a855f7;
+    }
+
+    h1 {
+      font-family: var(--font-title);
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #ffffff 30%, #c084fc 70%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+    }
+
+    p.subtitle {
+      color: var(--text-dim);
+      font-size: 16px;
+      max-width: 500px;
+      line-height: 1.5;
+    }
+
+    /* Search Bar */
+    .search-wrapper {
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 36px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 14px 20px 14px 46px;
+      background: rgba(18, 22, 40, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      color: #ffffff;
+      font-family: var(--font-main);
+      font-size: 15px;
+      outline: none;
+      transition: all 0.25s ease;
+      backdrop-filter: blur(12px);
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: var(--text-dim);
+      pointer-events: none;
+    }
+
+    /* Grid */
+    .portal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+      width: 100%;
+    }
+
+    /* Card */
+    .portal-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .portal-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .portal-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--card-border-hover);
+      box-shadow: 0 16px 36px -10px var(--primary-glow);
+    }
+
+    .portal-card:hover::before {
+      opacity: 1;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .portal-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(6, 182, 212, 0.1));
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: #c084fc;
+      transition: transform 0.3s ease;
+    }
+
+    .portal-card:hover .portal-icon {
+      transform: scale(1.08) rotate(3deg);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #34d399;
+      background: rgba(52, 211, 153, 0.1);
+      border: 1px solid rgba(52, 211, 153, 0.25);
+      padding: 3px 8px;
+      border-radius: 9999px;
+    }
+
+    .status-dot-inner {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 6px #34d399;
+    }
+
+    .portal-title {
+      font-family: var(--font-title);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+      color: #ffffff;
+      text-transform: capitalize;
+    }
+
+    .portal-desc {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.5;
+      margin-bottom: 24px;
+      flex-grow: 1;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .launch-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: #c084fc;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: gap 0.2s ease;
+    }
+
+    .portal-card:hover .launch-text {
+      gap: 10px;
+      color: #ffffff;
+    }
+
+    .launch-icon {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* Empty State */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-dim);
+      font-size: 15px;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 60px;
+      color: var(--text-dim);
+      font-size: 13px;
+      text-align: center;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+  <div class="bg-grid"></div>
+
+  <div class="container">
+    <header>
+      <div class="badge">
+        <span class="badge-dot"></span>
+        <span>Appx Gateway</span>
+      </div>
+      <h1>APPX Portal Hub</h1>
+      <p class="subtitle">Select a portal below to access courses, videos, and live sessions.</p>
+    </header>
+
+    <div class="search-wrapper">
+      <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" id="searchInput" class="search-input" placeholder="Search portals..." oninput="filterPortals()">
+    </div>
+
+    <div class="portal-grid" id="portalGrid">
+      <!-- Portals rendered dynamically via JavaScript -->
+    </div>
+
+    <footer>
+      <span>APPX Portal Platform &bull; Standalone Proxy & Stream Engine</span>
+    </footer>
+  </div>
+
+  <script>
+    // Initial fallback list of known portals
+const fallbackPortals = [
+  {
+    name: "bhainsh",
+    filename: "bhainsh.html",
+    icon: "🐃",
+    desc: `પાયાથી PRO JCB રેકોર્ડેડ બેચમાં
+જૂના રેકોર્ડેડ કોર્સ અને મોડેલ પેપર ફોલ્ડરમાં
+બધા જ કોર્સનો ઍક્સેસ મળી રહેશે.`
+  },
+  {
+    name: "DHYEY",
+    filename: "DHYEY.html",
+    icon: "🎯",
+    desc: "Adding soon"
+  }
+];
+
+    let allPortals = [...fallbackPortals];
+
+    function renderPortals(list) {
+      const grid = document.getElementById("portalGrid");
+      if (!list.length) {
+        grid.innerHTML = '<div class="empty-state">No matching portals found.</div>';
+        return;
+      }
+
+      grid.innerHTML = list.map(p => {
+        // Strip .html extension so ONLY clean name is displayed
+        const cleanName = (p.name || p.filename || '').replace(/\.html$/i, '');
+        const href = '/' + p.filename;
+        const icon = p.icon || '🚀';
+        const desc = p.desc || `Open ${cleanName} player and dashboard portal`;
+
+        return `
+          <a href="${href}" class="portal-card" data-name="${cleanName.toLowerCase()}">
+            <div class="card-top">
+              <div class="portal-icon">${icon}</div>
+              <div class="status-badge">
+                <span class="status-dot-inner"></span>
+                <span>Active</span>
+              </div>
+            </div>
+            <div class="portal-title">${cleanName}</div>
+            <div class="portal-desc">${desc}</div>
+            <div class="card-footer">
+              <span class="launch-text">
+                <span>Enter Portal</span>
+                <svg class="launch-icon" viewBox="0 0 24 24">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </span>
+            </div>
+          </a>
+        `;
+      }).join('');
+    }
+
+    function filterPortals() {
+      const query = document.getElementById("searchInput").value.trim().toLowerCase();
+      const filtered = allPortals.filter(p => {
+        const cleanName = (p.name || p.filename || '').replace(/\.html$/i, '').toLowerCase();
+        return cleanName.includes(query) || (p.desc && p.desc.toLowerCase().includes(query));
+      });
+      renderPortals(filtered);
+    }
+
+    // Load available HTML portals dynamically from server
+    async function loadDynamicPortals() {
+      try {
+        const res = await fetch('/api/portals');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            allPortals = data.map(item => {
+              const clean = item.name || item.filename.replace(/\.html$/i, '');
+              let icon = '🚀';
+              if (clean.toLowerCase().includes('bhainsh')) icon = '🐃';
+              else if (clean.toLowerCase().includes('dhyey')) icon = '🎯';
+              return {
+                name: clean,
+                filename: item.filename,
+                icon: icon,
+                desc: `${clean} streaming and dashboard portal`
+              };
+            });
+            renderPortals(allPortals);
+            return;
+          }
+        }
+      } catch (err) {}
+      // Render fallback list if fetch fails
+      renderPortals(allPortals);
+    }
+
+    // Initialize
+    loadDynamicPortals();
+  </script>
+</body>
+</html>
