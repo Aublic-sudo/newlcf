@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node proxy_server.js",
     "dev": "node proxy_server.js",
-    "build": "node build.js"
+    "build": "node build.js",
+    "lint": "node -c proxy_server.js api/proxy.js build.js"
   },
   "keywords": [],
   "author": "rstock937@gmail.com",

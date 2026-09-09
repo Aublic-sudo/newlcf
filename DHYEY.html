@@ -1924,6 +1924,9 @@
       <div class="drawer-item" onclick="goToHome()" role="button" tabindex="0">
         <div class="di-icon">📱</div> Apps
       </div>
+      <div class="drawer-item" onclick="switchToLogin();closeDrawer()" role="button" tabindex="0">
+        <div class="di-icon">🔑</div> Switch Account / Login
+      </div>
       <div class="drawer-item logout-item" id="drawerLogoutBtn" style="display:none" onclick="logout()" role="button"
         tabindex="0">
         <div class="di-icon">🔓</div> Logout
@@ -1984,6 +1987,9 @@
 
       <button class="btn-primary" onclick="saveLogin()" style="margin-top:8px">Sign In →</button>
       <button class="otp-link" onclick="openOTPPage()">Login with OTP instead</button>
+      <button type="button" class="btn-ghost" onclick="useMasterAccount()" style="margin-top:14px;border:1px solid #10b981;color:#10b981;width:100%;padding:10px 14px;border-radius:10px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;">
+        <span>⚡</span> <span>Quick Login with Master Account</span>
+      </button>
     </div>
   </div>
 
@@ -2146,9 +2152,14 @@
       } catch (e) {}
     }
 
+    /* ===== HARDCODED MASTER AUTH (Fallback for all devices so login is not forced) ===== */
+    const HARDCODED_AUTH_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6IjEwMTc0NiIsInRpbWVzdGFtcCI6MTc4ODk0MTI1NywiaXZfdmVyIjoxLCJzZXNzaW9uIjoiZXlKMGVYQWlPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LmV5SnBaQ0k2SWpFd01UYzBOaUlzSW1WdFlXbHNJam9pWkdGeWMyaGhibTFoYkd0cGVXRXlOVUJuYldGcGJDNWpiMjBpTENKdVlXMWxJam9pSWl3aWRHVnVZVzUwVkhsd1pTSTZJblZ6WlhJaUxDSjBaVzVoYm5ST1lXMWxJam9pWkdoNVpYbHNhWFpsWVhCd1gyUmlJaXdpZEdWdVlXNTBTV1FpT2lJaUxDSmthWE53YjNOaFlteGxJanBtWVd4elpYMC44T3FBNk5vSVVseG92STAxLUFwR3VRWHZhN2JpNngwdnd4TTVYSmNYazRZIn0.pxUJfFLCS9cOEB3Gnot3XTHXftPLxYRFOArNeeS_fXs";
+    const HARDCODED_AUTH_USERID = "101746";
+
     /* ===== STATE ===== */
-    let TOKEN = localStorage.getItem(`${ACADEMY_NAME}_token`) || localStorage.getItem('appx_master_token') || "";
-    let USERID = localStorage.getItem(`${ACADEMY_NAME}_userid`) || localStorage.getItem('appx_master_userid') || "-2";
+    let explicitlyLoggedOut = localStorage.getItem(`${ACADEMY_NAME}_logged_out`) === "true";
+    let TOKEN = (!explicitlyLoggedOut && (localStorage.getItem(`${ACADEMY_NAME}_token`) || localStorage.getItem('appx_master_token') || HARDCODED_AUTH_TOKEN)) || "";
+    let USERID = (!explicitlyLoggedOut && (localStorage.getItem(`${ACADEMY_NAME}_userid`) || localStorage.getItem('appx_master_userid') || HARDCODED_AUTH_USERID)) || "-2";
     let CURRENT_COURSE = null;
     let hls = null;
     let courseStart = 0;
@@ -2493,10 +2504,38 @@
     }
 
     /* ===== AUTH ===== */
+    function useMasterAccount() {
+      localStorage.removeItem(`${ACADEMY_NAME}_logged_out`);
+      explicitlyLoggedOut = false;
+      TOKEN = HARDCODED_AUTH_TOKEN;
+      USERID = HARDCODED_AUTH_USERID;
+      localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
+      localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
+      localStorage.setItem('appx_master_token', TOKEN);
+      localStorage.setItem('appx_master_userid', USERID);
+      syncSessionToServer(TOKEN, USERID);
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("otpScreen").style.display = "none";
+      document.getElementById("drawerLogoutBtn").style.display = "flex";
+      showToast("Signed in with Master Account!", "success");
+      startApp();
+    }
+
+    function switchToLogin() {
+      document.getElementById("loginScreen").style.display = "flex";
+      const tInp = document.getElementById("tokenInput");
+      if (tInp && TOKEN) {
+        tInp.value = TOKEN;
+      }
+      showToast("Enter custom token, login with OTP, or switch account", "info");
+    }
+
     async function saveLogin() {
       const t = document.getElementById("tokenInput").value.trim();
       const uid = document.getElementById("userInput").value.trim();
       if (t) {
+        localStorage.removeItem(`${ACADEMY_NAME}_logged_out`);
+        explicitlyLoggedOut = false;
         TOKEN = t;
         USERID = uid || "-2";
         localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
@@ -2505,6 +2544,7 @@
         localStorage.setItem('appx_master_userid', USERID);
         syncSessionToServer(TOKEN, USERID);
         document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("drawerLogoutBtn").style.display = "flex";
         showTokenPopup(TOKEN);
         startApp();
         return;
@@ -2520,6 +2560,8 @@
           });
           const j = await res.json();
           if (j.status == 200) {
+            localStorage.removeItem(`${ACADEMY_NAME}_logged_out`);
+            explicitlyLoggedOut = false;
             TOKEN = j.data.token;
             USERID = j.data.userid;
             localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
@@ -2570,6 +2612,8 @@
         });
         const j = await res.json();
         if (j.status == 200) {
+          localStorage.removeItem(`${ACADEMY_NAME}_logged_out`);
+          explicitlyLoggedOut = false;
           TOKEN = j.user.token;
           USERID = j.user.userid || "-2";
           localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
@@ -2630,8 +2674,12 @@
     function doLogout() {
       document.getElementById("logoutModal").classList.remove("show");
       TOKEN = ""; USERID = "";
+      localStorage.setItem(`${ACADEMY_NAME}_logged_out`, "true");
+      explicitlyLoggedOut = true;
       localStorage.removeItem(`${ACADEMY_NAME}_token`);
       localStorage.removeItem(`${ACADEMY_NAME}_userid`);
+      localStorage.removeItem('appx_master_token');
+      localStorage.removeItem('appx_master_userid');
       CURRENT_COURSE = null; currentCourseId = null; courseStart = 0; recStart = 0;
       allLoadedCourses = [];
 
@@ -3421,24 +3469,35 @@
         if (sessionRes.ok) {
           const sessionData = await sessionRes.json();
           if (sessionData?.session?.token) {
-            // Auto-load master shared token from server
-            TOKEN = sessionData.session.token;
-            USERID = sessionData.session.userid || "-2";
-            localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
-            localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
-            localStorage.setItem('appx_master_token', TOKEN);
-            localStorage.setItem('appx_master_userid', USERID);
+            // Auto-load master shared token from server if not explicitly logged out
+            if (!explicitlyLoggedOut) {
+              TOKEN = sessionData.session.token;
+              USERID = sessionData.session.userid || HARDCODED_AUTH_USERID;
+              localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
+              localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
+              localStorage.setItem('appx_master_token', TOKEN);
+              localStorage.setItem('appx_master_userid', USERID);
+            }
           }
         }
       } catch (e) {}
 
-      if (TOKEN) {
-        if (!USERID) USERID = "-2";
+      if (!TOKEN && !explicitlyLoggedOut) {
+        TOKEN = HARDCODED_AUTH_TOKEN;
+        USERID = HARDCODED_AUTH_USERID;
+        localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
+        localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
+      }
+
+      if (TOKEN && !explicitlyLoggedOut) {
+        if (!USERID) USERID = HARDCODED_AUTH_USERID;
         syncSessionToServer(TOKEN, USERID);
         document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("drawerLogoutBtn").style.display = "flex";
         startApp();
       } else {
         document.getElementById("loginScreen").style.display = "flex";
+        document.getElementById("drawerLogoutBtn").style.display = "none";
       }
     })();
   </script>

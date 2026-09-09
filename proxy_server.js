@@ -30,16 +30,36 @@ const MASTER_DEVICE = {
 };
 
 // PERSISTENT SHARED SESSIONS
+const HARDCODED_MASTER_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6IjEwMTc0NiIsInRpbWVzdGFtcCI6MTc4ODk0MTI1NywiaXZfdmVyIjoxLCJzZXNzaW9uIjoiZXlKMGVYQWlPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LmV5SnBaQ0k2SWpFd01UYzBOaUlzSW1WdFlXbHNJam9pWkdGeWMyaGhibTFoYkd0cGVXRXlOVUJuYldGcGJDNWpiMjBpTENKdVlXMWxJam9pSWl3aWRHVnVZVzUwVkhsd1pTSTZJblZ6WlhJaUxDSjBaVzVoYm5ST1lXMWxJam9pWkdoNVpYbHNhWFpsWVhCd1gyUmlJaXdpZEdWdVlXNTBTV1FpT2lJaUxDSmthWE53YjNOaFlteGxJanBtWVd4elpYMC44T3FBNk5vSVVseG92STAxLUFwR3VRWHZhN2JpNngwdnd4TTVYSmNYazRZIn0.pxUJfFLCS9cOEB3Gnot3XTHXftPLxYRFOArNeeS_fXs";
+const HARDCODED_MASTER_USERID = "101746";
+const DEFAULT_HARDCODED_AUTH = {
+  token: HARDCODED_MASTER_TOKEN,
+  userid: HARDCODED_MASTER_USERID,
+  updated_at: new Date().toISOString()
+};
+
 const SESSIONS_FILE = process.env.VERCEL ? path.join('/tmp', 'sessions.json') : path.join(BASE_DIR, 'sessions.json');
 function loadSessions() {
+  let sessions = {};
   try {
     if (fs.existsSync(SESSIONS_FILE)) {
-      return JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf8'));
+      sessions = JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf8'));
     }
   } catch (err) {
     console.error('[Session Error] Could not read sessions.json:', err.message);
   }
-  return {};
+
+  // Ensure default master auth is present if no custom session exists
+  if (!sessions.master || !sessions.master.token) {
+    sessions.master = { ...DEFAULT_HARDCODED_AUTH };
+  }
+  if (!sessions.dhyeylive || !sessions.dhyeylive.token) {
+    sessions.dhyeylive = { ...DEFAULT_HARDCODED_AUTH };
+  }
+  if (!sessions.bhainskipathshala || !sessions.bhainskipathshala.token) {
+    sessions.bhainskipathshala = { ...DEFAULT_HARDCODED_AUTH };
+  }
+  return sessions;
 }
 
 function saveSessions(sessions) {
@@ -299,6 +319,24 @@ async function forwardUpstream(targetUrlStr, req, res) {
         redirect: 'follow',
         signal: controller.signal
       });
+    } catch (fetchErr) {
+      clearTimeout(timeoutId);
+      // Auto-correct common upstream domain typos if applicable
+      if (targetUrlStr.includes('dhyeyliveapi.akamai.net.in')) {
+        targetUrlStr = targetUrlStr.replace('dhyeyliveapi.akamai.net.in', 'dhyeyliveappapi.akamai.net.in');
+        try {
+          upstreamRes = await fetch(targetUrlStr, {
+            method: req.method,
+            headers: fetchHeaders,
+            body: requestBody,
+            redirect: 'follow'
+          });
+        } catch (e2) {
+          throw fetchErr;
+        }
+      } else {
+        throw fetchErr;
+      }
     } finally {
       clearTimeout(timeoutId);
     }
@@ -750,8 +788,19 @@ async function forwardUpstream(targetUrlStr, req, res) {
       res.end();
     }
   } catch (err) {
-    console.error('[Proxy Error]:', err.message);
-    sendResponse(res, 502, { 'Content-Type': 'text/plain' }, 'Proxy Error: ' + err.message);
+    console.warn('[Proxy Warning]:', err.message, 'Target:', targetUrlStr);
+    if (!res.headersSent && !res.writableEnded) {
+      if (/\.(svg|png|jpe?g|webp|gif|css|woff2?)(\?|$)/i.test(targetUrlStr)) {
+        sendResponse(res, 204, { 'Content-Type': 'image/svg+xml' }, '');
+        return;
+      }
+      sendResponse(res, 502, { 'Content-Type': 'application/json' }, JSON.stringify({
+        status: 502,
+        error: 'Proxy Error',
+        message: err.message,
+        target: targetUrlStr
+      }));
+    }
   }
 }
 
@@ -857,7 +906,7 @@ async function handleRequest(req, res) {
         }
       }
 
-      // 3. Universal Fallback: If portal has no custom session, use master or latest session
+      // 3. Universal Fallback: If portal has no custom session, use master, latest session, or default hardcoded auth
       if (!session) {
         session = sessions['master'] || sessions['latest'] || null;
         if (!session) {
@@ -867,6 +916,10 @@ async function handleRequest(req, res) {
             session = allSessions[0];
           }
         }
+      }
+
+      if (!session) {
+        session = DEFAULT_HARDCODED_AUTH;
       }
 
       sendResponse(res, 200, { 'Content-Type': 'application/json' }, JSON.stringify({
