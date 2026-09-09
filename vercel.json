@@ -1,0 +1,33 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/APPX.html"
+    },
+    {
+      "source": "/api/portals",
+      "destination": "/api/proxy.js"
+    },
+    {
+      "source": "/proxy",
+      "destination": "/api/proxy.js"
+    },
+    {
+      "source": "/_next/:path*",
+      "destination": "/api/proxy.js?url=https://player.appx.co.in/_next/:path*"
+    },
+    {
+      "source": "/videojs-:path*",
+      "destination": "/api/proxy.js?url=https://player.appx.co.in/videojs-:path*"
+    },
+    {
+      "source": "/video-uhs:path*",
+      "destination": "/api/proxy.js?url=https://player.appx.co.in/video-uhs:path*"
+    },
+    {
+      "source": "/uhs-hls-player/:path*",
+      "destination": "/api/proxy.js?url=https://appx-play.classx.co.in/uhs-hls-player/:path*"
+    }
+  ]
+}

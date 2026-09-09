@@ -1,0 +1,13 @@
+{
+  "name": "darko",
+  "version": "1.0.0",
+  "description": "Educational Video Portal and Stream Player",
+  "main": "proxy_server.js",
+  "scripts": {
+    "start": "node proxy_server.js",
+    "dev": "node proxy_server.js"
+  },
+  "keywords": [],
+  "author": "rstock937@gmail.com",
+  "license": "ISC"
+}
