@@ -1,0 +1,6 @@
+{
+  "name": "APPX Portal Hub",
+  "description": "Educational Video Portal and Stream Player with secure playback",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

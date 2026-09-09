@@ -5,7 +5,8 @@
   "main": "proxy_server.js",
   "scripts": {
     "start": "node proxy_server.js",
-    "dev": "node proxy_server.js"
+    "dev": "node proxy_server.js",
+    "build": "echo 'Build complete'"
   },
   "keywords": [],
   "author": "rstock937@gmail.com",

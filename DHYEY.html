@@ -2326,11 +2326,41 @@
     /* ===== DECRYPT ===== */
     function decrypt(enc) {
       try {
-        enc = enc.split(":")[0];
+        if (!enc || typeof enc !== "string") return "";
+        enc = enc.replace(/\\/g, "").trim().split(":")[0];
         const key = CryptoJS.enc.Utf8.parse("638udh3829162018");
         const iv = CryptoJS.enc.Utf8.parse("fedcba9876543210");
         return CryptoJS.AES.decrypt({ ciphertext: CryptoJS.enc.Base64.parse(enc) }, key, { iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }).toString(CryptoJS.enc.Utf8);
       } catch (e) { return ""; }
+    }
+
+    function getYouTubeId(data, item) {
+      const candidates = [
+        data?.embed_url,
+        data?.file_link,
+        data?.video_id,
+        item?.embed_url,
+        item?.file_link,
+        item?.video_id
+      ];
+
+      for (let raw of candidates) {
+        if (!raw || typeof raw !== "string") continue;
+        raw = raw.trim();
+        let match = raw.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/i);
+        if (match && match[1]) return match[1];
+        if (/^[\w-]{11}$/.test(raw)) return raw;
+
+        try {
+          const dec = decrypt(raw).trim();
+          if (dec) {
+            match = dec.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/i);
+            if (match && match[1]) return match[1];
+            if (/^[\w-]{11}$/.test(dec)) return dec;
+          }
+        } catch (e) { }
+      }
+      return null;
     }
 
     function decryptPDF(enc, keyEnc) {
@@ -2974,7 +3004,7 @@
             if (item.material_type == "FOLDER") {
               row.onclick = () => { navStack.push({ type: "FOLDER", id: item.id, name: item.Title }); fetchFolders(item.id, item.Title); };
             } else if (item.material_type == "VIDEO") {
-              row.onclick = () => playVideoInPro(item.id);
+              row.onclick = () => playVideoInPro(item.id, item);
             } else if (item.material_type == "PDF") {
               row.onclick = () => {
                 const rawUrl = decryptPDF(item.pdf_link, item.pdf_encryption_key);
@@ -3048,11 +3078,24 @@
         const player = document.getElementById("player");
         const vid = document.getElementById("video");
 
+        // Check YouTube
+        const ytId = getYouTubeId(data);
+        if (data.ytFlag == 1 || data.ytFlagWeb == 1 || data.ytFlag === '1' || data.ytFlagWeb === '1' || ytId) {
+          const validYtId = ytId || getYouTubeId(data);
+          if (validYtId) {
+            const pUrl = getProxyUrl(`https://www.youtube.com/embed/${validYtId}?autoplay=1&enablejsapi=1&rel=0`);
+            player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player">✕ Close</button><iframe src="${pUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;height:100%;border:none;position:absolute;top:0;left:0" title="Video Player"></iframe>`;
+            player.style.display = "block";
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+          }
+        }
+
         if (data.video_player_url && data.video_player_token) {
           const pUrl = data.video_player_url.includes(data.video_player_token)
             ? data.video_player_url
             : (data.video_player_url + data.video_player_token);
-          player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player">? Close</button><iframe src="${getProxyUrl(pUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen title="Video Player"></iframe>`;
+          player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player">✕ Close</button><iframe src="${getProxyUrl(pUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen title="Video Player"></iframe>`;
           player.style.display = "block";
           window.scrollTo({ top: 0, behavior: "smooth" });
           return;
@@ -3076,7 +3119,7 @@
           const obj = data.encrypted_links[0];
           let k2 = decode_base64(decrypt(obj.key)), da = decrypt(obj.path);
           const pUrl = "https://appx-play.classx.co.in/combined-img-player?isMobile=true&videoPlayer=hls&urls=" + encodeURIComponent(da) + "&key=" + encodeURIComponent(k2);
-          player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player">? Close</button><iframe src="${getProxyUrl(pUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen title="Video Player"></iframe>`;
+          player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player">✕ Close</button><iframe src="${getProxyUrl(pUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen title="Video Player"></iframe>`;
           player.style.display = "block";
           window.scrollTo({ top: 0, behavior: "smooth" });
           return;
@@ -3103,33 +3146,66 @@
       setupHLS(`https://liveclasses.cloud-front.in/live/${id}_480p.m3u8`);
     }
 
-    async function playVideoInPro(vidId) {
+    async function playVideoInPro(vidId, item) {
       const host = document.getElementById("player-host");
       document.getElementById("player-wrapper").style.display = "block";
       document.getElementById("custom-controls").style.display = "block";
       host.innerHTML = `<div class="spinner" style="margin-top:20%"></div>`;
       window.scrollTo({ top: 0, behavior: "smooth" });
       try {
-        const res = await fetch(`${API_BASE}/get/fetchVideoDetailsById?course_id=${currentCourseId}&folder_wise_course=1&ytflag=0&video_id=${vidId}`, { headers: getHeaders() });
-        const j = await res.json();
-        const data = j.data;
+        const isItemYt = !!(item && (item.ytFlag == 1 || item.ytFlagWeb == 1 || item.ytflag == 1 || item.ytFlag === '1' || item.ytFlagWeb === '1'));
+        let res = await fetch(`${API_BASE}/get/fetchVideoDetailsById?course_id=${currentCourseId}&folder_wise_course=1&ytflag=${isItemYt ? 1 : 0}&video_id=${vidId}`, { headers: getHeaders() });
+        let j = await res.json().catch(() => ({}));
+        let data = j?.data;
+
+        if (!data) {
+          try {
+            const fallbackRes = await fetch(`${API_BASE}/get/fetchVideoDetailsById?course_id=${currentCourseId}&folder_wise_course=1&ytflag=${isItemYt ? 0 : 1}&video_id=${vidId}`, { headers: getHeaders() });
+            const fallbackJ = await fallbackRes.json().catch(() => ({}));
+            if (fallbackJ?.data) data = fallbackJ.data;
+          } catch (e) { }
+        }
+
+        if (!data && item) {
+          data = item;
+        }
+
         if (!data) { host.innerHTML = "<p style='padding:20px;text-align:center;opacity:0.5'>No video data</p>"; return; }
 
+        // Check if video is YouTube (via flags or decryptable link/id)
+        const isYt = (data.ytFlag == 1 || data.ytFlagWeb == 1 || data.ytFlag === '1' || data.ytFlagWeb === '1' || isItemYt);
+        const ytId = getYouTubeId(data, item);
+
+        if (isYt || ytId) {
+          const targetYtId = ytId || getYouTubeId(data, item);
+          if (targetYtId) {
+            const ytEmbedUrl = `https://www.youtube.com/embed/${targetYtId}?autoplay=1&enablejsapi=1&rel=0`;
+            const proxiedYtUrl = getProxyUrl(ytEmbedUrl);
+            host.innerHTML = `<iframe
+              src="${proxiedYtUrl}"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+              style="width:100%;height:100%;border:none;position:absolute;top:0;left:0"
+              title="${data.Title || item?.Title || 'YouTube Player'}">
+            </iframe>`;
+            return;
+          }
+        }
+
         if (data.video_player_token) {
-  const pUrl =
-    "https://player.appx.co.in/secure-player?isMobile=true&debug=true&token=" +
-    encodeURIComponent(data.video_player_token);
-
-  host.innerHTML = `<iframe
-    src="${getProxyUrl(pUrl)}"
-    allow="autoplay;fullscreen;picture-in-picture"
-    allowfullscreen
-    style="width:100%;height:100%;border:none;position:absolute;top:0;left:0"
-    title="Video Player">
-  </iframe>`;
-
-  return;
-}
+          const token = data.video_player_token;
+          let pUrl = (data.video_player_url && data.video_player_url.trim())
+            ? (data.video_player_url.includes(token) ? data.video_player_url : (data.video_player_url + token))
+            : ("https://player.appx.co.in/secure-player?isMobile=true&debug=true&token=" + encodeURIComponent(token));
+          host.innerHTML = `<iframe
+            src="${getProxyUrl(pUrl)}"
+            allow="autoplay;fullscreen;picture-in-picture"
+            allowfullscreen
+            style="width:100%;height:100%;border:none;position:absolute;top:0;left:0"
+            title="Video Player">
+          </iframe>`;
+          return;
+        }
 
         if (data.download_links?.length || data.download_link) {
           const enc = data.download_links?.[0]?.path || data.download_link;
@@ -3145,8 +3221,17 @@
           return;
         }
 
+        if (ytId) {
+          const ytEmbedUrl = `https://www.youtube.com/embed/${ytId}?autoplay=1&enablejsapi=1&rel=0`;
+          host.innerHTML = `<iframe src="${getProxyUrl(ytEmbedUrl)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;height:100%;border:none;position:absolute;top:0;left:0" title="YouTube Player"></iframe>`;
+          return;
+        }
+
         host.innerHTML = "<p style='padding:20px;text-align:center;opacity:0.5'>Video locked / unsupported</p>";
-      } catch (e) { host.innerHTML = "<p style='padding:20px;text-align:center;opacity:0.5'>Error loading video</p>"; }
+      } catch (e) {
+        console.error("playVideoInPro error:", e);
+        host.innerHTML = "<p style='padding:20px;text-align:center;opacity:0.5'>Error loading video</p>";
+      }
     }
 
     function setupHLS(url) {
