@@ -311,6 +311,37 @@
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
     }
 
+    .proxy-shield-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #d8b4fe;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+      user-select: none;
+      margin-left: auto;
+    }
+
+    .proxy-shield-badge .shield-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.85);
+      animation: shieldPulse 2.2s infinite ease-in-out;
+    }
+
+    @keyframes shieldPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.35); opacity: 0.65; }
+    }
+
     .h-hamburger {
       width: 42px;
       height: 42px;
@@ -1902,6 +1933,10 @@
       style="display:none;color:var(--primary);border-color:var(--border-a);font-size:18px;font-weight:900"
       title="Go back" aria-label="Go back"><span>←</span></button>
     <span id="headerTitle">📂 All Courses</span>
+    <div id="proxyShieldBadge" class="proxy-shield-badge" title="Proxy Shield Active: All requests routed via server proxy. Upstream sees 1 unified device. User IP is masked.">
+      <span class="shield-dot"></span>
+      <span>Proxy &bull; 1-Device</span>
+    </div>
     <button class="h-btn" id="searchToggleBtn" onclick="openSearch()" title="Search"
       aria-label="Search courses"><span>🔍</span></button>
     <button id="logoutBtn" style="display:none" onclick="logout()"></button>
@@ -2042,20 +2077,62 @@
     const STORAGE_PREFIX = `AUBLIC_${ACADEMY_NAME}`;
     const FAV_KEY = `${STORAGE_PREFIX}_favCourses`;
     const APP_VERSION = 1;
-    // Auto-proxy Akamai backend APIs to prevent CORS preflight block
-    const _rawFetch = window.fetch;
-    window.fetch = function(url, opts) {
-      if (typeof url === "string" && (url.includes("akamai.net.in") || url.includes("dhyeyliveappapi") || url.includes("bhainskipathshalaapi")) && !url.includes("/proxy?url=")) {
-        url = getProxyUrl(url);
-      }
-      return _rawFetch.call(this, url, opts);
-    };
+    const MASTER_DEVICE_ID = "WebBrowser17267591437616qmd1cxx313";
+
     const PROXY_BASE = (function() {
       if (typeof window !== "undefined" && window.location && window.location.protocol.startsWith("http")) {
         return window.location.origin + "/proxy?url=";
       }
       return "http://localhost:3000/proxy?url=";
     })();
+
+    function getProxyUrl(url) {
+      if (!url || typeof url !== "string") return "";
+      if (url.startsWith("/proxy?url=") || url.includes("/proxy?url=")) return url;
+      // Keep relative endpoints (e.g. /api/session, /api/portals) local to our server
+      if (url.startsWith("/") && !url.startsWith("//")) return url;
+      return PROXY_BASE + encodeURIComponent(url);
+    }
+
+    // Comprehensive Interceptor: Route ALL external requests through proxy
+    // Upstream sees ONLY the proxy server IP & 1 unified master device identity
+    const _rawFetch = window.fetch;
+    window.fetch = function(url, opts) {
+      if (typeof url === "string") {
+        if ((url.startsWith("http://") || url.startsWith("https://") || url.startsWith("//")) && !url.startsWith(window.location.origin) && !url.includes("/proxy?url=")) {
+          url = getProxyUrl(url);
+        }
+      } else if (url && typeof url.url === "string") {
+        const u = url.url;
+        if ((u.startsWith("http://") || u.startsWith("https://") || u.startsWith("//")) && !u.startsWith(window.location.origin) && !u.includes("/proxy?url=")) {
+          try {
+            url = new Request(getProxyUrl(u), url);
+          } catch (e) {}
+        }
+      }
+      return _rawFetch.call(this, url, opts);
+    };
+
+    // Intercept XMLHttpRequest so player libraries (e.g. HLS.js, PDF.js) cannot leak client IP
+    const _origXHROpen = window.XMLHttpRequest.prototype.open;
+    window.XMLHttpRequest.prototype.open = function(method, url) {
+      if (typeof url === "string" && (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("//")) && !url.startsWith(window.location.origin) && !url.includes("/proxy?url=")) {
+        url = getProxyUrl(url);
+      }
+      return _origXHROpen.apply(this, [method, url].concat(Array.prototype.slice.call(arguments, 2)));
+    };
+
+    // Shared session synchronization helper
+    async function syncSessionToServer(token, userid) {
+      if (!token) return;
+      try {
+        await _rawFetch('/api/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ portal: ACADEMY_NAME, token, userid })
+        });
+      } catch (e) {}
+    }
 
     /* ===== STATE ===== */
     let TOKEN = localStorage.getItem(`${ACADEMY_NAME}_token`) || "";
@@ -2273,12 +2350,6 @@
       }
     }
 
-    function getProxyUrl(url) {
-      if (!url) return "";
-      if (url.startsWith("/proxy?url=") || url.includes("/proxy?url=")) return url;
-      return PROXY_BASE + encodeURIComponent(url);
-    }
-
     function getHeaders() {
       return {
         "Authorization": TOKEN,
@@ -2290,6 +2361,11 @@
         "Auth-Key": "appxapi",
         "User-ID": USERID || "0",
         "device-type": "android",
+        "device-id": MASTER_DEVICE_ID,
+        "device_id": MASTER_DEVICE_ID,
+        "device-name": "Samsung Galaxy S22",
+        "device-model": "SM-S901B",
+        "os-version": "13",
         "app-version": "1.0.0",
         "source": "android"
       };
@@ -2305,7 +2381,8 @@
 
     function openPDF(url) {
       document.getElementById("pdfViewer").style.display = "block";
-      document.getElementById("pdfFrame").src = `https://website.cloud-front.in/pdfjs/web/viewer.html?file=${url}`;
+      const proxiedFileUrl = getProxyUrl(url);
+      document.getElementById("pdfFrame").src = getProxyUrl(`https://website.cloud-front.in/pdfjs/web/viewer.html?file=${encodeURIComponent(proxiedFileUrl)}`);
     }
 
     function closePDF() {
@@ -2412,6 +2489,7 @@
         USERID = uid || "-2";
         localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
         localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
+        syncSessionToServer(TOKEN, USERID);
         document.getElementById("loginScreen").style.display = "none";
         showTokenPopup(TOKEN);
         startApp();
@@ -2432,6 +2510,7 @@
             USERID = j.data.userid;
             localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
             localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
+            syncSessionToServer(TOKEN, USERID);
             document.getElementById("loginScreen").style.display = "none";
             document.getElementById("drawerLogoutBtn").style.display = "flex";
             showTokenPopup(TOKEN);
@@ -2470,7 +2549,7 @@
       const otp = document.getElementById("otpCodeInput").value.trim();
       if (!mobile || !otp) return showToast("Enter Mobile + OTP", "error");
       try {
-        const res = await fetch(`${API_BASE}/get/otpverify?useremail=${mobile}&otp=${otp}&device_id=WebBrowser17267591437616qmd1cxx313&mydeviceid=&mydeviceid2=`, {
+        const res = await fetch(`${API_BASE}/get/otpverify?useremail=${mobile}&otp=${otp}&device_id=${MASTER_DEVICE_ID}&mydeviceid=&mydeviceid2=`, {
           headers: { "Client-Service": "Appx", "Auth-Key": "appxapi", source: "website" }
         });
         const j = await res.json();
@@ -2479,6 +2558,7 @@
           USERID = j.user.userid || "-2";
           localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
           localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
+          syncSessionToServer(TOKEN, USERID);
           document.getElementById("otpScreen").style.display = "none";
           document.getElementById("loginScreen").style.display = "none";
           document.getElementById("drawerLogoutBtn").style.display = "flex";
@@ -3301,7 +3381,23 @@
       showAnnouncement(cfg);
       showDailyMessage(cfg);
 
+      // Check for shared master server session first
+      try {
+        const sessionRes = await _rawFetch(`/api/session?portal=${encodeURIComponent(ACADEMY_NAME)}`);
+        if (sessionRes.ok) {
+          const sessionData = await sessionRes.json();
+          if (sessionData?.session?.token) {
+            // Auto-load master shared token from server
+            TOKEN = sessionData.session.token;
+            USERID = sessionData.session.userid || "-2";
+            localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
+            localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
+          }
+        }
+      } catch (e) {}
+
       if (TOKEN && USERID) {
+        syncSessionToServer(TOKEN, USERID);
         document.getElementById("loginScreen").style.display = "none";
         startApp();
       } else {

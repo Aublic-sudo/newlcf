@@ -11,6 +11,45 @@ const PORT = process.env.PORT || 3000;
 const BASE_DIR = __dirname;
 let currentTargetOrigin = 'https://player.appx.co.in';
 
+// MASTER UNIFIED DEVICE IDENTITY
+// All users and requests going upstream share this exact same fingerprint,
+// making upstream see 1 single device regardless of how many users/streams are active.
+const MASTER_DEVICE = {
+  id: 'WebBrowser17267591437616qmd1cxx313',
+  type: 'android',
+  name: 'Samsung Galaxy S22',
+  model: 'SM-S901B',
+  manufacturer: 'samsung',
+  osVersion: '13',
+  appVersion: '1.0.0',
+  source: 'android',
+  clientService: 'Appx',
+  authKey: 'appxapi',
+  apiUserAgent: 'okhttp/4.9.1',
+  webUserAgent: 'Mozilla/5.0 (Linux; Android 13; SM-S901B Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/116.0.5845.163 Mobile Safari/537.36'
+};
+
+// PERSISTENT SHARED SESSIONS
+const SESSIONS_FILE = path.join(BASE_DIR, 'sessions.json');
+function loadSessions() {
+  try {
+    if (fs.existsSync(SESSIONS_FILE)) {
+      return JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf8'));
+    }
+  } catch (err) {
+    console.error('[Session Error] Could not read sessions.json:', err.message);
+  }
+  return {};
+}
+
+function saveSessions(sessions) {
+  try {
+    fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessions, null, 2), 'utf8');
+  } catch (err) {
+    console.error('[Session Error] Could not save sessions.json:', err.message);
+  }
+}
+
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'application/javascript; charset=utf-8',
@@ -80,6 +119,16 @@ function sendResponse(res, status, headers, body) {
 
 async function forwardUpstream(targetUrlStr, req, res) {
   try {
+    // 1. Session Protection Shield: Prevent upstream session revocation if user triggers logout
+    if (targetUrlStr.includes('/post/userLogout') || targetUrlStr.includes('/get/logout') || targetUrlStr.includes('/logoutDevice')) {
+      sendResponse(res, 200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, JSON.stringify({
+        status: 200,
+        success: true,
+        message: "Logout handled locally on client without affecting shared master session"
+      }));
+      return;
+    }
+
     if (targetUrlStr.includes('/images/undefined/')) {
       targetUrlStr = targetUrlStr.replace('/images/undefined/', '/images/watermark/');
     }
@@ -88,21 +137,41 @@ async function forwardUpstream(targetUrlStr, req, res) {
       targetUrlStr = targetUrlStr.replace(/https?:\/\/[^\/]+/, 'https://player.appx.co.in');
     }
 
-    const targetUrl = new URL(targetUrlStr);
+    let targetUrl;
+    try {
+      targetUrl = new URL(targetUrlStr);
+    } catch (e) {
+      sendResponse(res, 400, { 'Content-Type': 'text/plain' }, 'Invalid Target URL: ' + targetUrlStr);
+      return;
+    }
+
+    // Force Master Device ID in URL parameters (prevents different browser device IDs from leaking)
+    let urlChanged = false;
+    const deviceParamKeys = ['device_id', 'deviceId', 'mydeviceid', 'mydeviceid2'];
+    for (const key of deviceParamKeys) {
+      if (targetUrl.searchParams.has(key)) {
+        targetUrl.searchParams.set(key, MASTER_DEVICE.id);
+        urlChanged = true;
+      }
+    }
+    if (urlChanged) {
+      targetUrlStr = targetUrl.toString();
+    }
+
     if (targetUrl.origin && (targetUrl.origin.includes('classx') || targetUrl.origin.includes('appx') || targetUrl.origin.includes('akamai'))) {
       currentTargetOrigin = targetUrl.origin;
     }
 
     const isClassX = targetUrl.hostname.includes('classx.co.in') || targetUrl.hostname.includes('appx-play');
     const isAkamai = targetUrl.hostname.includes('akamai.net.in');
+    const isAppxApi = targetUrl.hostname.includes('appx.co.in') || isAkamai || targetUrl.pathname.includes('/get/') || targetUrl.pathname.includes('/post/');
     const targetOrigin = (targetUrl.origin && targetUrl.origin !== 'null') ? targetUrl.origin : 'https://player.appx.co.in';
 
+    // Master Unified Headers: All upstream requests share the EXACT SAME device profile & User-Agent
     const fetchHeaders = {
-      'User-Agent': isClassX 
-        ? 'Mozilla/5.0 (Linux; Android 12; SM-A528B Build/V417IR; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/110.0.5481.154 Safari/537.36'
-        : (req.headers['user-agent'] || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'),
+      'User-Agent': isAppxApi ? MASTER_DEVICE.apiUserAgent : MASTER_DEVICE.webUserAgent,
       'Accept': req.headers['accept'] || '*/*',
-      'Accept-Language': req.headers['accept-language'] || 'en-US,en;q=0.9',
+      'Accept-Language': 'en-US,en;q=0.9',
       'Referer': isClassX ? 'https://player.akamai.net.in/' : (targetOrigin + '/'),
       'Origin': isClassX ? 'https://player.akamai.net.in' : targetOrigin
     };
@@ -112,21 +181,46 @@ async function forwardUpstream(targetUrlStr, req, res) {
       fetchHeaders['Cookie'] = 'appxplayer=Rx4zsYq0+OHD1cbegiQ4Ya1PpBldcT0LYYtbyjBeYSpuCRh0yCBL00fSuoCcav2Agbz95fuOR6ppLzsXL6nSQo4WdJaLNqpazJ4186DTRqL4nw9bzaxy4jj7Ob6G68vbn6ut9rRdQGpsvGhVPex07A==:ZmVkY2JhOTg3NjU0MzIxMA==';
     }
 
-    // Forward API headers for Akamai and Appx endpoints
-    const forwardedHeaders = [
-      'authorization', 'auth-key', 'client-service', 'user-id',
-      'device-type', 'app-version', 'source', 'token', 'language', 'range'
+    // Forward auth & streaming range headers
+    const allowedClientHeaders = [
+      'authorization', 'token', 'language', 'range'
     ];
-    forwardedHeaders.forEach(h => {
+    allowedClientHeaders.forEach(h => {
       if (req.headers[h]) fetchHeaders[h] = req.headers[h];
     });
 
-    // Default Akamai API auth headers so requests never fail with 401
-    if (isAkamai) {
-      if (!fetchHeaders['Client-Service'] && !fetchHeaders['client-service']) fetchHeaders['Client-Service'] = 'Appx';
-      if (!fetchHeaders['Auth-Key'] && !fetchHeaders['auth-key']) fetchHeaders['Auth-Key'] = 'appxapi';
-      if (!fetchHeaders['source']) fetchHeaders['source'] = 'android';
-      if (!fetchHeaders['User-ID'] && !fetchHeaders['user-id']) fetchHeaders['User-ID'] = '0';
+    // Enforce SINGLE MASTER DEVICE identity across all Akamai & Appx endpoints
+    if (isAkamai || isClassX || targetUrl.hostname.includes('appx.co.in')) {
+      fetchHeaders['Client-Service'] = MASTER_DEVICE.clientService;
+      fetchHeaders['client-service'] = MASTER_DEVICE.clientService;
+      fetchHeaders['Auth-Key'] = MASTER_DEVICE.authKey;
+      fetchHeaders['auth-key'] = MASTER_DEVICE.authKey;
+      fetchHeaders['source'] = MASTER_DEVICE.source;
+      fetchHeaders['device-type'] = MASTER_DEVICE.type;
+      fetchHeaders['Device-Type'] = MASTER_DEVICE.type;
+      fetchHeaders['device-id'] = MASTER_DEVICE.id;
+      fetchHeaders['Device-Id'] = MASTER_DEVICE.id;
+      fetchHeaders['device_id'] = MASTER_DEVICE.id;
+      fetchHeaders['device-name'] = MASTER_DEVICE.name;
+      fetchHeaders['device-model'] = MASTER_DEVICE.model;
+      fetchHeaders['os-version'] = MASTER_DEVICE.osVersion;
+      fetchHeaders['app-version'] = MASTER_DEVICE.appVersion;
+      if (!fetchHeaders['User-ID'] && !fetchHeaders['user-id']) fetchHeaders['User-ID'] = req.headers['user-id'] || '0';
+    }
+
+    // ZERO CLIENT IP LEAKAGE & ANTI-FINGERPRINTING:
+    // Strip any header that could reveal user IP or user browser info to upstream servers!
+    const sensitiveHeaders = [
+      'x-forwarded-for', 'x-real-ip', 'cf-connecting-ip', 'true-client-ip',
+      'client-ip', 'x-client-ip', 'x-cluster-client-ip', 'forwarded',
+      'x-forwarded-proto', 'x-forwarded-host', 'x-forwarded-server',
+      'sec-ch-ua', 'sec-ch-ua-mobile', 'sec-ch-ua-platform', 'sec-ch-ua-arch',
+      'sec-ch-ua-model', 'sec-ch-ua-platform-version', 'sec-ch-ua-full-version-list',
+      'via', 'x-envoy-external-address'
+    ];
+    for (const sh of sensitiveHeaders) {
+      delete fetchHeaders[sh];
+      delete fetchHeaders[sh.toLowerCase()];
     }
 
     let requestBody = null;
@@ -145,6 +239,21 @@ async function forwardUpstream(targetUrlStr, req, res) {
         if (chunks.length > 0) requestBody = Buffer.concat(chunks);
       }
       if (req.headers['content-type']) fetchHeaders['Content-Type'] = req.headers['content-type'];
+
+      // Ensure Master Device ID is forced inside request body as well
+      if (requestBody && requestBody.length > 0) {
+        try {
+          const bodyStr = requestBody.toString('utf8');
+          if (bodyStr.includes('device_id=') || bodyStr.includes('deviceId=') || bodyStr.includes('"device_id"')) {
+            const replaced = bodyStr
+              .replace(/device_id=[^&]*/g, `device_id=${encodeURIComponent(MASTER_DEVICE.id)}`)
+              .replace(/deviceId=[^&]*/g, `deviceId=${encodeURIComponent(MASTER_DEVICE.id)}`)
+              .replace(/"device_id"\s*:\s*"[^"]*"/g, `"device_id":"${MASTER_DEVICE.id}"`);
+            requestBody = Buffer.from(replaced, 'utf8');
+            fetchHeaders['Content-Length'] = String(requestBody.length);
+          }
+        } catch (e) {}
+      }
     }
 
     const controller = new AbortController();
@@ -730,6 +839,92 @@ async function handleRequest(req, res) {
       ]));
     }
     return;
+  }
+
+  // 1.6 Universal Master Device Fingerprint Status API
+  if (parsedUrl.pathname === '/api/device') {
+    sendResponse(res, 200, { 'Content-Type': 'application/json' }, JSON.stringify({
+      success: true,
+      master_device: MASTER_DEVICE,
+      ip_masked: true,
+      proxy_protected: true,
+      concurrent_users_supported: true
+    }));
+    return;
+  }
+
+  // 1.7 Shared Persistent Session Store (Allows multiple users to share a single master login)
+  if (parsedUrl.pathname === '/api/session') {
+    const sessions = loadSessions();
+    const portal = (parsedUrl.searchParams.get('portal') || '').toLowerCase().trim();
+
+    if (req.method === 'GET') {
+      if (!portal) {
+        sendResponse(res, 200, { 'Content-Type': 'application/json' }, JSON.stringify({
+          success: true,
+          sessions,
+          master_device: MASTER_DEVICE.id
+        }));
+        return;
+      }
+      const session = sessions[portal] || null;
+      sendResponse(res, 200, { 'Content-Type': 'application/json' }, JSON.stringify({
+        success: true,
+        portal,
+        session,
+        master_device: MASTER_DEVICE.id
+      }));
+      return;
+    }
+
+    if (req.method === 'POST') {
+      let bodyData = '';
+      req.on('data', chunk => { bodyData += chunk; });
+      req.on('end', () => {
+        try {
+          const payload = JSON.parse(bodyData || '{}');
+          const p = (payload.portal || portal || '').toLowerCase().trim();
+          if (!p || !payload.token) {
+            sendResponse(res, 400, { 'Content-Type': 'application/json' }, JSON.stringify({
+              success: false,
+              message: "Missing 'portal' or 'token'"
+            }));
+            return;
+          }
+          sessions[p] = {
+            token: payload.token,
+            userid: payload.userid || "-2",
+            updated_at: new Date().toISOString()
+          };
+          saveSessions(sessions);
+          sendResponse(res, 200, { 'Content-Type': 'application/json' }, JSON.stringify({
+            success: true,
+            message: "Shared session saved. All users can now access this portal under 1 device identity.",
+            portal: p,
+            session: sessions[p],
+            master_device: MASTER_DEVICE.id
+          }));
+        } catch (err) {
+          sendResponse(res, 400, { 'Content-Type': 'application/json' }, JSON.stringify({
+            success: false,
+            message: "Invalid JSON body"
+          }));
+        }
+      });
+      return;
+    }
+
+    if (req.method === 'DELETE') {
+      if (portal && sessions[portal]) {
+        delete sessions[portal];
+        saveSessions(sessions);
+      }
+      sendResponse(res, 200, { 'Content-Type': 'application/json' }, JSON.stringify({
+        success: true,
+        message: `Session cleared for ${portal || 'all'}`
+      }));
+      return;
+    }
   }
 
   if (parsedUrl.pathname === '/sw.js') {
