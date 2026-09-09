@@ -835,25 +835,45 @@ async function handleRequest(req, res) {
     return;
   }
 
-  // 1.7 Shared Persistent Session Store (Allows multiple users to share a single master login)
+  // 1.7 Shared Persistent Session Store (Allows multiple portals & users to share a master login)
   if (parsedUrl.pathname === '/api/session') {
     const sessions = loadSessions();
     const portal = (parsedUrl.searchParams.get('portal') || '').toLowerCase().trim();
 
     if (req.method === 'GET') {
-      if (!portal) {
-        sendResponse(res, 200, { 'Content-Type': 'application/json' }, JSON.stringify({
-          success: true,
-          sessions,
-          master_device: MASTER_DEVICE.id
-        }));
-        return;
+      let session = null;
+
+      // 1. Check exact portal match
+      if (portal && sessions[portal]) {
+        session = sessions[portal];
       }
-      const session = sessions[portal] || null;
+
+      // 2. Check portal aliases if not found
+      if (!session && portal) {
+        if (portal.includes('bhainsh') || portal.includes('pathshala')) {
+          session = sessions['bhainskipathshala'] || sessions['bhainsh'];
+        } else if (portal.includes('dhyey')) {
+          session = sessions['dhyeylive'] || sessions['dhyey'];
+        }
+      }
+
+      // 3. Universal Fallback: If portal has no custom session, use master or latest session
+      if (!session) {
+        session = sessions['master'] || sessions['latest'] || null;
+        if (!session) {
+          const allSessions = Object.values(sessions).filter(s => s && s.token);
+          if (allSessions.length > 0) {
+            allSessions.sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
+            session = allSessions[0];
+          }
+        }
+      }
+
       sendResponse(res, 200, { 'Content-Type': 'application/json' }, JSON.stringify({
         success: true,
-        portal,
-        session,
+        portal: portal || 'all',
+        session: session || null,
+        sessions,
         master_device: MASTER_DEVICE.id
       }));
       return;
@@ -865,25 +885,43 @@ async function handleRequest(req, res) {
       req.on('end', () => {
         try {
           const payload = JSON.parse(bodyData || '{}');
-          const p = (payload.portal || portal || '').toLowerCase().trim();
-          if (!p || !payload.token) {
+          const p = (payload.portal || portal || 'master').toLowerCase().trim();
+          if (!payload.token) {
             sendResponse(res, 400, { 'Content-Type': 'application/json' }, JSON.stringify({
               success: false,
-              message: "Missing 'portal' or 'token'"
+              message: "Missing 'token'"
             }));
             return;
           }
-          sessions[p] = {
+          const sessionObj = {
             token: payload.token,
             userid: payload.userid || "-2",
             updated_at: new Date().toISOString()
           };
+
+          // Save under requested portal
+          sessions[p] = sessionObj;
+
+          // Always save as global master & latest session so other portals can immediately use it
+          sessions['master'] = sessionObj;
+          sessions['latest'] = sessionObj;
+
+          // Auto-sync known aliases
+          if (p.includes('dhyey')) {
+            sessions['dhyeylive'] = sessionObj;
+            sessions['dhyey'] = sessionObj;
+          }
+          if (p.includes('bhainsh') || p.includes('pathshala')) {
+            sessions['bhainskipathshala'] = sessionObj;
+            sessions['bhainsh'] = sessionObj;
+          }
+
           saveSessions(sessions);
           sendResponse(res, 200, { 'Content-Type': 'application/json' }, JSON.stringify({
             success: true,
-            message: "Shared session saved. All users can now access this portal under 1 device identity.",
+            message: "Shared session saved across all portals.",
             portal: p,
-            session: sessions[p],
+            session: sessionObj,
             master_device: MASTER_DEVICE.id
           }));
         } catch (err) {

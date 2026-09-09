@@ -2147,8 +2147,8 @@
     }
 
     /* ===== STATE ===== */
-    let TOKEN = localStorage.getItem(`${ACADEMY_NAME}_token`) || "";
-    let USERID = localStorage.getItem(`${ACADEMY_NAME}_userid`) || "-2";
+    let TOKEN = localStorage.getItem(`${ACADEMY_NAME}_token`) || localStorage.getItem('appx_master_token') || "";
+    let USERID = localStorage.getItem(`${ACADEMY_NAME}_userid`) || localStorage.getItem('appx_master_userid') || "-2";
     let CURRENT_COURSE = null;
     let hls = null;
     let courseStart = 0;
@@ -2501,6 +2501,8 @@
         USERID = uid || "-2";
         localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
         localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
+        localStorage.setItem('appx_master_token', TOKEN);
+        localStorage.setItem('appx_master_userid', USERID);
         syncSessionToServer(TOKEN, USERID);
         document.getElementById("loginScreen").style.display = "none";
         showTokenPopup(TOKEN);
@@ -2522,6 +2524,8 @@
             USERID = j.data.userid;
             localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
             localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
+            localStorage.setItem('appx_master_token', TOKEN);
+            localStorage.setItem('appx_master_userid', USERID);
             syncSessionToServer(TOKEN, USERID);
             document.getElementById("loginScreen").style.display = "none";
             document.getElementById("drawerLogoutBtn").style.display = "flex";
@@ -2570,6 +2574,8 @@
           USERID = j.user.userid || "-2";
           localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
           localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
+          localStorage.setItem('appx_master_token', TOKEN);
+          localStorage.setItem('appx_master_userid', USERID);
           syncSessionToServer(TOKEN, USERID);
           document.getElementById("otpScreen").style.display = "none";
           document.getElementById("loginScreen").style.display = "none";
@@ -3421,11 +3427,14 @@
             USERID = sessionData.session.userid || "-2";
             localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
             localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
+            localStorage.setItem('appx_master_token', TOKEN);
+            localStorage.setItem('appx_master_userid', USERID);
           }
         }
       } catch (e) {}
 
-      if (TOKEN && USERID) {
+      if (TOKEN) {
+        if (!USERID) USERID = "-2";
         syncSessionToServer(TOKEN, USERID);
         document.getElementById("loginScreen").style.display = "none";
         startApp();
