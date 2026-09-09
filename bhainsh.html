@@ -1401,24 +1401,34 @@
 
     .close-player {
       position: absolute;
-      top: 12px;
-      right: 12px;
-      background: rgba(0, 0, 0, 0.75);
-      color: white;
-      border: 1px solid var(--border-m);
-      border-radius: 10px;
-      padding: 7px 16px;
+      top: 10px;
+      right: 10px;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 50%;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
-      z-index: 10;
-      font-size: 12px;
+      z-index: 25;
+      font-size: 16px;
       font-weight: 700;
-      font-family: inherit;
-      transition: var(--transition);
+      line-height: 1;
+      padding: 0;
+      transition: background-color 0.2s, transform 0.15s, border-color 0.2s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     }
 
     .close-player:hover {
-      border-color: rgba(244, 63, 94, 0.5);
-      color: #fca5a5;
+      background: rgba(239, 68, 68, 0.9);
+      border-color: rgba(239, 68, 68, 1);
+      transform: scale(1.08);
+      color: #ffffff;
     }
 
     .videoCard {
@@ -2042,12 +2052,12 @@
     </div>
 
     <div id="player" role="region" aria-label="Video player">
-      <button class="close-player" onclick="closePlayer()" aria-label="Close player">✕ Close</button>
+      <button class="close-player" onclick="closePlayer()" aria-label="Close player" title="Close player">✕</button>
       <video id="video" controls autoplay playsinline></video>
     </div>
 
     <div id="player-wrapper">
-      <button class="close-player" onclick="closeProPlayer()" aria-label="Close player">✕ Close</button>
+      <button class="close-player" onclick="closeProPlayer()" aria-label="Close player" title="Close player">✕</button>
       <div id="player-host"></div>
     </div>
     <div id="custom-controls" style="display:none;padding:0 14px 14px">
@@ -2089,6 +2099,8 @@
     function getProxyUrl(url) {
       if (!url || typeof url !== "string") return "";
       if (url.startsWith("/proxy?url=") || url.includes("/proxy?url=")) return url;
+      // Never proxy YouTube URLs - direct embed requested
+      if (url.includes("youtube.com") || url.includes("youtu.be")) return url;
       // Keep relative endpoints (e.g. /api/session, /api/portals) local to our server
       if (url.startsWith("/") && !url.startsWith("//")) return url;
       return PROXY_BASE + encodeURIComponent(url);
@@ -2099,12 +2111,12 @@
     const _rawFetch = window.fetch;
     window.fetch = function(url, opts) {
       if (typeof url === "string") {
-        if ((url.startsWith("http://") || url.startsWith("https://") || url.startsWith("//")) && !url.startsWith(window.location.origin) && !url.includes("/proxy?url=")) {
+        if ((url.startsWith("http://") || url.startsWith("https://") || url.startsWith("//")) && !url.startsWith(window.location.origin) && !url.includes("/proxy?url=") && !url.includes("youtube.com") && !url.includes("youtu.be")) {
           url = getProxyUrl(url);
         }
       } else if (url && typeof url.url === "string") {
         const u = url.url;
-        if ((u.startsWith("http://") || u.startsWith("https://") || u.startsWith("//")) && !u.startsWith(window.location.origin) && !u.includes("/proxy?url=")) {
+        if ((u.startsWith("http://") || u.startsWith("https://") || u.startsWith("//")) && !u.startsWith(window.location.origin) && !u.includes("/proxy?url=") && !u.includes("youtube.com") && !u.includes("youtu.be")) {
           try {
             url = new Request(getProxyUrl(u), url);
           } catch (e) {}
@@ -2116,7 +2128,7 @@
     // Intercept XMLHttpRequest so player libraries (e.g. HLS.js, PDF.js) cannot leak client IP
     const _origXHROpen = window.XMLHttpRequest.prototype.open;
     window.XMLHttpRequest.prototype.open = function(method, url) {
-      if (typeof url === "string" && (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("//")) && !url.startsWith(window.location.origin) && !url.includes("/proxy?url=")) {
+      if (typeof url === "string" && (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("//")) && !url.startsWith(window.location.origin) && !url.includes("/proxy?url=") && !url.includes("youtube.com") && !url.includes("youtu.be")) {
         url = getProxyUrl(url);
       }
       return _origXHROpen.apply(this, [method, url].concat(Array.prototype.slice.call(arguments, 2)));
@@ -2395,7 +2407,7 @@
       const vid = document.getElementById("video");
       if (vid) { vid.pause(); vid.src = ""; }
       if (hls) { hls.destroy(); hls = null; }
-      player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player">✕ Close</button><video id="video" controls autoplay playsinline></video>`;
+      player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player" title="Close player">✕</button><video id="video" controls autoplay playsinline></video>`;
       player.style.display = "none";
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -2809,7 +2821,7 @@
       document.getElementById("content").innerHTML = "";
       document.getElementById("content-grid").innerHTML = "";
       document.getElementById("live-area").innerHTML = "";
-      document.getElementById("player").innerHTML = '<button class="close-player" onclick="closePlayer()" aria-label="Close player">✕ Close</button><video id="video" controls autoplay playsinline></video>';
+      document.getElementById("player").innerHTML = '<button class="close-player" onclick="closePlayer()" aria-label="Close player" title="Close player">✕</button><video id="video" controls autoplay playsinline></video>';
       const vid = document.getElementById("video");
       if (vid) { vid.pause(); vid.src = ""; }
       if (hls) { hls.destroy(); hls = null; }
@@ -3163,8 +3175,9 @@
         if (data.ytFlag == 1 || data.ytFlagWeb == 1 || data.ytFlag === '1' || data.ytFlagWeb === '1' || ytId) {
           const validYtId = ytId || getYouTubeId(data);
           if (validYtId) {
-            const pUrl = getProxyUrl(`https://www.youtube.com/embed/${validYtId}?autoplay=1&enablejsapi=1&rel=0`);
-            player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player">✕ Close</button><iframe src="${pUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;height:100%;border:none;position:absolute;top:0;left:0" title="Video Player"></iframe>`;
+            closeProPlayer();
+            const ytEmbedUrl = `https://www.youtube.com/embed/${validYtId}?autoplay=1&rel=0`;
+            player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player" title="Close player">✕</button><iframe src="${ytEmbedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;height:100%;border:none;position:absolute;top:0;left:0" title="YouTube Player"></iframe>`;
             player.style.display = "block";
             window.scrollTo({ top: 0, behavior: "smooth" });
             return;
@@ -3172,16 +3185,18 @@
         }
 
         if (data.video_player_url && data.video_player_token) {
+          closeProPlayer();
           const pUrl = data.video_player_url.includes(data.video_player_token)
             ? data.video_player_url
             : (data.video_player_url + data.video_player_token);
-          player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player">✕ Close</button><iframe src="${getProxyUrl(pUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen title="Video Player"></iframe>`;
+          player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player" title="Close player">✕</button><iframe src="${getProxyUrl(pUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen title="Video Player"></iframe>`;
           player.style.display = "block";
           window.scrollTo({ top: 0, behavior: "smooth" });
           return;
         }
 
         if (data.download_links?.length || data.download_link) {
+          closeProPlayer();
           const enc = data.download_links?.[0]?.path || data.download_link;
           const realLink = decrypt(enc).trim().replace(/\s/g, "");
           player.style.display = "block";
@@ -3196,10 +3211,11 @@
         }
 
         if (data.encrypted_links?.length) {
+          closeProPlayer();
           const obj = data.encrypted_links[0];
           let k2 = decode_base64(decrypt(obj.key)), da = decrypt(obj.path);
           const pUrl = "https://appx-play.classx.co.in/combined-img-player?isMobile=true&videoPlayer=hls&urls=" + encodeURIComponent(da) + "&key=" + encodeURIComponent(k2);
-          player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player">✕ Close</button><iframe src="${getProxyUrl(pUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen title="Video Player"></iframe>`;
+          player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player" title="Close player">✕</button><iframe src="${getProxyUrl(pUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen title="Video Player"></iframe>`;
           player.style.display = "block";
           window.scrollTo({ top: 0, behavior: "smooth" });
           return;
@@ -3227,6 +3243,7 @@
     }
 
     async function playVideoInPro(vidId, item) {
+      closePlayer();
       const host = document.getElementById("player-host");
       document.getElementById("player-wrapper").style.display = "block";
       document.getElementById("custom-controls").style.display = "block";
@@ -3259,10 +3276,9 @@
         if (isYt || ytId) {
           const targetYtId = ytId || getYouTubeId(data, item);
           if (targetYtId) {
-            const ytEmbedUrl = `https://www.youtube.com/embed/${targetYtId}?autoplay=1&enablejsapi=1&rel=0`;
-            const proxiedYtUrl = getProxyUrl(ytEmbedUrl);
+            const ytEmbedUrl = `https://www.youtube.com/embed/${targetYtId}?autoplay=1&rel=0`;
             host.innerHTML = `<iframe
-              src="${proxiedYtUrl}"
+              src="${ytEmbedUrl}"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowfullscreen
               style="width:100%;height:100%;border:none;position:absolute;top:0;left:0"
@@ -3302,8 +3318,8 @@
         }
 
         if (ytId) {
-          const ytEmbedUrl = `https://www.youtube.com/embed/${ytId}?autoplay=1&enablejsapi=1&rel=0`;
-          host.innerHTML = `<iframe src="${getProxyUrl(ytEmbedUrl)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;height:100%;border:none;position:absolute;top:0;left:0" title="YouTube Player"></iframe>`;
+          const ytEmbedUrl = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`;
+          host.innerHTML = `<iframe src="${ytEmbedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;height:100%;border:none;position:absolute;top:0;left:0" title="YouTube Player"></iframe>`;
           return;
         }
 

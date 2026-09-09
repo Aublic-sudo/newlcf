@@ -129,6 +129,15 @@ async function forwardUpstream(targetUrlStr, req, res) {
       return;
     }
 
+    // YouTube embeds should never be proxied to avoid player script crashes (direct embed)
+    if (targetUrlStr.includes('youtube.com') || targetUrlStr.includes('youtu.be')) {
+      sendResponse(res, 302, {
+        'Location': targetUrlStr,
+        'Access-Control-Allow-Origin': '*'
+      }, '');
+      return;
+    }
+
     if (targetUrlStr.includes('/images/undefined/')) {
       targetUrlStr = targetUrlStr.replace('/images/undefined/', '/images/watermark/');
     }
@@ -362,45 +371,6 @@ async function forwardUpstream(targetUrlStr, req, res) {
     width: 0 !important;
     height: 0 !important;
   }
-
-  /* Embedded Close Button (Top-Right "✕") */
-  #appx-inline-close-btn {
-    position: fixed;
-    top: 10px;
-    right: 12px;
-    z-index: 2147483647;
-    background: rgba(15, 23, 42, 0.65);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #ffffff;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    padding: 0;
-    transition: background-color 0.2s ease, transform 0.15s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  }
-  #appx-inline-close-btn:hover {
-    background: rgba(239, 68, 68, 0.85);
-    border-color: rgba(239, 68, 68, 1);
-    transform: scale(1.1);
-  }
-  #appx-inline-close-btn svg {
-    width: 18px;
-    height: 18px;
-    stroke: currentColor;
-    stroke-width: 2.5;
-    fill: none;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  
 </style>
 <script>
 (function() {
@@ -680,20 +650,6 @@ async function forwardUpstream(targetUrlStr, req, res) {
     } catch(err) {}
   }
 
-  function injectCloseBtn() {
-    if (document.getElementById('appx-inline-close-btn')) return;
-    var closeBtn = document.createElement('button');
-    closeBtn.type = 'button';
-    closeBtn.id = 'appx-inline-close-btn';
-    closeBtn.title = 'Close / Exit Player (Esc)';
-    closeBtn.setAttribute('aria-label', 'Close player');
-    closeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
-    closeBtn.onclick = closePlayerAction;
-    if (document.body) document.body.appendChild(closeBtn);
-  }
-
-  
-
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
       closePlayerAction(e);
@@ -706,8 +662,6 @@ async function forwardUpstream(targetUrlStr, req, res) {
     _domTimer = setTimeout(function() {
       _domTimer = null;
       purgeReportBtn();
-      injectCloseBtn();
-      
       patchWatermarkFunctions();
     }, 100);
   }
