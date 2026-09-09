@@ -1,0 +1,3228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+
+  <meta name="description" content="Academy Dashboard - Access your courses, live classes, and study materials" />
+  <meta name="keywords" content="academy, courses, online learning, live classes" />
+  <meta name="author" content="Academy" />
+  <meta name="theme-color" content="#0a0418" />
+
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
+
+  <meta property="og:title" content="Academy Dashboard" />
+  <meta property="og:description" content="Access your courses and live classes" />
+  <meta property="og:type" content="website" />
+
+  <title>Academy Dashboard</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700&display=swap"
+    rel="stylesheet" />
+
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>" />
+
+  <style>
+    /* ═══════════════════════ CSS VARIABLES ═══════════════════════ */
+    :root {
+      --bg: #0a0418;
+      --bg2: #120827;
+      --bg3: #1a0f3a;
+      --card: rgba(26, 15, 58, 0.7);
+      --card-hover: rgba(38, 22, 82, 0.85);
+      --card-solid: #1a0f3a;
+      --glass: rgba(255, 255, 255, 0.03);
+      --glass-b: rgba(255, 255, 255, 0.06);
+      --glass-s: rgba(255, 255, 255, 0.10);
+      --primary: #a855f7;
+      --primary-2: #8b5cf6;
+      --primary-3: #7c3aed;
+      --secondary: #ec4899;
+      --accent: #06b6d4;
+      --accent-g: linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #06b6d4 100%);
+      --accent-g2: linear-gradient(135deg, #a855f7, #8b5cf6);
+      --accent-g3: linear-gradient(135deg, #ec4899, #a855f7);
+      --emerald: #10b981;
+      --red: #f43f5e;
+      --amber: #fbbf24;
+      --text: #f5f3ff;
+      --text-dim: #6b5b95;
+      --text-mid: #a89bc9;
+      --text-soft: #c4b5fd;
+      --border: rgba(168, 85, 247, 0.12);
+      --border-m: rgba(168, 85, 247, 0.22);
+      --border-a: rgba(168, 85, 247, 0.45);
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      --shadow-glow: 0 0 40px rgba(168, 85, 247, 0.25);
+      --radius: 20px;
+      --radius-sm: 12px;
+      --radius-xs: 8px;
+      --header-h: 64px;
+      --transition: 0.2s ease;
+      --bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* ═══════════════════════ RESET & BASE ═══════════════════════ */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      touch-action: manipulation;
+      min-height: 100%;
+      overscroll-behavior: none;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      /* ✅ OPTIMIZED: Simplified background - single gradient instead of 4 */
+      background-image:
+        radial-gradient(ellipse 90% 70% at 0% 0%, rgba(168, 85, 247, 0.18) 0%, transparent 55%),
+        radial-gradient(ellipse 70% 60% at 100% 100%, rgba(236, 72, 153, 0.12) 0%, transparent 55%);
+      background-attachment: fixed;
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      letter-spacing: -0.01em;
+    }
+
+    /* ✅ REMOVED: Animated blob - was causing constant repaints */
+    /* ✅ REMOVED: Noise overlay - was causing GPU work */
+
+    :focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    ::selection {
+      background: rgba(168, 85, 247, 0.35);
+      color: var(--text);
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 99px;
+    }
+
+    /* ═══════════════════════ TOAST ═══════════════════════ */
+    .toast-container {
+      position: fixed;
+      top: calc(var(--header-h) + 12px);
+      right: 14px;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: rgba(18, 8, 39, 0.95);
+      border: 1px solid var(--border-m);
+      border-radius: 14px;
+      padding: 14px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+      animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+      pointer-events: auto;
+      max-width: 340px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .toast::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--primary);
+    }
+
+    .toast.success {
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .toast.success::before {
+      background: var(--emerald);
+    }
+
+    .toast.error {
+      border-color: rgba(244, 63, 94, 0.4);
+    }
+
+    .toast.error::before {
+      background: var(--red);
+    }
+
+    .toast.info::before {
+      background: var(--accent);
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateX(120px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes toastOut {
+      from {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      to {
+        opacity: 0;
+        transform: translateX(120px);
+      }
+    }
+
+    /* ═══════════════════════ SKELETON ═══════════════════════ */
+    .skeleton {
+      background: linear-gradient(90deg, var(--glass) 25%, var(--glass-s) 50%, var(--glass) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius-sm);
+    }
+
+    .skeleton-card {
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+
+    .skeleton-thumb {
+      aspect-ratio: 16/10;
+      width: 100%;
+    }
+
+    .skeleton-text {
+      height: 14px;
+      margin: 12px;
+      width: 70%;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+
+      100% {
+        background-position: 200% 0;
+      }
+    }
+
+    .scroll-top {
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: var(--accent-g2);
+      border: 1px solid var(--border-a);
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(12px);
+      transition: opacity 0.25s, transform 0.25s, visibility 0.25s;
+      box-shadow: 0 8px 24px rgba(168, 85, 247, 0.4);
+    }
+
+    .scroll-top.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .scroll-top:hover {
+      transform: translateY(-4px);
+    }
+
+    /* ═══════════════════════ HEADER ═══════════════════════ */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      background: rgba(10, 4, 24, 0.92);
+      /* ✅ OPTIMIZED: Reduced blur from 28px to 12px */
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      transition: box-shadow 0.3s;
+    }
+
+    .header.scrolled {
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .h-hamburger {
+      width: 42px;
+      height: 42px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--glass-b);
+      flex-shrink: 0;
+      transition: var(--transition);
+    }
+
+    .h-hamburger:hover {
+      border-color: var(--border-a);
+    }
+
+    .h-hamburger:active {
+      transform: scale(0.95);
+    }
+
+    .h-hamburger span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: var(--text-soft);
+      border-radius: 99px;
+      transition: 0.3s;
+    }
+
+    .h-hamburger.open span:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+      background: var(--primary);
+    }
+
+    .h-hamburger.open span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .h-hamburger.open span:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+      background: var(--primary);
+    }
+
+    #headerTitle {
+      flex: 1;
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: -0.5px;
+      font-family: 'Space Grotesk', sans-serif;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .h-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--glass-b);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-soft);
+      font-size: 16px;
+      flex-shrink: 0;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+
+    .h-btn:hover {
+      border-color: var(--border-a);
+      color: var(--primary);
+    }
+
+    .h-btn:active {
+      transform: scale(0.92);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--emerald);
+      flex-shrink: 0;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+    }
+
+    .status-dot.offline {
+      background: var(--red);
+      box-shadow: 0 0 8px rgba(244, 63, 94, 0.6);
+    }
+
+    #searchBar {
+      display: none;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: var(--header-h);
+      background: rgba(10, 4, 24, 0.98);
+      padding: 11px 14px;
+      gap: 10px;
+      align-items: center;
+      border-bottom: 1px solid var(--border-a);
+      z-index: 9999;
+    }
+
+    #searchBar.visible {
+      display: flex;
+    }
+
+    #searchInput {
+      flex: 1;
+      background: var(--glass-s);
+      border: 1px solid var(--border-m);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      padding: 0 16px;
+      height: 42px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #searchInput:focus {
+      border-color: var(--primary);
+    }
+
+    #searchInput::placeholder {
+      color: var(--text-dim);
+    }
+
+    .search-close {
+      cursor: pointer;
+      color: var(--text-mid);
+      font-size: 20px;
+      padding: 6px 10px;
+      border-radius: 8px;
+    }
+
+    .search-close:hover {
+      color: var(--red);
+    }
+
+    /* ═══════════════════════ DRAWER ═══════════════════════ */
+    #drawerOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 300;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+
+    #drawerOverlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    #drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 78vw;
+      max-width: 300px;
+      z-index: 400;
+      background: #120827;
+      border-right: 1px solid var(--border-m);
+      transform: translateX(-105%);
+      transition: transform 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      overscroll-behavior: contain;
+    }
+
+    #drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      padding: 28px 22px 24px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(168, 85, 247, 0.1), transparent);
+    }
+
+    .drawer-logo {
+      font-weight: 900;
+      font-size: 24px;
+      letter-spacing: -0.8px;
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--accent-g);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+
+    .drawer-sub {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+
+    .drawer-nav {
+      padding: 18px 14px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .drawer-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      cursor: pointer;
+      color: var(--text-mid);
+      font-weight: 600;
+      font-size: 14px;
+      transition: var(--transition);
+      margin-bottom: 6px;
+      border: 1px solid transparent;
+    }
+
+    .drawer-item:hover {
+      background: var(--glass-s);
+      color: var(--text);
+      border-color: var(--border-m);
+    }
+
+    .drawer-item.active {
+      background: rgba(168, 85, 247, 0.12);
+      color: var(--primary);
+      border-color: var(--border-a);
+    }
+
+    .drawer-item .di-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--glass-s);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+
+    .drawer-item.logout-item {
+      color: var(--red);
+    }
+
+    .drawer-item.logout-item:hover {
+      background: rgba(244, 63, 94, 0.1);
+      border-color: rgba(244, 63, 94, 0.25);
+      color: #fca5a5;
+    }
+
+    .drawer-item.logout-item .di-icon {
+      background: rgba(244, 63, 94, 0.1);
+      border-color: rgba(244, 63, 94, 0.2);
+    }
+
+    .drawer-footer {
+      padding: 18px 22px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-dim);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    /* ═══════════════════════ FULL SCREEN ═══════════════════════ */
+    .fullScreen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 60% at 0% 0%, rgba(168, 85, 247, 0.25) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 50% at 100% 100%, rgba(236, 72, 153, 0.18) 0%, transparent 55%);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    /* ═══════════════════════ AUTH BOX ═══════════════════════ */
+    .authBox {
+      background: linear-gradient(145deg, rgba(26, 15, 58, 0.9), rgba(18, 8, 39, 0.95));
+      border: 1px solid var(--border-m);
+      padding: 40px 30px;
+      border-radius: 28px;
+      width: 100%;
+      max-width: 420px;
+      margin: auto;
+      box-shadow:
+        0 32px 80px rgba(0, 0, 0, 0.6),
+        0 0 80px rgba(168, 85, 247, 0.15);
+      position: relative;
+      overflow: hidden;
+      animation: authIn 0.5s ease;
+    }
+
+    @keyframes authIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .authBox::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--accent-g);
+    }
+
+    .auth-icon {
+      width: 76px;
+      height: 76px;
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2));
+      border: 1px solid var(--border-a);
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      margin: 0 auto 24px;
+      box-shadow: 0 8px 32px rgba(168, 85, 247, 0.3);
+    }
+
+    .authBox h3 {
+      text-align: center;
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: -0.8px;
+      margin-bottom: 8px;
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .auth-sub {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-mid);
+      margin-bottom: 28px;
+    }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 18px 0;
+      color: var(--text-dim);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-m);
+    }
+
+    .input-wrap {
+      position: relative;
+      margin-bottom: 14px;
+    }
+
+    .input-wrap .i-icon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      font-size: 16px;
+      pointer-events: none;
+      transition: color 0.2s;
+    }
+
+    .input-wrap:focus-within .i-icon {
+      color: var(--primary);
+    }
+
+    input:not([type="checkbox"]):not([type="radio"]) {
+      width: 100%;
+      padding: 15px 15px 15px 46px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border-m);
+      border-radius: 14px;
+      color: var(--text);
+      outline: none;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s, background 0.2s;
+      font-weight: 500;
+    }
+
+    input:not([type="checkbox"]):not([type="radio"]):focus {
+      border-color: var(--primary);
+      background: rgba(168, 85, 247, 0.05);
+    }
+
+    input::placeholder {
+      color: var(--text-dim);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 15px;
+      background: var(--accent-g2);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      letter-spacing: 0.2px;
+      font-family: inherit;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 8px 24px rgba(168, 85, 247, 0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(168, 85, 247, 0.5);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-ghost {
+      width: 100%;
+      padding: 14px;
+      background: var(--glass-s);
+      border: 1px solid var(--border-m);
+      color: var(--text-soft);
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      font-family: inherit;
+      transition: var(--transition);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--border-a);
+      color: var(--text);
+    }
+
+    .otp-link {
+      background: none;
+      border: none;
+      color: var(--primary);
+      width: 100%;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      padding: 14px;
+      text-align: center;
+      font-weight: 600;
+      opacity: 0.85;
+      transition: opacity 0.2s;
+      border-radius: 10px;
+    }
+
+    .otp-link:hover {
+      opacity: 1;
+    }
+
+    /* ═══════════════════════ MODALS ═══════════════════════ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-box {
+      background: linear-gradient(145deg, rgba(26, 15, 58, 0.98), rgba(18, 8, 39, 0.98));
+      border: 1px solid var(--border-m);
+      padding: 36px 30px;
+      border-radius: 28px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+      position: relative;
+      overflow: hidden;
+      animation: modalIn 0.3s ease;
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .modal-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--accent-g);
+    }
+
+    .modal-icon {
+      font-size: 54px;
+      margin-bottom: 18px;
+      display: inline-block;
+    }
+
+    .modal-title {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.6px;
+      margin-bottom: 8px;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .modal-desc {
+      font-size: 13px;
+      color: var(--text-mid);
+      margin-bottom: 22px;
+      line-height: 1.6;
+    }
+
+    .token-copy-row {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border-m);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    #tokenDisplay {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text-soft);
+      font-size: 11px;
+      outline: none;
+      padding: 0;
+      width: 0;
+      font-family: 'Courier New', monospace;
+    }
+
+    .copy-btn {
+      background: var(--glass-s);
+      border: 1px solid var(--border-m);
+      color: var(--primary);
+      padding: 7px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: inherit;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+
+    .copy-btn:hover {
+      background: rgba(168, 85, 247, 0.15);
+      border-color: var(--border-a);
+    }
+
+    #logoutModal .modal-box::before {
+      background: linear-gradient(90deg, var(--red), #f97316);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-actions .btn-ghost {
+      flex: 1;
+    }
+
+    .modal-actions .btn-danger {
+      flex: 1;
+      padding: 14px;
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(249, 115, 22, 0.25));
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      border-radius: 14px;
+      color: #fca5a5;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 14px;
+      font-family: inherit;
+      transition: var(--transition);
+    }
+
+    .modal-actions .btn-danger:hover {
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.4), rgba(249, 115, 22, 0.4));
+    }
+
+    /* ═══════════════════════ HOME ═══════════════════════ */
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 28px 16px 14px;
+    }
+
+    .section-label h2 {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label .s-count {
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid var(--border-a);
+      color: var(--primary);
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 99px;
+      letter-spacing: 0.5px;
+    }
+
+    .section-label .s-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border-m), transparent);
+    }
+
+    #favSection {
+      margin: 8px 14px;
+      background: linear-gradient(145deg, rgba(168, 85, 247, 0.06), rgba(236, 72, 153, 0.04));
+      border: 1px solid var(--border-m);
+      border-radius: 22px;
+      overflow: hidden;
+      display: none;
+      position: relative;
+    }
+
+    #favSection::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--accent-g3);
+    }
+
+    .fav-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .fav-header .fav-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--secondary), var(--primary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 4px 16px rgba(236, 72, 153, 0.35);
+    }
+
+    .fav-header span {
+      background: var(--accent-g3);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    #favList {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+      padding: 14px;
+    }
+
+    #purchasedSection {
+      display: none;
+    }
+
+    #purchasedList {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      padding: 0 14px 4px;
+    }
+
+    #courseList {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      padding: 0 14px 4px;
+    }
+
+    @media(min-width: 480px) {
+
+      #courseList,
+      #purchasedList {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media(min-width: 768px) {
+
+      #courseList,
+      #purchasedList {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    @media(min-width: 1024px) {
+
+      #courseList,
+      #purchasedList {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+
+      .header {
+        padding: 0 24px;
+      }
+
+      .section-label {
+        padding: 32px 24px 14px;
+      }
+
+      #courseList,
+      #purchasedList {
+        padding: 0 24px 4px;
+      }
+    }
+
+    @media(min-width: 1200px) {
+
+      #courseList,
+      #purchasedList {
+        grid-template-columns: repeat(5, 1fr);
+      }
+    }
+
+    /* ═══════════════════════ ⚡ OPTIMIZED CARD ═══════════════════════ */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      cursor: pointer;
+      /* ✅ OPTIMIZED: Simple transition, only on transform/border/shadow */
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      /* ✅ CRITICAL: GPU layer promotion for smooth scroll */
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+      /* ✅ CRITICAL: Tells browser to skip rendering off-screen cards */
+      content-visibility: auto;
+      contain-intrinsic-size: auto 260px;
+      /* ✅ REMOVED backdrop-filter - it was the BIGGEST lag cause */
+    }
+
+    /* ✅ REMOVED gradient border pseudo-element - was very expensive */
+
+    .card:hover {
+      /* ✅ OPTIMIZED: Smaller transform, lighter shadow */
+      transform: translateY(-4px);
+      border-color: var(--border-a);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .card:active {
+      transform: translateY(-2px);
+    }
+
+    .thumb-wrap {
+      position: relative;
+      aspect-ratio: 16/10;
+      overflow: hidden;
+      background: #0a0418;
+    }
+
+    .thumb {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      /* ✅ OPTIMIZED: faster zoom, no heavy easing */
+      transition: transform 0.3s ease;
+      /* ✅ Hint browser for faster decoding */
+      will-change: auto;
+    }
+
+    /* ✅ OPTIMIZED: smaller scale = less GPU work */
+    .card:hover .thumb {
+      transform: scale(1.05);
+    }
+
+    .thumb-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(10, 4, 24, 0.9));
+      pointer-events: none;
+    }
+
+    .card-id {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.75);
+      padding: 3px 10px;
+      border-radius: 7px;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text-soft);
+      letter-spacing: 0.5px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .card-fav-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-soft);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.2s;
+      font-family: inherit;
+    }
+
+    .card-fav-btn.saved {
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.4), rgba(168, 85, 247, 0.4));
+      border-color: rgba(236, 72, 153, 0.6);
+      color: #f9a8d4;
+    }
+
+    .card-fav-btn:hover {
+      transform: scale(1.08);
+    }
+
+    .courseTitle {
+      padding: 12px 14px 14px;
+      font-size: 12.5px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      line-height: 1.45;
+      color: var(--text);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    #courseList .card {
+      display: block;
+    }
+
+    .purchasedBadge {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: linear-gradient(135deg, var(--emerald), #059669);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 4px 11px;
+      border-radius: 99px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+    }
+
+    .load-more-btn {
+      display: block;
+      margin: 20px auto 30px;
+      padding: 14px 36px;
+      background: var(--glass-s);
+      border: 1px solid var(--border-m);
+      border-radius: 14px;
+      color: var(--text-soft);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: var(--transition);
+    }
+
+    .load-more-btn:hover {
+      border-color: var(--border-a);
+      color: var(--primary);
+    }
+
+    /* ═══════════════════════ COURSE VIEW ═══════════════════════ */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10, 4, 24, 0.92);
+      backdrop-filter: blur(10px);
+      overflow-x: auto;
+      scrollbar-width: none;
+      position: sticky;
+      top: var(--header-h);
+      z-index: 100;
+    }
+
+    .tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab {
+      flex: 1;
+      min-width: fit-content;
+      text-align: center;
+      padding: 16px 14px;
+      cursor: pointer;
+      color: var(--text-dim);
+      font-weight: 700;
+      white-space: nowrap;
+      font-size: 12px;
+      position: relative;
+      transition: color 0.2s;
+      letter-spacing: -0.2px;
+      border: none;
+      background: none;
+      font-family: inherit;
+    }
+
+    .tab:hover {
+      color: var(--text-mid);
+    }
+
+    .tab.active {
+      color: var(--primary);
+    }
+
+    .tab.active::after {
+      content: "";
+      position: absolute;
+      bottom: -1px;
+      left: 15%;
+      width: 70%;
+      height: 3px;
+      background: var(--accent-g2);
+      border-radius: 99px;
+    }
+
+    #player {
+      display: none;
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #000;
+      margin: 14px 0;
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+    }
+
+    #player iframe,
+    #player video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      border: none;
+    }
+
+    #player-wrapper {
+      display: none;
+      position: relative;
+      width: calc(100% - 28px);
+      padding-top: 56.25%;
+      background: #000;
+      border-radius: 18px;
+      overflow: hidden;
+      margin: 14px 14px;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+    }
+
+    #player-wrapper iframe,
+    #player-wrapper video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .close-player {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(0, 0, 0, 0.75);
+      color: white;
+      border: 1px solid var(--border-m);
+      border-radius: 10px;
+      padding: 7px 16px;
+      cursor: pointer;
+      z-index: 10;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: inherit;
+      transition: var(--transition);
+    }
+
+    .close-player:hover {
+      border-color: rgba(244, 63, 94, 0.5);
+      color: #fca5a5;
+    }
+
+    .videoCard {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 15px 17px;
+      margin: 0 12px 10px;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s, background 0.2s;
+      font-size: 13px;
+      font-weight: 600;
+      transform: translateZ(0);
+    }
+
+    .videoCard:hover {
+      border-color: var(--border-a);
+      background: var(--card-hover);
+      transform: translateX(4px);
+    }
+
+    .folder {
+      margin: 12px 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    .folderTitle {
+      padding: 15px 18px;
+      font-weight: 800;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Space Grotesk', sans-serif;
+      background: linear-gradient(90deg, rgba(168, 85, 247, 0.08), transparent);
+      color: var(--text);
+    }
+
+    .folderTitle::before {
+      content: '';
+      width: 4px;
+      height: 18px;
+      background: var(--accent-g2);
+      border-radius: 2px;
+    }
+
+    .folderGrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 12px;
+    }
+
+    @media(max-width:480px) {
+      .folderGrid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .list-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 15px 17px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: transform 0.2s, border-color 0.2s, background 0.2s;
+      transform: translateZ(0);
+    }
+
+    .list-item:hover {
+      border-color: var(--border-a);
+      background: var(--card-hover);
+      transform: translateX(4px);
+    }
+
+    .meta-info {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 6px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .meta-badge {
+      background: var(--glass-s);
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      color: var(--text-mid);
+      font-weight: 600;
+    }
+
+    .li-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--glass-s), var(--glass-b));
+      border: 1px solid var(--border-m);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .live-tag {
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.2), rgba(249, 115, 22, 0.15));
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      color: #fca5a5;
+      padding: 14px 20px;
+      border-radius: 16px;
+      font-weight: 800;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 16px rgba(244, 63, 94, 0.2);
+    }
+
+    .live-tag:hover {
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.3), rgba(249, 115, 22, 0.25));
+      border-color: rgba(244, 63, 94, 0.6);
+    }
+
+    .live-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--red);
+      border-radius: 50%;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7);
+      }
+
+      50% {
+        box-shadow: 0 0 0 6px rgba(244, 63, 94, 0);
+      }
+    }
+
+    #loader {
+      text-align: center;
+      padding: 48px;
+      display: none;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      margin: 0 auto;
+      border: 3px solid var(--border-m);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .fullscreen-btn {
+      display: block;
+      margin: 0 14px 14px;
+      padding: 13px;
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(236, 72, 153, 0.15));
+      border: 1px solid var(--border-a);
+      border-radius: 14px;
+      color: var(--primary);
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: var(--transition);
+      text-align: center;
+    }
+
+    .fullscreen-btn:hover {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(236, 72, 153, 0.25));
+    }
+
+    .dl-btn {
+      background: var(--glass-s);
+      border: 1px solid var(--border-m);
+      color: var(--text-soft);
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: inherit;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+
+    .dl-btn:hover {
+      border-color: var(--border-a);
+      color: var(--primary);
+    }
+
+    #pdfViewer {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 9999;
+    }
+
+    #pdfFrame {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .pdf-close {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 10000;
+      background: linear-gradient(135deg, var(--red), #f97316);
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 800;
+      font-family: inherit;
+      font-size: 14px;
+      transition: transform 0.2s;
+      box-shadow: 0 8px 24px rgba(244, 63, 94, 0.4);
+    }
+
+    .pdf-close:hover {
+      transform: scale(1.05);
+    }
+
+    #maintenanceScreen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 99999;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    #maintenanceScreen h2 {
+      color: var(--primary);
+      margin: 22px 0 12px;
+      font-size: 24px;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    #maintenanceScreen p {
+      color: var(--text-mid);
+      max-width: 320px;
+      line-height: 1.6;
+    }
+
+    .retry-btn {
+      margin-top: 26px;
+      padding: 14px 32px;
+      background: var(--accent-g2);
+      border: none;
+      border-radius: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      transition: transform 0.2s;
+      box-shadow: 0 8px 24px rgba(168, 85, 247, 0.4);
+    }
+
+    .retry-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    #updatePopup {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 99999;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .update-box {
+      background: linear-gradient(145deg, rgba(26, 15, 58, 0.98), rgba(18, 8, 39, 0.98));
+      border: 1px solid var(--border-a);
+      padding: 36px;
+      border-radius: 28px;
+      text-align: center;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+    }
+
+    .update-box h3 {
+      color: var(--primary);
+      margin-bottom: 14px;
+      font-size: 22px;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .update-box p {
+      color: var(--text-mid);
+      font-size: 13px;
+      margin-bottom: 22px;
+      line-height: 1.6;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 56px 20px;
+    }
+
+    .empty-state .es-icon {
+      font-size: 52px;
+      margin-bottom: 16px;
+      opacity: 0.7;
+      display: inline-block;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+      color: var(--text-mid);
+      font-weight: 500;
+    }
+
+    .sectionHeader {
+      padding: 20px 16px 4px;
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--text-mid);
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    #homeScreen {
+      padding-bottom: 28px;
+    }
+
+    .announce-bar {
+      margin: 12px 14px;
+      padding: 14px 18px;
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.08));
+      border: 1px solid var(--border-a);
+      border-radius: 14px;
+      font-size: 13px;
+      color: var(--text-soft);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 500;
+    }
+
+    .mt-10 {
+      margin-top: 10px;
+    }
+
+    @media print {
+
+      .header,
+      .drawer,
+      #drawerOverlay,
+      .scroll-top {
+        display: none !important;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* ✅ Low-end device optimizations */
+    @media (max-width: 500px) {
+      .card:hover .thumb {
+        transform: none;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <button class="scroll-top" id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})"
+    aria-label="Scroll to top">↑</button>
+
+  <div id="maintenanceScreen" role="alert">
+    <img id="maintImg" src="" alt="Maintenance"
+      style="width:110px;border-radius:18px;box-shadow:0 16px 40px rgba(168,85,247,0.3)" />
+    <h2>🚧 Under Maintenance</h2>
+    <p id="maintMsg"></p>
+    <button class="retry-btn" onclick="location.reload()">🔄 Retry</button>
+  </div>
+
+  <div id="updatePopup" role="dialog" aria-modal="true" aria-label="Update required">
+    <div class="update-box">
+      <h3>🚀 Update Required</h3>
+      <p id="updateMsg"></p>
+      <button id="updateBtn" class="btn-primary" style="box-shadow:none">⬇ Download Update</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="logoutModal" role="dialog" aria-modal="true" aria-label="Logout confirmation">
+    <div class="modal-box">
+      <div class="modal-icon">🔓</div>
+      <div class="modal-title">Logout?</div>
+      <div class="modal-desc">You'll need to login again to access your courses.</div>
+      <div class="modal-actions">
+        <button class="btn-ghost"
+          onclick="document.getElementById('logoutModal').classList.remove('show')">Cancel</button>
+        <button class="btn-danger" onclick="doLogout()">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="tokenPopup" role="dialog" aria-modal="true" aria-label="Login successful">
+    <div class="modal-box">
+      <div class="modal-icon">✅</div>
+      <div class="modal-title">Login Successful!</div>
+      <div class="modal-desc">Save your access token below for future use.</div>
+      <div class="token-copy-row">
+        <input id="tokenDisplay" readonly aria-label="Access token" />
+        <button class="copy-btn" onclick="copyToken()">Copy</button>
+      </div>
+      <button class="btn-primary" onclick="closeTokenPopup()">Continue →</button>
+    </div>
+  </div>
+
+  <div id="drawerOverlay" onclick="closeDrawer()" aria-hidden="true"></div>
+
+  <nav id="drawer" role="navigation" aria-label="Main navigation">
+    <div class="drawer-header">
+      <div class="drawer-logo">📚 Academy</div>
+      <div class="drawer-sub">Your learning companion</div>
+    </div>
+    <div class="drawer-nav">
+      <div class="drawer-item active" onclick="goBackToHome();closeDrawer()" role="button" tabindex="0">
+        <div class="di-icon">🏠</div> Home
+      </div>
+      <div class="drawer-item" onclick="scrollToPurchased();closeDrawer()" role="button" tabindex="0">
+        <div class="di-icon">🎓</div> My Courses
+      </div>
+      <div class="drawer-item" onclick="goToHome()" role="button" tabindex="0">
+        <div class="di-icon">📱</div> Apps
+      </div>
+      <div class="drawer-item logout-item" id="drawerLogoutBtn" style="display:none" onclick="logout()" role="button"
+        tabindex="0">
+        <div class="di-icon">🔓</div> Logout
+      </div>
+    </div>
+    <div class="drawer-footer">
+      <span>v1.0 · GHOST</span>
+      <div class="status-dot" id="statusDot" title="Online"></div>
+    </div>
+  </nav>
+
+  <header class="header" role="banner">
+    <div class="h-hamburger" id="hamburger" role="button" tabindex="0" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </div>
+    <button class="h-btn" id="backBtn"
+      style="display:none;color:var(--primary);border-color:var(--border-a);font-size:18px;font-weight:900"
+      title="Go back" aria-label="Go back"><span>←</span></button>
+    <span id="headerTitle">📂 All Courses</span>
+    <button class="h-btn" id="searchToggleBtn" onclick="openSearch()" title="Search"
+      aria-label="Search courses"><span>🔍</span></button>
+    <button id="logoutBtn" style="display:none" onclick="logout()"></button>
+  </header>
+
+  <div id="searchBar" role="search">
+    <input id="searchInput" placeholder="Search courses..." autocomplete="off" oninput="filterCourses()"
+      aria-label="Search courses" />
+    <span class="search-close" onclick="closeSearch()" role="button" tabindex="0" aria-label="Close search">✕</span>
+  </div>
+
+  <div id="loginScreen" class="fullScreen" style="justify-content:center; align-items:center;">
+    <div class="authBox" role="form" aria-label="Login form">
+      <div class="auth-icon">🔐</div>
+      <h3>Welcome Back</h3>
+      <p class="auth-sub">Sign in to access your courses</p>
+
+      <div class="input-wrap">
+        <span class="i-icon" aria-hidden="true">📱</span>
+        <input id="mobileInput" placeholder="Mobile / Email" autocomplete="username" aria-label="Mobile or Email" />
+      </div>
+      <div class="input-wrap">
+        <span class="i-icon" aria-hidden="true">🔒</span>
+        <input id="passInput" type="password" placeholder="Password" autocomplete="current-password"
+          aria-label="Password" />
+      </div>
+
+      <div class="auth-divider">OR</div>
+
+      <div class="input-wrap">
+        <span class="i-icon" aria-hidden="true">🎫</span>
+        <input id="tokenInput" placeholder="Access Token" aria-label="Access Token" />
+      </div>
+      <input id="userInput" type="hidden" />
+
+      <button class="btn-primary" onclick="saveLogin()" style="margin-top:8px">Sign In →</button>
+      <button class="otp-link" onclick="openOTPPage()">Login with OTP instead</button>
+    </div>
+  </div>
+
+  <div id="otpScreen" class="fullScreen" style="display:none; justify-content:center; align-items:center;">
+    <div class="authBox" role="form" aria-label="OTP Login form">
+      <div class="auth-icon">📱</div>
+      <h3>OTP Login</h3>
+      <p class="auth-sub">Enter your registered mobile number</p>
+
+      <div class="input-wrap">
+        <span class="i-icon" aria-hidden="true">📱</span>
+        <input id="otpMobileInput" placeholder="Registered Mobile / Email" autocomplete="tel"
+          aria-label="Registered Mobile or Email" />
+      </div>
+      <button class="btn-primary" id="sendOtpBtn" onclick="sendOTP()">📩 Send OTP</button>
+
+      <div class="input-wrap mt-10">
+        <span class="i-icon" aria-hidden="true">🔢</span>
+        <input id="otpCodeInput" placeholder="Enter 6-Digit OTP" maxlength="6" inputmode="numeric" pattern="[0-9]*"
+          autocomplete="one-time-code" aria-label="OTP Code" />
+      </div>
+      <button class="btn-primary"
+        style="background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 8px 24px rgba(16,185,129,0.35)"
+        onclick="verifyOTP()">✅ Verify & Login</button>
+      <button class="btn-ghost mt-10" onclick="backToLogin()">⬅ Back to Login</button>
+    </div>
+  </div>
+
+  <main id="homeScreen" style="display:none" role="main">
+    <div id="favSection" style="display:none">
+      <div class="fav-header">
+        <div class="fav-icon">⭐</div> <span>Favourites</span>
+      </div>
+      <div id="favList"></div>
+    </div>
+
+    <section id="purchasedSection" style="display:none">
+      <div class="section-label">
+        <h2>🎓 My Courses</h2>
+        <div class="s-line"></div>
+      </div>
+      <div id="purchasedList"></div>
+    </section>
+
+    <section id="allCourseSection">
+      <div class="section-label">
+        <h2>📚 All Courses</h2>
+        <div class="s-line"></div>
+      </div>
+      <div id="courseList"></div>
+    </section>
+  </main>
+
+  <div id="pdfViewer" style="display:none;position:fixed;inset:0;background:#000;z-index:9999" role="dialog"
+    aria-label="PDF Viewer">
+    <button class="pdf-close" onclick="closePDF()" aria-label="Close PDF">✕ Close</button>
+    <iframe id="pdfFrame" style="width:100%;height:100%;border:none" title="PDF Document"></iframe>
+  </div>
+
+  <div id="courseView" style="display:none">
+    <div class="tabs" role="tablist">
+      <button class="tab active" id="tLive" onclick="showLive()" role="tab" aria-selected="true">🔴 Live</button>
+      <button class="tab" id="tRec" onclick="showRec()" role="tab" aria-selected="false">📼 Recorded</button>
+      <button class="tab" id="tFolder" onclick="showFolder()" role="tab" aria-selected="false">📁 Subjects</button>
+      <button class="tab" id="tFolderPro" onclick="showFolderPro()" role="tab" aria-selected="false">📂 Folders</button>
+    </div>
+
+    <div id="player" role="region" aria-label="Video player">
+      <button class="close-player" onclick="closePlayer()" aria-label="Close player">✕ Close</button>
+      <video id="video" controls autoplay playsinline></video>
+    </div>
+
+    <div id="player-wrapper">
+      <button class="close-player" onclick="closeProPlayer()" aria-label="Close player">✕ Close</button>
+      <div id="player-host"></div>
+    </div>
+    <div id="custom-controls" style="display:none;padding:0 14px 14px">
+      <button class="fullscreen-btn" onclick="goFullScreen()">⛶ Fullscreen</button>
+    </div>
+
+    <div id="live-area" style="padding:0 2px"></div>
+
+    <div id="loader" aria-label="Loading">
+      <div class="spinner"></div>
+    </div>
+
+    <div id="content" style="padding-bottom:14px" role="tabpanel"></div>
+    <button class="load-more-btn" id="loadMoreRec" style="display:none" onclick="loadMoreRecorded()">Load More
+      ↓</button>
+
+    <div id="content-grid" style="padding:12px;display:none" role="tabpanel"></div>
+  </div>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js"></script>
+
+  <script>
+    /* ===== CONFIG ===== */
+    const ACADEMY_NAME = "dhyeylive";
+    const API_BASE = "https://dhyeyliveappapi.akamai.net.in";
+    const STORAGE_PREFIX = `AUBLIC_${ACADEMY_NAME}`;
+    const FAV_KEY = `${STORAGE_PREFIX}_favCourses`;
+    const APP_VERSION = 1;
+    // Auto-proxy Akamai backend APIs to prevent CORS preflight block
+    const _rawFetch = window.fetch;
+    window.fetch = function(url, opts) {
+      if (typeof url === "string" && (url.includes("akamai.net.in") || url.includes("dhyeyliveappapi") || url.includes("bhainskipathshalaapi")) && !url.includes("/proxy?url=")) {
+        url = getProxyUrl(url);
+      }
+      return _rawFetch.call(this, url, opts);
+    };
+    const PROXY_BASE = (function() {
+      if (typeof window !== "undefined" && window.location && window.location.protocol.startsWith("http")) {
+        return window.location.origin + "/proxy?url=";
+      }
+      return "http://localhost:3000/proxy?url=";
+    })();
+
+    /* ===== STATE ===== */
+    let TOKEN = localStorage.getItem(`${ACADEMY_NAME}_token`) || "";
+    let USERID = localStorage.getItem(`${ACADEMY_NAME}_userid`) || "-2";
+    let CURRENT_COURSE = null;
+    let hls = null;
+    let courseStart = 0;
+    let recStart = 0;
+    let favourites = JSON.parse(localStorage.getItem(FAV_KEY) || "[]");
+    let lastScrollY = 0;
+    let allLoadedCourses = [];
+    let navStack = [];
+    let currentCourseId = null;
+
+    const API_MAP = {
+      courses: ["/get/courselistnewv2?exam_id=&start={start}", "/get/courselist?start={start}", "/get/allcourse?start={start}"],
+      purchased: ["/get/mycoursev2?userid={uid}", "/get/get_all_purchases?userid={uid}&item_type=10"],
+      live: [
+        "/get/live_upcoming_course_classv2?start=-1&courseid={id}",
+        "/get/course_contents_by_live_status?course_id={id}&start=-1&live_status=1,2",
+        "/get/liveclasslist?course_id={id}"
+      ],
+      recorded: [
+        "/get/get_previous_live_videos?course_id={id}&start={start}&folder_wise_course=1&userid={uid}",
+        "/get/get_previous_live_videos?course_id={id}&start={start}&folder_wise_course=0&userid={uid}"
+      ],
+      player: [
+        "/get/fetchVideoDetailsById?course_id={id}&folder_wise_course=1&ytflag=0&video_id={vid}",
+        "/get/fetchVideoDetailsById?course_id={id}&folder_wise_course=0&ytflag=0&video_id={vid}",
+        "/get/fetchVideoDetailsById?course_id={id}&video_id={vid}&ytflag=0&folder_wise_course=0"
+      ],
+      folder_subject: ["/get/allsubjectfrmlivecourseclass?courseid={id}&start=-1"],
+      folder_topic: ["/get/alltopicfrmlivecourseclass?courseid={id}&subjectid={sid}&start=-1"],
+      folder_video: ["/get/livecourseclassbycoursesubtopconceptapiv3?topicid={tid}&start=-1&conceptid=&courseid={id}&subjectid={sid}"]
+    };
+
+    /* ===== TOAST ===== */
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+      toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3200);
+    }
+
+    /* ===== SKELETON ===== */
+    function showSkeletons(container, count = 6) {
+      let html = '';
+      for (let i = 0; i < count; i++) {
+        html += `<div class="skeleton-card"><div class="skeleton skeleton-thumb"></div><div class="skeleton skeleton-text"></div></div>`;
+      }
+      container.innerHTML = html;
+    }
+
+    /* ===== ⚡ OPTIMIZED SCROLL HANDLER (rAF throttled) ===== */
+    let scrollTicking = false;
+    window.addEventListener('scroll', () => {
+      if (!scrollTicking) {
+        window.requestAnimationFrame(() => {
+          const header = document.querySelector('.header');
+          const scrollBtn = document.getElementById('scrollTopBtn');
+          if (window.scrollY > 10) {
+            header.classList.add('scrolled');
+          } else {
+            header.classList.remove('scrolled');
+          }
+          if (window.scrollY > 400) {
+            scrollBtn.classList.add('visible');
+          } else {
+            scrollBtn.classList.remove('visible');
+          }
+          scrollTicking = false;
+        });
+        scrollTicking = true;
+      }
+    }, { passive: true });
+
+    /* ===== ONLINE/OFFLINE ===== */
+    function updateOnlineStatus() {
+      const dot = document.getElementById('statusDot');
+      if (navigator.onLine) {
+        dot.classList.remove('offline');
+        dot.title = 'Online';
+      } else {
+        dot.classList.add('offline');
+        dot.title = 'Offline';
+        showToast('You are offline', 'error');
+      }
+    }
+    window.addEventListener('online', () => { updateOnlineStatus(); showToast('Back online!', 'success'); });
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    /* ===== KEYBOARD ===== */
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey && e.key === 'k') || (e.key === '/' && !e.target.closest('input'))) {
+        e.preventDefault();
+        openSearch();
+      }
+      if (e.key === 'Escape') {
+        closeSearch();
+        closeDrawer();
+        document.getElementById('logoutModal').classList.remove('show');
+        closeTokenPopup();
+        closePDF();
+      }
+    });
+
+    /* ===== DRAWER ===== */
+    function toggleDrawer() {
+      const d = document.getElementById("drawer");
+      const o = document.getElementById("drawerOverlay");
+      const h = document.getElementById("hamburger");
+      const open = d.classList.toggle("open");
+      o.classList.toggle("open", open);
+      h.classList.toggle("open", open);
+      d.setAttribute('aria-hidden', !open);
+    }
+    function closeDrawer() {
+      document.getElementById("drawer").classList.remove("open");
+      document.getElementById("drawerOverlay").classList.remove("open");
+      document.getElementById("hamburger").classList.remove("open");
+      document.getElementById("drawer").setAttribute('aria-hidden', 'true');
+    }
+    function scrollToPurchased() {
+      if (document.getElementById("homeScreen").style.display !== "none") {
+        document.getElementById("purchasedSection").scrollIntoView({ behavior: "smooth" });
+      }
+    }
+    function goBackToHome() {
+      if (CURRENT_COURSE) goBack();
+    }
+
+    /* ===== SEARCH ===== */
+    function openSearch() {
+      document.getElementById("searchBar").classList.add("visible");
+      document.getElementById("searchInput").focus();
+    }
+    function closeSearch() {
+      document.getElementById("searchBar").classList.remove("visible");
+      document.getElementById("searchInput").value = "";
+      filterCourses();
+    }
+
+    let searchTimeout;
+    function filterCourses() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        const q = document.getElementById("searchInput").value.toLowerCase().trim();
+        const allCards = document.querySelectorAll("#courseList .card, #purchasedList .card, #favList .card");
+        allCards.forEach(card => {
+          const title = card.querySelector(".courseTitle")?.textContent.toLowerCase() || "";
+          const show = !q || title.includes(q);
+          card.style.display = show ? "block" : "none";
+        });
+      }, 150);
+    }
+
+    /* ===== UTILS ===== */
+    async function fetchGithubJSON(path) {
+      try {
+        const res = await fetch(`https://api.github.com/repos/aublic6969/meappadmin/contents/${path}`);
+        if (!res.ok) return {};
+        const data = await res.json();
+        return JSON.parse(atob(data.content));
+      } catch (e) { return {}; }
+    }
+
+    async function checkUpdate() {
+      try {
+        const v = await fetchGithubJSON("version.json");
+        const lastShown = localStorage.getItem("update_seen_version");
+        if (v.force_update && v.latest_version > APP_VERSION) { showUpdatePopup(v); return true; }
+        if (v.latest_version > APP_VERSION && lastShown !== String(v.latest_version)) {
+          showUpdatePopup(v);
+          localStorage.setItem("update_seen_version", String(v.latest_version));
+        }
+      } catch (e) { console.warn("❌ Update check failed", e); }
+      return false;
+    }
+
+    function showUpdatePopup(v) {
+      document.getElementById("updatePopup").style.display = "flex";
+      document.getElementById("updateMsg").innerText = v.update_message;
+      document.getElementById("updateBtn").onclick = () => { window.location.href = v.apk_url; };
+    }
+
+    function checkBan(cfg) {
+      if (cfg.banned_users?.includes(USERID)) {
+        document.body.innerHTML = `
+          <div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#0a0418;color:white;text-align:center;padding:20px">
+            <div>
+              <h2 style="color:#f43f5e;margin-bottom:10px;font-family:'Space Grotesk',sans-serif">🚫 Access Denied</h2>
+              <p style="color:#a89bc9;margin-bottom:15px">You are blocked by admin</p>
+              <a href="https://t.me/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#a855f7,#8b5cf6);color:#fff;border-radius:12px;font-weight:700;text-decoration:none;box-shadow:0 8px 24px rgba(168,85,247,0.4)">📩 Contact Admin</a>
+            </div>
+          </div>`;
+        return true;
+      }
+      return false;
+    }
+
+    function showAnnouncement(cfg) {
+      if (cfg.announcement) showToast(cfg.announcement, 'info');
+    }
+
+    function showDailyMessage(cfg) {
+      const today = new Date().toDateString();
+      const lastShown = localStorage.getItem("daily_msg_date");
+      if (lastShown !== today && cfg.daily_message) {
+        showToast(cfg.daily_message, 'info');
+        localStorage.setItem("daily_msg_date", today);
+      }
+    }
+
+    function getProxyUrl(url) {
+      if (!url) return "";
+      if (url.startsWith("/proxy?url=") || url.includes("/proxy?url=")) return url;
+      return PROXY_BASE + encodeURIComponent(url);
+    }
+
+    function getHeaders() {
+      return {
+        "Authorization": TOKEN,
+        "User-Agent": "okhttp/4.9.1",
+        "Accept-Encoding": "gzip,deflate",
+        "language": "en",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Client-Service": "Appx",
+        "Auth-Key": "appxapi",
+        "User-ID": USERID || "0",
+        "device-type": "android",
+        "app-version": "1.0.0",
+        "source": "android"
+      };
+    }
+
+    function showLoader(s) { document.getElementById("loader").style.display = s ? "block" : "none"; }
+
+    function updateBreadcrumbs() {
+      document.getElementById("headerTitle").innerText = navStack.length
+        ? navStack[navStack.length - 1].name
+        : (CURRENT_COURSE ? "Course" : "📂 All Courses");
+    }
+
+    function openPDF(url) {
+      document.getElementById("pdfViewer").style.display = "block";
+      document.getElementById("pdfFrame").src = `https://website.cloud-front.in/pdfjs/web/viewer.html?file=${url}`;
+    }
+
+    function closePDF() {
+      document.getElementById("pdfViewer").style.display = "none";
+      document.getElementById("pdfFrame").src = "";
+    }
+
+    function closePlayer() {
+      const player = document.getElementById("player");
+      const vid = document.getElementById("video");
+      if (vid) { vid.pause(); vid.src = ""; }
+      if (hls) { hls.destroy(); hls = null; }
+      player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player">✕ Close</button><video id="video" controls autoplay playsinline></video>`;
+      player.style.display = "none";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    /* ===== DECRYPT ===== */
+    function decrypt(enc) {
+      try {
+        enc = enc.split(":")[0];
+        const key = CryptoJS.enc.Utf8.parse("638udh3829162018");
+        const iv = CryptoJS.enc.Utf8.parse("fedcba9876543210");
+        return CryptoJS.AES.decrypt({ ciphertext: CryptoJS.enc.Base64.parse(enc) }, key, { iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }).toString(CryptoJS.enc.Utf8);
+      } catch (e) { return ""; }
+    }
+
+    function decryptPDF(enc, keyEnc) {
+      try {
+        const key = CryptoJS.enc.Utf8.parse("638udh3829162018");
+        const iv = CryptoJS.enc.Utf8.parse("fedcba9876543210");
+        return CryptoJS.AES.decrypt({ ciphertext: CryptoJS.enc.Base64.parse(enc.split(":")[0]) }, key, { iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }).toString(CryptoJS.enc.Utf8);
+      } catch (e) { return ""; }
+    }
+
+    function decode_base64(str) { try { return atob(str); } catch (e) { return ""; } }
+
+    /* ===== FETCH HELPERS ===== */
+    async function fetchMulti(endpoints) {
+      for (let url of endpoints) {
+        try {
+          const r = await fetch(url, { headers: getHeaders() });
+          const text = await r.text();
+          if (text.trim().startsWith("<")) continue;
+          const j = JSON.parse(text);
+          if (j && (j.data || j.status == 200)) return j;
+        } catch (e) { }
+      }
+      return {};
+    }
+
+    async function fetchMultiAll(endpoints) {
+      let finalData = [];
+      for (let url of endpoints) {
+        try {
+          const r = await fetch(url, { headers: getHeaders() });
+          const text = await r.text();
+          if (text.trim().startsWith("<")) continue;
+          const j = JSON.parse(text);
+          if (j?.data) finalData = finalData.concat(Array.isArray(j.data) ? j.data : [j.data]);
+        } catch (e) { }
+      }
+      return { data: finalData };
+
+
+    }
+
+    /* ===== AUTH ===== */
+    async function saveLogin() {
+      const t = document.getElementById("tokenInput").value.trim();
+      const uid = document.getElementById("userInput").value.trim();
+      if (t) {
+        TOKEN = t;
+        USERID = uid || "-2";
+        localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
+        localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
+        document.getElementById("loginScreen").style.display = "none";
+        showTokenPopup(TOKEN);
+        startApp();
+        return;
+      }
+      const mobile = document.getElementById("mobileInput").value.trim();
+      const pass = document.getElementById("passInput").value.trim();
+      if (mobile && pass) {
+        try {
+          const res = await fetch(`${API_BASE}/post/userLogin`, {
+            method: "POST",
+            headers: { "Auth-Key": "appxapi", "User-Id": "-2", "Content-Type": "application/x-www-form-urlencoded" },
+            body: `email=${encodeURIComponent(mobile)}&password=${encodeURIComponent(pass)}`
+          });
+          const j = await res.json();
+          if (j.status == 200) {
+            TOKEN = j.data.token;
+            USERID = j.data.userid;
+            localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
+            localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
+            document.getElementById("loginScreen").style.display = "none";
+            document.getElementById("drawerLogoutBtn").style.display = "flex";
+            showTokenPopup(TOKEN);
+            showToast("Login successful!", "success");
+            startApp();
+            return;
+          }
+          showToast("Login Failed - Invalid credentials", "error");
+        } catch (e) { showToast("Login Error - Network issue", "error"); }
+        return;
+      }
+      showToast("Enter Token OR Mobile + Password", "error");
+    }
+
+    async function sendOTP() {
+      const mobile = document.getElementById("otpMobileInput").value.trim();
+      if (!mobile) return showToast("Enter Mobile Number", "error");
+      const btn = document.getElementById("sendOtpBtn");
+      btn.disabled = true;
+      btn.innerText = "Sending...";
+      try {
+        await fetch(`${API_BASE}/get/sendotp?phone=${mobile}`, {
+          headers: { "Client-Service": "Appx", "Auth-Key": "appxapi", source: "website" }
+        });
+        btn.innerText = "✓ OTP Sent";
+        showToast("OTP sent successfully!", "success");
+      } catch (e) {
+        btn.disabled = false;
+        btn.innerText = "📩 Send OTP";
+        showToast("Failed to send OTP", "error");
+      }
+    }
+
+    async function verifyOTP() {
+      const mobile = document.getElementById("otpMobileInput").value.trim();
+      const otp = document.getElementById("otpCodeInput").value.trim();
+      if (!mobile || !otp) return showToast("Enter Mobile + OTP", "error");
+      try {
+        const res = await fetch(`${API_BASE}/get/otpverify?useremail=${mobile}&otp=${otp}&device_id=WebBrowser17267591437616qmd1cxx313&mydeviceid=&mydeviceid2=`, {
+          headers: { "Client-Service": "Appx", "Auth-Key": "appxapi", source: "website" }
+        });
+        const j = await res.json();
+        if (j.status == 200) {
+          TOKEN = j.user.token;
+          USERID = j.user.userid || "-2";
+          localStorage.setItem(`${ACADEMY_NAME}_token`, TOKEN);
+          localStorage.setItem(`${ACADEMY_NAME}_userid`, USERID);
+          document.getElementById("otpScreen").style.display = "none";
+          document.getElementById("loginScreen").style.display = "none";
+          document.getElementById("drawerLogoutBtn").style.display = "flex";
+          showTokenPopup(TOKEN);
+          showToast("OTP Verified! Welcome!", "success");
+          startApp();
+          return;
+        }
+        showToast("OTP Verification Failed", "error");
+      } catch (e) { showToast("OTP Verify Error", "error"); }
+    }
+
+    function backToLogin() {
+      document.getElementById("otpScreen").style.display = "none";
+      document.getElementById("loginScreen").style.display = "flex";
+    }
+
+    function showTokenPopup(token) {
+      document.getElementById("tokenDisplay").value = token;
+      document.getElementById("tokenPopup").classList.add("show");
+    }
+
+    function copyToken() {
+      const tokenEl = document.getElementById("tokenDisplay");
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(tokenEl.value).then(() => {
+          showToast("Token copied!", "success");
+        });
+      } else {
+        tokenEl.select();
+        document.execCommand("copy");
+        showToast("Token copied!", "success");
+      }
+    }
+
+    function closeTokenPopup() {
+      document.getElementById("tokenPopup").classList.remove("show");
+    }
+
+    function openOTPPage() {
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("otpScreen").style.display = "flex";
+    }
+
+    /* ===== LOGOUT ===== */
+    function logout() {
+      closeDrawer();
+      document.getElementById("logoutModal").classList.add("show");
+    }
+
+    function doLogout() {
+      document.getElementById("logoutModal").classList.remove("show");
+      TOKEN = ""; USERID = "";
+      localStorage.removeItem(`${ACADEMY_NAME}_token`);
+      localStorage.removeItem(`${ACADEMY_NAME}_userid`);
+      CURRENT_COURSE = null; currentCourseId = null; courseStart = 0; recStart = 0;
+      allLoadedCourses = [];
+
+      document.getElementById("courseList").innerHTML = "";
+      document.getElementById("favList").innerHTML = "";
+      document.getElementById("purchasedList").innerHTML = "";
+      document.getElementById("content").innerHTML = "";
+      document.getElementById("content-grid").innerHTML = "";
+      document.getElementById("courseView").style.display = "none";
+      document.getElementById("homeScreen").style.display = "none";
+      document.getElementById("favSection").style.display = "none";
+      document.getElementById("purchasedSection").style.display = "none";
+      document.getElementById("headerTitle").innerText = "📂 All Courses";
+      document.getElementById("drawerLogoutBtn").style.display = "none";
+      document.getElementById("loginScreen").style.display = "flex";
+      if (hls) { hls.destroy(); hls = null; }
+      window.scrollTo(0, 0);
+      showToast("Logged out successfully", "info");
+    }
+
+    /* ===== ⚡ OPTIMIZED LOAD COURSES ===== */
+    async function loadCourses() {
+      showSkeletons(document.getElementById("courseList"), 6);
+
+      const j = await fetchMultiAll(API_MAP.courses.map(e => API_BASE + e.replace("{start}", -1)));
+      const courseList = document.getElementById("courseList");
+
+      if (!j.data?.length) {
+        courseList.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="es-icon">📚</div><p>No courses available</p></div>`;
+        return;
+      }
+
+      // ✅ OPTIMIZED: Build HTML string instead of appending one-by-one (avoids layout thrashing)
+      const fragment = document.createDocumentFragment();
+      j.data.forEach(c => {
+        allLoadedCourses.push(c);
+        fragment.appendChild(buildCourseCard(c));
+      });
+      courseList.innerHTML = "";
+      courseList.appendChild(fragment);
+      updateFavSection();
+    }
+
+    /* ===== LOAD PURCHASED ===== */
+    async function loadPurchased() {
+      const purchasedList = document.getElementById("purchasedList");
+      purchasedList.innerHTML = "";
+      document.getElementById("purchasedSection").style.display = "none";
+      try {
+        const j = await fetchMultiAll(API_MAP.purchased.map(e => API_BASE + e.replace("{uid}", USERID)));
+        const courses = j.data || [];
+        if (!courses.length) return;
+        document.getElementById("purchasedSection").style.display = "block";
+
+        const fragment = document.createDocumentFragment();
+        courses.forEach(c => {
+          const courseObj = { id: c.id || c.item_id, course_name: c.course_name || c.title, course_thumbnail: c.course_thumbnail };
+          const thumb = courseObj.course_thumbnail || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='300' viewBox='0 0 600 300'%3E%3Crect width='600' height='300' fill='%231a0f3a'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23a855f7' font-family='sans-serif' font-size='24'%3ENo Image%3C/text%3E%3C/svg%3E";
+          const d = document.createElement("div");
+          d.className = "card";
+          d.innerHTML = `
+            <div class="thumb-wrap">
+              <img class="thumb" src="${thumb}" loading="lazy" decoding="async" width="600" height="375" alt="${courseObj.course_name}">
+              <div class="thumb-overlay"></div>
+              <span class="purchasedBadge">✓ Purchased</span>
+            </div>
+            <div class="courseTitle">${courseObj.course_name}</div>`;
+          d.onclick = () => openCourse(courseObj);
+          fragment.appendChild(d);
+        });
+        purchasedList.appendChild(fragment);
+      } catch (e) { console.warn("Purchased error", e); }
+    }
+
+    /* ===== ⚡ OPTIMIZED CARD BUILDER ===== */
+    function buildCourseCard(c) {
+      const isFav = favourites.some(f => String(f.id) === String(c.id));
+      const thumb = c.course_thumbnail || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='300' viewBox='0 0 600 300'%3E%3Crect width='600' height='300' fill='%231a0f3a'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23a855f7' font-family='sans-serif' font-size='24'%3ENo Image%3C/text%3E%3C/svg%3E";
+      const d = document.createElement("div");
+      d.className = "card";
+      // ✅ width/height attributes help browser reserve space = less reflow
+      // ✅ loading="lazy" + decoding="async" = no blocking
+      d.innerHTML = `
+        <div class="thumb-wrap">
+          <img class="thumb" src="${thumb}" loading="lazy" decoding="async" width="600" height="375" alt="${c.course_name}">
+          <div class="thumb-overlay"></div>
+          <span class="card-id">ID:${c.id}</span>
+          <button class="card-fav-btn ${isFav ? 'saved' : ''}" aria-label="${isFav ? 'Remove from favourites' : 'Add to favourites'}">${isFav ? "★ Saved" : "☆ Save"}</button>
+        </div>
+        <div class="courseTitle">${c.course_name}</div>`;
+      d.querySelector(".card-fav-btn").onclick = e => {
+        e.stopPropagation();
+        const btn = e.target;
+        if (btn.classList.contains("saved")) {
+          removeFav(e, c.id);
+          btn.classList.remove("saved");
+          btn.textContent = "☆ Save";
+          showToast("Removed from favourites", "info");
+        } else {
+          addFav(e, c.id, c.course_name, thumb);
+        }
+      };
+      d.onclick = () => openCourse(c);
+      return d;
+    }
+
+    function renderCourse(c, target) {
+      target.appendChild(buildCourseCard(c));
+    }
+
+    /* ===== FAVOURITES ===== */
+    function addFav(e, id, course_name, course_thumbnail) {
+      e.stopPropagation();
+      if (favourites.some(f => String(f.id) === String(id))) return;
+      favourites.unshift({ id, course_name, course_thumbnail });
+      localStorage.setItem(FAV_KEY, JSON.stringify(favourites));
+      updateFavSection();
+      const btn = e.target;
+      btn.innerText = "★ Saved";
+      btn.classList.add("saved");
+      showToast("Added to favourites!", "success");
+    }
+
+    function removeFav(e, id) {
+      if (e) e.stopPropagation();
+      favourites = favourites.filter(f => String(f.id) !== String(id));
+      localStorage.setItem(FAV_KEY, JSON.stringify(favourites));
+      updateFavSection();
+    }
+
+    function updateFavSection() {
+      const favList = document.getElementById("favList");
+      favList.innerHTML = "";
+      if (!favourites.length) { document.getElementById("favSection").style.display = "none"; return; }
+      document.getElementById("favSection").style.display = "block";
+
+      const fragment = document.createDocumentFragment();
+      favourites.forEach(c => {
+        const thumb = c.course_thumbnail || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='300' viewBox='0 0 600 300'%3E%3Crect width='600' height='300' fill='%231a0f3a'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23a855f7' font-family='sans-serif' font-size='24'%3ENo Image%3C/text%3E%3C/svg%3E";
+        const d = document.createElement("div");
+        d.className = "card";
+        d.innerHTML = `
+          <div class="thumb-wrap">
+            <img class="thumb" src="${thumb}" loading="lazy" decoding="async" width="600" height="375" alt="${c.course_name}">
+            <div class="thumb-overlay"></div>
+            <button class="card-fav-btn saved" style="z-index:2" aria-label="Remove from favourites">✕ Remove</button>
+          </div>
+          <div class="courseTitle">${c.course_name}</div>`;
+        d.querySelector("button").addEventListener("click", function (e) {
+          e.stopPropagation();
+          favourites = favourites.filter(f => String(f.id) !== String(c.id));
+          localStorage.setItem(FAV_KEY, JSON.stringify(favourites));
+          updateFavSection();
+          showToast("Removed from favourites", "info");
+        });
+        d.onclick = () => openCourse(c);
+        fragment.appendChild(d);
+      });
+      favList.appendChild(fragment);
+    }
+
+    /* ===== OPEN / BACK COURSE ===== */
+    function openCourse(c) {
+      lastScrollY = window.scrollY;
+      CURRENT_COURSE = c.id;
+      currentCourseId = c.id;
+      navStack = [];
+      document.getElementById("headerTitle").innerText = c.course_name;
+      document.getElementById("backBtn").style.display = "flex";
+      document.getElementById("hamburger").style.display = "none";
+      document.getElementById("homeScreen").style.display = "none";
+      document.getElementById("courseView").style.display = "block";
+      document.getElementById("content").innerHTML = "";
+      document.getElementById("content-grid").innerHTML = "";
+      document.getElementById("player").style.display = "none";
+      document.getElementById("live-area").innerHTML = "";
+      showLive();
+    }
+
+    function goBack() {
+      if (document.getElementById("tFolderPro").classList.contains("active") && navStack.length > 0) {
+        navStack.pop();
+        if (navStack.length == 0) { loadInitialFolderPro(); }
+        else { const prev = navStack[navStack.length - 1]; fetchFolders(prev.id, prev.name); }
+        return;
+      }
+      CURRENT_COURSE = null; currentCourseId = null; navStack = [];
+      document.getElementById("headerTitle").innerText = "📂 All Courses";
+      document.getElementById("backBtn").style.display = "none";
+      document.getElementById("hamburger").style.display = "flex";
+      document.getElementById("courseView").style.display = "none";
+      document.getElementById("homeScreen").style.display = "block";
+      document.getElementById("content").innerHTML = "";
+      document.getElementById("content-grid").innerHTML = "";
+      document.getElementById("live-area").innerHTML = "";
+      document.getElementById("player").innerHTML = '<button class="close-player" onclick="closePlayer()" aria-label="Close player">✕ Close</button><video id="video" controls autoplay playsinline></video>';
+      const vid = document.getElementById("video");
+      if (vid) { vid.pause(); vid.src = ""; }
+      if (hls) { hls.destroy(); hls = null; }
+      document.getElementById("player").style.display = "none";
+      closeProPlayer();
+      document.getElementById("purchasedSection").style.display = "block";
+      setTimeout(() => window.scrollTo({ top: lastScrollY, behavior: "instant" }), 50);
+    }
+
+    document.getElementById("hamburger").addEventListener("click", toggleDrawer);
+    document.getElementById("hamburger").addEventListener("keydown", (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDrawer(); }
+    });
+    document.getElementById("backBtn").addEventListener("click", goBack);
+
+    /* ===== TABS ===== */
+    function setActiveTab(id) {
+      ["tLive", "tRec", "tFolder", "tFolderPro"].forEach(t => {
+        const el = document.getElementById(t);
+        el.classList.remove("active");
+        el.setAttribute('aria-selected', 'false');
+      });
+      const active = document.getElementById(id);
+      active.classList.add("active");
+      active.setAttribute('aria-selected', 'true');
+
+      if (id === "tFolderPro") {
+        document.getElementById("content").style.display = "none";
+        document.getElementById("loadMoreRec").style.display = "none";
+        document.getElementById("player").style.display = "none";
+        document.getElementById("content-grid").style.display = "";
+      } else {
+        document.getElementById("content-grid").innerHTML = "";
+        document.getElementById("content-grid").style.display = "none";
+        document.getElementById("content").style.display = "";
+        closeProPlayer();
+        document.getElementById("live-area").innerHTML = "";
+      }
+    }
+
+    async function showLive() {
+      setActiveTab("tLive");
+      document.getElementById("loadMoreRec").style.display = "none";
+      const content = document.getElementById("content");
+      content.innerHTML = '<div class="spinner" style="margin:40px auto"></div>';
+
+      const j = await fetchMultiAll(API_MAP.live.map(e => API_BASE + e.replace("{id}", CURRENT_COURSE)));
+      content.innerHTML = "";
+      let liveList = [], upcomingList = [];
+      if (Array.isArray(j.data)) {
+        j.data.forEach(obj => {
+          if (obj.live && Array.isArray(obj.live)) liveList = liveList.concat(obj.live);
+          if (obj.upcoming && Array.isArray(obj.upcoming)) upcomingList = upcomingList.concat(obj.upcoming);
+          if (obj.material_type || obj.Title) liveList.push(obj);
+        });
+      }
+      if (liveList.length) {
+        const frag = document.createDocumentFragment();
+        liveList.forEach(v => {
+          const d = document.createElement("div");
+          d.className = "videoCard";
+          d.innerHTML = `<div style="display:flex;align-items:center;gap:12px"><div class="live-dot"></div><div><b>${v.Title}</b><br><small style="color:var(--text-dim)">${v.date_and_time || ""}</small></div></div>`;
+          if (v.recording_schedule) d.onclick = () => playLive(v.recording_schedule);
+          frag.appendChild(d);
+        });
+        content.appendChild(frag);
+        return;
+      }
+      if (upcomingList.length) {
+        const frag = document.createDocumentFragment();
+        upcomingList.forEach(v => {
+          const d = document.createElement("div");
+          d.className = "videoCard";
+          d.style.cursor = "default";
+          d.innerHTML = `<div><b>🕒 ${v.Title}</b><br><span style="color:var(--primary);font-size:12px;font-weight:600">📅 ${v.date_and_time}</span></div>`;
+          frag.appendChild(d);
+        });
+        content.appendChild(frag);
+        return;
+      }
+      content.innerHTML = `<div class="empty-state"><div class="es-icon">📡</div><p>No live class right now</p></div>`;
+    }
+
+    async function showRec() {
+      setActiveTab("tRec");
+      const content = document.getElementById("content");
+      content.innerHTML = '<div class="spinner" style="margin:40px auto"></div>';
+      recStart = 0;
+      document.getElementById("loadMoreRec").style.display = "block";
+      content.innerHTML = "";
+      await loadMoreRecorded();
+    }
+
+    async function loadMoreRecorded() {
+      const j = await fetchMultiAll(API_MAP.recorded.map(e => API_BASE + e.replace("{id}", CURRENT_COURSE).replace("{start}", recStart).replace("{uid}", USERID)));
+      if (!j.data || !j.data.length) { document.getElementById("loadMoreRec").style.display = "none"; return; }
+      j.data.sort((a, b) => b.strtotime - a.strtotime);
+      const content = document.getElementById("content");
+      const frag = document.createDocumentFragment();
+      j.data.forEach(v => {
+        const d = document.createElement("div");
+        d.className = "videoCard";
+        d.style.cssText = "display:flex;justify-content:space-between;align-items:center;gap:12px";
+        d.innerHTML = `
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">🎬 ${v.Title}</div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:4px">${v.date_and_time || ""}</div>
+          </div>
+          <button class="dl-btn" onclick="downloadVideo(event,${v.id})" aria-label="Download video">⬇</button>`;
+        d.onclick = () => playRecorded(v.id);
+        frag.appendChild(d);
+      });
+      content.appendChild(frag);
+      recStart += j.data.length;
+    }
+
+    async function showFolder() {
+      setActiveTab("tFolder");
+      const content = document.getElementById("content");
+      content.innerHTML = "<div class='spinner' style='margin:40px auto'></div>";
+      try {
+        const r = await fetch(API_BASE + API_MAP.folder_subject[0].replace("{id}", CURRENT_COURSE), { headers: getHeaders() });
+        const j = await r.json();
+        content.innerHTML = "";
+        if (!j.data?.length) {
+          content.innerHTML = `<div class="empty-state"><div class="es-icon">📚</div><p>No subjects available</p></div>`;
+          return;
+        }
+        j.data.forEach(subject => {
+          const box = document.createElement("div");
+          box.className = "folder";
+          box.innerHTML = `<div class="folderTitle">📚 ${subject.subject_name}</div><div class="folderGrid" id="grid_${subject.subjectid}"></div>`;
+          content.appendChild(box);
+          fetch(API_BASE + API_MAP.folder_topic[0].replace("{id}", CURRENT_COURSE).replace("{sid}", subject.subjectid), { headers: getHeaders() })
+            .then(r => r.json()).then(j2 => {
+              const grid = document.getElementById(`grid_${subject.subjectid}`);
+              if (!j2.data?.length) { grid.innerHTML = "<p style='padding:10px;font-size:12px;opacity:0.6'>No topics</p>"; return; }
+              const frag = document.createDocumentFragment();
+              j2.data.forEach(topic => {
+                const tc = document.createElement("div");
+                tc.className = "videoCard";
+                tc.style.margin = "0";
+                tc.innerHTML = `📖 ${topic.topic_name}`;
+                tc.onclick = () => openTopic(subject.subjectid, topic.topicid, subject.subject_name, topic.topic_name);
+                frag.appendChild(tc);
+              });
+              grid.appendChild(frag);
+            });
+        });
+      } catch (e) { content.innerHTML = "<p style='padding:15px;opacity:0.6'>Error loading subjects</p>"; }
+    }
+
+    async function openTopic(subjectId, topicId, subjectName, topicName) {
+      const content = document.getElementById("content");
+      content.innerHTML = `
+        <div style="padding:12px">
+          <div class="folder">
+            <div class="folderTitle" id="topicBack" style="cursor:pointer;color:var(--text-mid)">← Back to ${subjectName}</div>
+          </div>
+          <div class="folder" style="margin-top:10px">
+            <div class="folderTitle">📖 ${topicName}</div>
+            <div id="topicVideos" class="folderGrid"></div>
+          </div>
+        </div>`;
+      document.getElementById("topicBack").onclick = () => showFolder();
+      const vc = document.getElementById("topicVideos");
+      try {
+        const r = await fetch(API_BASE + API_MAP.folder_video[0].replace("{id}", CURRENT_COURSE).replace("{sid}", subjectId).replace("{tid}", topicId), { headers: getHeaders() });
+        const j = await r.json();
+        if (!j.data?.length) { vc.innerHTML = "<p style='padding:10px;font-size:12px;opacity:0.6'>No videos</p>"; return; }
+        const frag = document.createDocumentFragment();
+        j.data.forEach(v => {
+          const d = document.createElement("div");
+          d.className = "videoCard";
+          d.style.margin = "0";
+          const pdfEnc = v.pdf_link || v.pdf_link2 || "";
+          const pdfKeyEnc = v.pdf_encryption_key || v.pdf2_encryption_key || "";
+          const hasPdf = pdfEnc && typeof pdfEnc === "string" && pdfEnc.includes(":");
+          d.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <span style="font-size:12px">🎬 ${v.Title}</span>
+              ${hasPdf ? `<button class="dl-btn" id="pdf_${v.id}" aria-label="Open PDF">📄 PDF</button>` : ""}
+            </div>`;
+          d.onclick = () => playRecorded(v.id);
+          const btn = d.querySelector(`#pdf_${v.id}`);
+          if (btn) {
+            btn.addEventListener("click", function (e) {
+              e.stopPropagation();
+              let rawUrl = "";
+              try {
+                rawUrl = decryptPDF(pdfEnc, pdfKeyEnc);
+                if (!rawUrl || !rawUrl.startsWith("http")) rawUrl = atob(pdfEnc.split(":")[0]).trim();
+              } catch (e) { rawUrl = atob(pdfEnc.split(":")[0]).trim(); }
+              if (!rawUrl) { showToast("PDF open nahi ho raha ❌", "error"); return; }
+              openPDF(rawUrl);
+            });
+          }
+          frag.appendChild(d);
+        });
+        vc.appendChild(frag);
+      } catch (e) { vc.innerHTML = "<p>Error loading videos</p>"; }
+    }
+
+    function showFolderPro() {
+      setActiveTab("tFolderPro");
+      navStack = [];
+      loadInitialFolderPro();
+    }
+
+    async function loadInitialFolderPro() {
+      showLoader(true);
+      const grid = document.getElementById("content-grid");
+      grid.innerHTML = "";
+      document.getElementById("live-area").innerHTML = "";
+      checkLiveClasses(CURRENT_COURSE);
+      await fetchFolders("-1", document.getElementById("headerTitle").innerText);
+      showLoader(false);
+    }
+
+    async function checkLiveClasses(courseId) {
+      const area = document.getElementById("live-area");
+      try {
+        const res = await fetch(`${API_BASE}/get/live_upcoming_course_classv2?start=-1&courseid=${courseId}`, { headers: getHeaders() });
+        const j = await res.json();
+        if (j.data?.[0]?.live?.length) {
+          const live = j.data[0].live[0];
+          const tag = document.createElement("div");
+          tag.className = "live-tag";
+          tag.innerHTML = `<div class="live-dot"></div> LIVE: ${live.Title}`;
+          tag.onclick = () => playLiveInPro(live.recording_schedule);
+          area.appendChild(tag);
+        }
+      } catch (e) { }
+    }
+
+    async function fetchFolders(parentId, title) {
+      showLoader(true);
+      closeProPlayer();
+      const grid = document.getElementById("content-grid");
+      grid.innerHTML = "";
+      document.getElementById("headerTitle").innerText = title;
+      let start = -1, allData = [];
+      try {
+        while (true) {
+          const res = await fetch(`${API_BASE}/get/folder_contentsv3?start=${start}&course_id=${currentCourseId}&parent_id=${parentId}`, { headers: getHeaders() });
+          const result = await res.json();
+          if (!result.data || !result.data.length) break;
+          allData = allData.concat(result.data);
+          if (result.data.length < 20) break;
+          start += 20;
+        }
+        if (allData.length > 0) {
+          const frag = document.createDocumentFragment();
+          allData.forEach(item => {
+            const row = document.createElement("div");
+            row.className = "list-item";
+            const icon = item.material_type == "FOLDER" ? "📁" : item.material_type == "PDF" ? "📄" : "🎬";
+            let metaHtml = "";
+            if (item.material_type == "FOLDER") {
+              metaHtml = `<span class="meta-badge">🎬 ${item.videos_count || 0}</span><span class="meta-badge">📄 ${item.files_count || 0}</span>`;
+            } else if (item.material_type == "VIDEO") {
+              metaHtml = `<span class="meta-badge">⏳ ${item.duration || 'N/A'}</span><span class="meta-badge">📅 ${item.date_and_time || item.created_at || 'No Date'}</span>`;
+            }
+            row.innerHTML = `
+              <div class="li-icon">${icon}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.Title}</div>
+                <div class="meta-info">${metaHtml}<span style="opacity:0.3;font-size:10px">ID:${item.id}</span></div>
+              </div>
+              ${item.material_type == "FOLDER" ? '<span style="color:var(--text-dim);font-size:20px;font-weight:800">›</span>' : ''}`;
+
+            if (item.material_type == "FOLDER") {
+              row.onclick = () => { navStack.push({ type: "FOLDER", id: item.id, name: item.Title }); fetchFolders(item.id, item.Title); };
+            } else if (item.material_type == "VIDEO") {
+              row.onclick = () => playVideoInPro(item.id);
+            } else if (item.material_type == "PDF") {
+              row.onclick = () => {
+                const rawUrl = decryptPDF(item.pdf_link, item.pdf_encryption_key);
+                if (rawUrl) { openPDF(rawUrl); }
+                else { showToast("PDF load nahi ho raha ❌", "error"); }
+              };
+            }
+            frag.appendChild(row);
+          });
+          grid.appendChild(frag);
+        } else {
+          grid.innerHTML = `<div class="empty-state"><div class="es-icon">📂</div><p>This folder is empty</p></div>`;
+        }
+      } catch (e) { console.warn(e); }
+      showLoader(false);
+    }
+
+    /* ===== PLAYERS ===== */
+    function playLive(id) {
+      const player = document.getElementById("player");
+      player.style.display = "block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (hls) hls.destroy();
+      hls = new Hls({ lowLatencyMode: true });
+      hls.loadSource(`https://liveclasses.cloud-front.in/live/${id}_480p.m3u8?request_llhls=1`);
+      const vid = document.getElementById("video");
+      hls.attachMedia(vid);
+      vid.play();
+    }
+
+    async function resolveAppxVideoUrl(tokenOrUrl) {
+      try {
+        if (!tokenOrUrl) return { url: null, playerUrl: "" };
+        let token = tokenOrUrl;
+        if (typeof token === "string" && token.includes("token=")) {
+          token = token.split("token=")[1].split("&")[0];
+        }
+        const hardcodedPlayerUrl = "https://player.appx.co.in/secure-player-v3?isMobile=true&debug=true&quality=1080p&token=" + token;
+        const proxied = getProxyUrl(hardcodedPlayerUrl);
+        const res = await fetch(proxied);
+        const html = await res.text();
+        const match = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+        if (match) {
+          const nextData = JSON.parse(match[1]);
+          const urls = nextData.props?.pageProps?.urls || [];
+          if (urls.length > 0) {
+            const best = urls.find(u => u.quality === "1080p" && u.path) || urls.find(u => !u.jstr && u.path) || urls[0];
+            if (best && best.path) {
+              return {
+                url: getProxyUrl(best.path),
+                quality: best.quality || "1080p",
+                allUrls: urls,
+                playerUrl: proxied
+              };
+            }
+          }
+        }
+        return { url: null, playerUrl: proxied };
+      } catch (e) {
+        console.warn("Error resolving Appx video:", e);
+        return { url: null, playerUrl: getProxyUrl("https://player.appx.co.in/secure-player-v3?isMobile=true&debug=true&quality=1080p&token=" + (tokenOrUrl || "")) };
+      }
+    }
+
+    async function playRecorded(videoId) {
+      try {
+        const j = await fetchMultiAll(API_MAP.player.map(e => API_BASE + e.replace("{id}", CURRENT_COURSE).replace("{vid}", videoId)));
+        if (!j?.data) { showToast("Video data not found", "error"); return; }
+        const data = Array.isArray(j.data) ? j.data[0] : j.data;
+        if (hls) { hls.destroy(); hls = null; }
+        const player = document.getElementById("player");
+        const vid = document.getElementById("video");
+
+        if (data.video_player_url && data.video_player_token) {
+          const pUrl = data.video_player_url.includes(data.video_player_token)
+            ? data.video_player_url
+            : (data.video_player_url + data.video_player_token);
+          player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player">? Close</button><iframe src="${getProxyUrl(pUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen title="Video Player"></iframe>`;
+          player.style.display = "block";
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+
+        if (data.download_links?.length || data.download_link) {
+          const enc = data.download_links?.[0]?.path || data.download_link;
+          const realLink = decrypt(enc).trim().replace(/\s/g, "");
+          player.style.display = "block";
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          if (Hls.isSupported()) {
+            hls = new Hls({ lowLatencyMode: true });
+            hls.loadSource(getProxyUrl(realLink));
+            hls.attachMedia(vid);
+            vid.play().catch(() => { });
+          }
+          return;
+        }
+
+        if (data.encrypted_links?.length) {
+          const obj = data.encrypted_links[0];
+          let k2 = decode_base64(decrypt(obj.key)), da = decrypt(obj.path);
+          const pUrl = "https://appx-play.classx.co.in/combined-img-player?isMobile=true&videoPlayer=hls&urls=" + encodeURIComponent(da) + "&key=" + encodeURIComponent(k2);
+          player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player">? Close</button><iframe src="${getProxyUrl(pUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen title="Video Player"></iframe>`;
+          player.style.display = "block";
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+      } catch (e) { console.warn(e); showToast("Error playing video", "error"); }
+    }
+
+    async function downloadVideo(e, vid) {
+      e.stopPropagation();
+      showToast("Fetching download link...", "info");
+      const j = await fetchMulti(API_MAP.player.map(ep => API_BASE + ep.replace("{id}", CURRENT_COURSE).replace("{vid}", vid)));
+      const data = j.data;
+      if (!data) { showToast("Video details not found", "error"); return; }
+      try {
+        const enc = data.download_links?.[0]?.path || data.download_link;
+        if (!enc) { showToast("Download link missing", "error"); return; }
+        window.open(decrypt(enc), "_blank");
+        showToast("Download started!", "success");
+      } catch (err) { showToast("Download Error ❌", "error"); }
+    }
+
+    function playLiveInPro(id) {
+      document.getElementById("player-wrapper").style.display = "block";
+      setupHLS(`https://liveclasses.cloud-front.in/live/${id}_480p.m3u8`);
+    }
+
+    async function playVideoInPro(vidId) {
+      const host = document.getElementById("player-host");
+      document.getElementById("player-wrapper").style.display = "block";
+      document.getElementById("custom-controls").style.display = "block";
+      host.innerHTML = `<div class="spinner" style="margin-top:20%"></div>`;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      try {
+        const res = await fetch(`${API_BASE}/get/fetchVideoDetailsById?course_id=${currentCourseId}&folder_wise_course=1&ytflag=0&video_id=${vidId}`, { headers: getHeaders() });
+        const j = await res.json();
+        const data = j.data;
+        if (!data) { host.innerHTML = "<p style='padding:20px;text-align:center;opacity:0.5'>No video data</p>"; return; }
+
+        if (data.video_player_token) {
+  const pUrl =
+    "https://player.appx.co.in/secure-player?isMobile=true&debug=true&token=" +
+    encodeURIComponent(data.video_player_token);
+
+  host.innerHTML = `<iframe
+    src="${getProxyUrl(pUrl)}"
+    allow="autoplay;fullscreen;picture-in-picture"
+    allowfullscreen
+    style="width:100%;height:100%;border:none;position:absolute;top:0;left:0"
+    title="Video Player">
+  </iframe>`;
+
+  return;
+}
+
+        if (data.download_links?.length || data.download_link) {
+          const enc = data.download_links?.[0]?.path || data.download_link;
+          setupHLS(getProxyUrl(decrypt(enc).trim().replace(/\s/g, "")));
+          return;
+        }
+
+        if (data.encrypted_links?.length) {
+          const obj = data.encrypted_links[0];
+          let k2 = decode_base64(decrypt(obj.key)), da = decrypt(obj.path);
+          const pUrl = "https://appx-play.classx.co.in/combined-img-player?isMobile=true&videoPlayer=hls&urls=" + encodeURIComponent(da) + "&key=" + encodeURIComponent(k2);
+          host.innerHTML = `<iframe src="${getProxyUrl(pUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen style="width:100%;height:100%;border:none;position:absolute;top:0;left:0" title="Video Player"></iframe>`;
+          return;
+        }
+
+        host.innerHTML = "<p style='padding:20px;text-align:center;opacity:0.5'>Video locked / unsupported</p>";
+      } catch (e) { host.innerHTML = "<p style='padding:20px;text-align:center;opacity:0.5'>Error loading video</p>"; }
+    }
+
+    function setupHLS(url) {
+      const host = document.getElementById("player-host");
+      host.innerHTML = `<video id="videoObj" controls autoplay playsinline style="position:absolute;top:0;left:0;width:100%;height:100%"></video>`;
+      const video = document.getElementById("videoObj");
+      if (Hls.isSupported()) {
+        const h = new Hls({ lowLatencyMode: true });
+        h.loadSource(url);
+        h.attachMedia(video);
+      } else { video.src = url; }
+    }
+
+    function closeProPlayer() {
+      document.getElementById("player-wrapper").style.display = "none";
+      document.getElementById("custom-controls").style.display = "none";
+      document.getElementById("player-host").innerHTML = "";
+    }
+
+    function goFullScreen() {
+      const iframe = document.querySelector("#player-host iframe");
+      const video = document.getElementById("videoObj");
+      const elem = iframe || video || document.getElementById("player-wrapper");
+      if (!elem) return;
+      if (elem.requestFullscreen) elem.requestFullscreen();
+      else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+      if (screen.orientation?.lock) screen.orientation.lock("landscape").catch(() => { });
+    }
+
+    function goToHome() { location.reload(); }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      ['mobileInput', 'passInput', 'tokenInput'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveLogin(); });
+      });
+      const otpInput = document.getElementById('otpCodeInput');
+      if (otpInput) otpInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') verifyOTP(); });
+    });
+
+    /* ===== INIT ===== */
+    function startApp() {
+      document.getElementById("drawerLogoutBtn").style.display = "flex";
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("homeScreen").style.display = "block";
+      loadCourses();
+      loadPurchased();
+      updateFavSection();
+    }
+
+    (async function initApp() {
+      let cfg = {};
+      try { cfg = await fetchGithubJSON("config.json"); } catch (e) { }
+
+      if (cfg.maintenance) {
+        document.getElementById("maintMsg").innerText = cfg.message;
+        document.getElementById("maintImg").src = cfg.image;
+        document.getElementById("maintenanceScreen").style.display = "flex";
+        return;
+      }
+
+      const blockedByUpdate = await checkUpdate();
+      if (blockedByUpdate) return;
+
+      if (checkBan(cfg)) return;
+      showAnnouncement(cfg);
+      showDailyMessage(cfg);
+
+      if (TOKEN && USERID) {
+        document.getElementById("loginScreen").style.display = "none";
+        startApp();
+      } else {
+        document.getElementById("loginScreen").style.display = "flex";
+      }
+    })();
+  </script>
+</body>
+
+</html>
