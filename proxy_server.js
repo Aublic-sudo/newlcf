@@ -129,15 +129,6 @@ async function forwardUpstream(targetUrlStr, req, res) {
       return;
     }
 
-    // YouTube embeds should never be proxied to avoid player script crashes (direct embed)
-    if (targetUrlStr.includes('youtube.com') || targetUrlStr.includes('youtu.be')) {
-      sendResponse(res, 302, {
-        'Location': targetUrlStr,
-        'Access-Control-Allow-Origin': '*'
-      }, '');
-      return;
-    }
-
     if (targetUrlStr.includes('/images/undefined/')) {
       targetUrlStr = targetUrlStr.replace('/images/undefined/', '/images/watermark/');
     }

@@ -3170,31 +3170,21 @@
         const player = document.getElementById("player");
         const vid = document.getElementById("video");
 
-        // Check YouTube
-        const ytId = getYouTubeId(data);
-        if (data.ytFlag == 1 || data.ytFlagWeb == 1 || data.ytFlag === '1' || data.ytFlagWeb === '1' || ytId) {
-          const validYtId = ytId || getYouTubeId(data);
-          if (validYtId) {
-            closeProPlayer();
-            const ytEmbedUrl = `https://www.youtube.com/embed/${validYtId}?autoplay=1&rel=0`;
-            player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player" title="Close player">✕</button><iframe src="${ytEmbedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;height:100%;border:none;position:absolute;top:0;left:0" title="YouTube Player"></iframe>`;
-            player.style.display = "block";
-            window.scrollTo({ top: 0, behavior: "smooth" });
-            return;
-          }
-        }
-
-        if (data.video_player_url && data.video_player_token) {
+        // 1. Primary: AppX secure-player
+        const token = data.video_player_token || (item && item.video_player_token) || '';
+        const vUrl = data.video_player_url || (item && item.video_player_url) || '';
+        if (token || (vUrl && vUrl.trim())) {
           closeProPlayer();
-          const pUrl = data.video_player_url.includes(data.video_player_token)
-            ? data.video_player_url
-            : (data.video_player_url + data.video_player_token);
+          let pUrl = (vUrl && vUrl.trim())
+            ? (token && !vUrl.includes(token) ? (vUrl + token) : vUrl)
+            : ("https://player.appx.co.in/secure-player?isMobile=true&debug=true&token=" + encodeURIComponent(token));
           player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player" title="Close player">✕</button><iframe src="${getProxyUrl(pUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen title="Video Player"></iframe>`;
           player.style.display = "block";
           window.scrollTo({ top: 0, behavior: "smooth" });
           return;
         }
 
+        // 2. Direct / decrypted stream links
         if (data.download_links?.length || data.download_link) {
           closeProPlayer();
           const enc = data.download_links?.[0]?.path || data.download_link;
@@ -3210,12 +3200,24 @@
           return;
         }
 
+        // 3. Encrypted links
         if (data.encrypted_links?.length) {
           closeProPlayer();
           const obj = data.encrypted_links[0];
           let k2 = decode_base64(decrypt(obj.key)), da = decrypt(obj.path);
           const pUrl = "https://appx-play.classx.co.in/combined-img-player?isMobile=true&videoPlayer=hls&urls=" + encodeURIComponent(da) + "&key=" + encodeURIComponent(k2);
           player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player" title="Close player">✕</button><iframe src="${getProxyUrl(pUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen title="Video Player"></iframe>`;
+          player.style.display = "block";
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+
+        // 4. Fallback only if no secure-player or streams available
+        const ytId = getYouTubeId(data);
+        if (ytId) {
+          closeProPlayer();
+          const ytEmbedUrl = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`;
+          player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player" title="Close player">✕</button><iframe src="${ytEmbedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;height:100%;border:none;position:absolute;top:0;left:0" title="YouTube Player"></iframe>`;
           player.style.display = "block";
           window.scrollTo({ top: 0, behavior: "smooth" });
           return;
@@ -3269,29 +3271,12 @@
 
         if (!data) { host.innerHTML = "<p style='padding:20px;text-align:center;opacity:0.5'>No video data</p>"; return; }
 
-        // Check if video is YouTube (via flags or decryptable link/id)
-        const isYt = (data.ytFlag == 1 || data.ytFlagWeb == 1 || data.ytFlag === '1' || data.ytFlagWeb === '1' || isItemYt);
-        const ytId = getYouTubeId(data, item);
-
-        if (isYt || ytId) {
-          const targetYtId = ytId || getYouTubeId(data, item);
-          if (targetYtId) {
-            const ytEmbedUrl = `https://www.youtube.com/embed/${targetYtId}?autoplay=1&rel=0`;
-            host.innerHTML = `<iframe
-              src="${ytEmbedUrl}"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowfullscreen
-              style="width:100%;height:100%;border:none;position:absolute;top:0;left:0"
-              title="${data.Title || item?.Title || 'YouTube Player'}">
-            </iframe>`;
-            return;
-          }
-        }
-
-        if (data.video_player_token) {
-          const token = data.video_player_token;
-          let pUrl = (data.video_player_url && data.video_player_url.trim())
-            ? (data.video_player_url.includes(token) ? data.video_player_url : (data.video_player_url + token))
+        // 1. Primary: AppX secure-player (ALWAYS use secure-player when token or player URL exists)
+        const token = data.video_player_token || (item && item.video_player_token) || '';
+        const vUrl = data.video_player_url || (item && item.video_player_url) || '';
+        if (token || (vUrl && vUrl.trim())) {
+          let pUrl = (vUrl && vUrl.trim())
+            ? (token && !vUrl.includes(token) ? (vUrl + token) : vUrl)
             : ("https://player.appx.co.in/secure-player?isMobile=true&debug=true&token=" + encodeURIComponent(token));
           host.innerHTML = `<iframe
             src="${getProxyUrl(pUrl)}"
@@ -3303,12 +3288,14 @@
           return;
         }
 
+        // 2. Download links / HLS stream
         if (data.download_links?.length || data.download_link) {
           const enc = data.download_links?.[0]?.path || data.download_link;
           setupHLS(getProxyUrl(decrypt(enc).trim().replace(/\s/g, "")));
           return;
         }
 
+        // 3. Encrypted links
         if (data.encrypted_links?.length) {
           const obj = data.encrypted_links[0];
           let k2 = decode_base64(decrypt(obj.key)), da = decrypt(obj.path);
@@ -3317,9 +3304,17 @@
           return;
         }
 
+        // 4. Fallback if only YouTube ID exists without secure-player token
+        const ytId = getYouTubeId(data, item);
         if (ytId) {
           const ytEmbedUrl = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`;
-          host.innerHTML = `<iframe src="${ytEmbedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;height:100%;border:none;position:absolute;top:0;left:0" title="YouTube Player"></iframe>`;
+          host.innerHTML = `<iframe
+            src="${ytEmbedUrl}"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+            style="width:100%;height:100%;border:none;position:absolute;top:0;left:0"
+            title="${data.Title || item?.Title || 'YouTube Player'}">
+          </iframe>`;
           return;
         }
 
