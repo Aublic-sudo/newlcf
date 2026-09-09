@@ -3161,6 +3161,32 @@
       }
     }
 
+    function extractVideoPlayerToken(data, item) {
+      if (data?.video_player_token) return String(data.video_player_token).trim();
+      if (item?.video_player_token) return String(item.video_player_token).trim();
+      const rawUrl = String(data?.video_player_url || item?.video_player_url || '');
+      if (rawUrl.includes('token=')) {
+        const match = rawUrl.match(/[?&]token=([^&#]+)/);
+        if (match && match[1]) return decodeURIComponent(match[1]).trim();
+      }
+      return '';
+    }
+
+    function resolveSecurePlayerUrl(data, item) {
+      const token = extractVideoPlayerToken(data, item);
+      if (!token) return '';
+      const serverUrl = String(data?.video_player_url || item?.video_player_url || '').trim();
+      // If server explicitly returned secure-player or secure-player-v3, use it with token
+      if (serverUrl && (serverUrl.includes('/secure-player-v3') || serverUrl.includes('/secure-player'))) {
+        let finalServerUrl = serverUrl.replace(/https?:\/\/[^\/]+/, 'https://player.appx.co.in');
+        if (finalServerUrl.includes(token)) return finalServerUrl;
+        if (finalServerUrl.endsWith('=')) return finalServerUrl + encodeURIComponent(token);
+        return finalServerUrl + (finalServerUrl.includes('?') ? '&token=' : '?token=') + encodeURIComponent(token);
+      }
+      // Otherwise, ALWAYS use the hardcoded secure-player URL with server token
+      return "https://player.appx.co.in/secure-player?isMobile=true&debug=true&token=" + encodeURIComponent(token);
+    }
+
     async function playRecorded(videoId) {
       try {
         const j = await fetchMultiAll(API_MAP.player.map(e => API_BASE + e.replace("{id}", CURRENT_COURSE).replace("{vid}", videoId)));
@@ -3171,14 +3197,10 @@
         const vid = document.getElementById("video");
 
         // 1. Primary: AppX secure-player
-        const token = data.video_player_token || (item && item.video_player_token) || '';
-        const vUrl = data.video_player_url || (item && item.video_player_url) || '';
-        if (token || (vUrl && vUrl.trim())) {
+        const securePlayerUrl = resolveSecurePlayerUrl(data, null);
+        if (securePlayerUrl) {
           closeProPlayer();
-          let pUrl = (vUrl && vUrl.trim())
-            ? (token && !vUrl.includes(token) ? (vUrl + token) : vUrl)
-            : ("https://player.appx.co.in/secure-player?isMobile=true&debug=true&token=" + encodeURIComponent(token));
-          player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player" title="Close player">✕</button><iframe src="${getProxyUrl(pUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen title="Video Player"></iframe>`;
+          player.innerHTML = `<button class="close-player" onclick="closePlayer()" aria-label="Close player" title="Close player">✕</button><iframe src="${getProxyUrl(securePlayerUrl)}" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen title="Video Player"></iframe>`;
           player.style.display = "block";
           window.scrollTo({ top: 0, behavior: "smooth" });
           return;
@@ -3272,14 +3294,10 @@
         if (!data) { host.innerHTML = "<p style='padding:20px;text-align:center;opacity:0.5'>No video data</p>"; return; }
 
         // 1. Primary: AppX secure-player (ALWAYS use secure-player when token or player URL exists)
-        const token = data.video_player_token || (item && item.video_player_token) || '';
-        const vUrl = data.video_player_url || (item && item.video_player_url) || '';
-        if (token || (vUrl && vUrl.trim())) {
-          let pUrl = (vUrl && vUrl.trim())
-            ? (token && !vUrl.includes(token) ? (vUrl + token) : vUrl)
-            : ("https://player.appx.co.in/secure-player?isMobile=true&debug=true&token=" + encodeURIComponent(token));
+        const securePlayerUrl = resolveSecurePlayerUrl(data, item);
+        if (securePlayerUrl) {
           host.innerHTML = `<iframe
-            src="${getProxyUrl(pUrl)}"
+            src="${getProxyUrl(securePlayerUrl)}"
             allow="autoplay;fullscreen;picture-in-picture"
             allowfullscreen
             style="width:100%;height:100%;border:none;position:absolute;top:0;left:0"

@@ -151,7 +151,15 @@ async function forwardUpstream(targetUrlStr, req, res) {
       }
     }
 
-    if ((targetUrlStr.includes('/secure-player-v3') || targetUrlStr.includes('/secure-player?')) && targetUrlStr.includes('classx.co.in')) {
+    // Force hardcoded secure-player URL whenever combined-img-player is called with a token
+    if (targetUrlStr.includes('/combined-img-player') && targetUrlStr.includes('token=')) {
+      const matchToken = targetUrlStr.match(/[?&]token=([^&#]+)/);
+      if (matchToken && matchToken[1]) {
+        targetUrlStr = 'https://player.appx.co.in/secure-player?isMobile=true&debug=true&token=' + matchToken[1];
+      }
+    }
+
+    if ((targetUrlStr.includes('/secure-player-v3') || targetUrlStr.includes('/secure-player')) && targetUrlStr.includes('classx.co.in')) {
       targetUrlStr = targetUrlStr.replace(/https?:\/\/[^\/]+/, 'https://player.appx.co.in');
     }
 
