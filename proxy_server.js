@@ -30,7 +30,7 @@ const MASTER_DEVICE = {
 };
 
 // PERSISTENT SHARED SESSIONS
-const SESSIONS_FILE = path.join(BASE_DIR, 'sessions.json');
+const SESSIONS_FILE = process.env.VERCEL ? path.join('/tmp', 'sessions.json') : path.join(BASE_DIR, 'sessions.json');
 function loadSessions() {
   try {
     if (fs.existsSync(SESSIONS_FILE)) {
@@ -208,22 +208,27 @@ async function forwardUpstream(targetUrlStr, req, res) {
     });
 
     // Enforce SINGLE MASTER DEVICE identity across all Akamai & Appx endpoints
-    if (isAkamai || isClassX || targetUrl.hostname.includes('appx.co.in')) {
+    if (isAkamai || isClassX || targetUrl.hostname.includes('appx.co.in') || targetUrl.pathname.includes('/get/') || targetUrl.pathname.includes('/post/')) {
+      // Clean any potential duplicate / conflicting casing keys first so Node fetch never combines them
+      const conflictKeys = [
+        'client-service', 'Client-Service', 'auth-key', 'Auth-Key',
+        'source', 'device-type', 'Device-Type', 'device-id', 'Device-Id', 'device_id',
+        'device-name', 'device-model', 'os-version', 'app-version', 'user-id', 'User-ID'
+      ];
+      for (const ck of conflictKeys) {
+        delete fetchHeaders[ck];
+      }
+
       fetchHeaders['Client-Service'] = MASTER_DEVICE.clientService;
-      fetchHeaders['client-service'] = MASTER_DEVICE.clientService;
       fetchHeaders['Auth-Key'] = MASTER_DEVICE.authKey;
-      fetchHeaders['auth-key'] = MASTER_DEVICE.authKey;
-      fetchHeaders['source'] = MASTER_DEVICE.source;
-      fetchHeaders['device-type'] = MASTER_DEVICE.type;
+      fetchHeaders['source'] = req.headers['source'] || 'website';
       fetchHeaders['Device-Type'] = MASTER_DEVICE.type;
       fetchHeaders['device-id'] = MASTER_DEVICE.id;
-      fetchHeaders['Device-Id'] = MASTER_DEVICE.id;
-      fetchHeaders['device_id'] = MASTER_DEVICE.id;
       fetchHeaders['device-name'] = MASTER_DEVICE.name;
       fetchHeaders['device-model'] = MASTER_DEVICE.model;
       fetchHeaders['os-version'] = MASTER_DEVICE.osVersion;
       fetchHeaders['app-version'] = MASTER_DEVICE.appVersion;
-      if (!fetchHeaders['User-ID'] && !fetchHeaders['user-id']) fetchHeaders['User-ID'] = req.headers['user-id'] || '0';
+      fetchHeaders['User-ID'] = req.headers['user-id'] || req.headers['User-ID'] || '0';
     }
 
     // ZERO CLIENT IP LEAKAGE & ANTI-FINGERPRINTING:
