@@ -1,0 +1,2746 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KeyAuth - Authentication Made for Everyone</title>
+  <link rel="icon" type="image/png" href="https://cdn.keyauth.cc/global/imgs/Favicon.png">
+  <script>
+    (function() {
+      var origWarn = console.warn;
+      console.warn = function() {
+        if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].indexOf('cdn.tailwindcss.com') !== -1) return;
+        return origWarn.apply(console, arguments);
+      };
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'custom-back': '#09090d',
+            'custom-back-1': '#111119',
+            'custom-card': '#161622',
+            'custom-border': '#222233',
+            'custom-blue': '#3b82f6'
+          },
+          fontFamily: {
+            sans: ['IBM Plex Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #09090d; color: #f3f4f6; }
+    .sidebar-link { transition: all 0.2s ease-in-out; }
+    .sidebar-link:hover, .sidebar-link.active {
+      background-color: #161622;
+      color: #3b82f6;
+      border-left: 3px solid #3b82f6;
+    }
+    .modal-backdrop {
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .glow-card {
+      box-shadow: 0 0 50px rgba(59, 130, 246, 0.15), 0 0 20px rgba(0, 0, 0, 0.8);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #09090d; }
+    ::-webkit-scrollbar-thumb { background: #222233; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans relative antialiased selection:bg-blue-600 selection:text-white bg-[#09090d]">
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-[100000] flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- LOGIN OVERLAY (Shows when unauthenticated) -->
+  <div id="loginOverlay" class="fixed inset-0 z-[99998] flex items-center justify-center p-4 bg-[#09090d]">
+    <div class="w-full max-w-md bg-[#12121c] border border-[#222235] rounded-3xl p-8 glow-card space-y-6 text-center">
+      <div>
+        <img src="https://cdn.keyauth.cc/v3/imgs/KeyauthBanner.png" class="h-10 mx-auto" alt="KeyAuth Logo">
+        <h2 class="text-xl font-bold text-white mt-5">Developer Admin Console</h2>
+        <p class="text-xs text-gray-400 mt-1">Authorized developers only. Login with Token or Credentials.</p>
+      </div>
+
+      <div class="flex bg-[#09090d] p-1 rounded-xl border border-[#26263d] text-xs">
+        <button type="button" id="tabLoginToken" onclick="switchLoginMode('token')" class="flex-1 py-1.5 rounded-lg font-semibold bg-blue-600 text-white transition">Admin Token</button>
+        <button type="button" id="tabLoginUser" onclick="switchLoginMode('user')" class="flex-1 py-1.5 rounded-lg font-semibold text-gray-400 hover:text-white transition">User & Password</button>
+      </div>
+
+      <form onsubmit="handleLoginSubmit(event)" class="space-y-4 text-left">
+        <!-- Token Login View -->
+        <div id="viewLoginToken" class="space-y-1">
+          <label class="text-xs text-gray-400 font-medium">Admin Secret Token / Key</label>
+          <div class="relative mt-1">
+            <i class="fas fa-key absolute left-3.5 top-3.5 text-gray-500 text-sm"></i>
+            <input type="password" id="adminTokenInput" placeholder="ghostrix_secret_admin_2026 or Darshan@1334"
+              class="w-full bg-[#09090d] border border-[#26263d] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition font-mono">
+          </div>
+        </div>
+
+        <!-- Username/Password Login View -->
+        <div id="viewLoginUser" class="hidden space-y-3">
+          <div>
+            <label class="text-xs text-gray-400 font-medium">Username</label>
+            <div class="relative mt-1">
+              <i class="fas fa-user absolute left-3.5 top-3.5 text-gray-500 text-sm"></i>
+              <input type="text" id="adminUserInput" placeholder="admin@1234"
+                class="w-full bg-[#09090d] border border-[#26263d] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+            </div>
+          </div>
+          <div>
+            <label class="text-xs text-gray-400 font-medium">Password</label>
+            <div class="relative mt-1">
+              <i class="fas fa-lock absolute left-3.5 top-3.5 text-gray-500 text-sm"></i>
+              <input type="password" id="adminPassInput" placeholder="Darshan@1334"
+                class="w-full bg-[#09090d] border border-[#26263d] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+            </div>
+          </div>
+        </div>
+
+        <div id="loginError" class="text-xs text-red-400 text-center hidden">Invalid Secret Token or Credentials!</div>
+
+        <button type="submit" id="loginBtn"
+          class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2">
+          <span>Authorize & Enter Console</span>
+          <i class="fas fa-arrow-right text-xs"></i>
+        </button>
+      </form>
+
+      <div class="pt-2 border-t border-[#1e1e2f] text-[11px] text-gray-500">
+        Ghostrix KeyAuth Serverless Engine • Protected Session
+      </div>
+    </div>
+  </div>
+
+  <!-- FIXED TOP HEADER -->
+  <header class="bg-custom-back-1 fixed top-0 left-0 right-0 lg:left-64 h-16 border-b border-custom-border z-40 flex items-center justify-between px-4 sm:px-6">
+    <div class="flex items-center gap-3">
+      <button onclick="toggleSidebar()" class="lg:hidden p-2 text-gray-400 hover:text-white rounded-lg hover:bg-custom-card">
+        <i class="fas fa-bars text-lg"></i>
+      </button>
+      <div class="relative w-64 md:w-80 hidden sm:block">
+        <i class="fas fa-search absolute left-3 top-3 text-gray-500 text-sm"></i>
+        <input type="search" id="globalSearch" oninput="handleGlobalSearch(this.value)" placeholder="Search pages, licenses, users, logs..." class="w-full bg-custom-back border border-custom-border text-sm rounded-lg pl-9 pr-4 py-1.5 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition">
+      </div>
+    </div>
+
+    <!-- PROFILE CARD & APP SELECTOR -->
+    <div class="flex items-center gap-3 sm:gap-4">
+      <div class="flex items-center gap-2 bg-custom-back px-3 py-1.5 rounded-xl border border-custom-border shadow-sm">
+        <i class="fas fa-layer-group text-blue-400 text-xs"></i>
+        <label for="globalAppSelector" class="text-xs text-gray-400 hidden sm:inline font-medium">Application:</label>
+        <select id="globalAppSelector" onchange="onSwitchApp(this.value)" class="bg-transparent text-white text-xs font-bold focus:outline-none cursor-pointer">
+          <option value="" disabled>Loading apps...</option>
+        </select>
+        <span id="globalAppStatusDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Application Online"></span>
+      </div>
+
+      <!-- User Profile Card -->
+      <div onclick="logoutAdmin()" title="Click to Logout" class="flex items-center gap-2.5 bg-custom-back px-3 py-1.5 rounded-xl border border-custom-border hover:border-red-500 transition cursor-pointer">
+        <img src="https://cdn.keyauth.cc/global/imgs/Favicon.png" class="w-8 h-8 rounded-full border border-blue-500 p-0.5" alt="profile">
+        <div class="text-left hidden md:block">
+          <div class="text-xs font-bold text-white">Developer Admin</div>
+          <div class="text-[10px] text-red-400 font-medium"><i class="fas fa-sign-out-alt"></i> Logout</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- FIXED SIDEBAR -->
+  <aside id="sidebar" class="bg-custom-back fixed top-0 left-0 bottom-0 w-64 border-r border-custom-border z-50 flex flex-col transition-transform duration-300 -translate-x-full lg:translate-x-0">
+    <div class="h-16 flex items-center justify-between px-5 border-b border-custom-border">
+      <img src="https://cdn.keyauth.cc/v3/imgs/KeyauthBanner.png" class="h-8 sm:h-9" alt="KeyAuth">
+      <button onclick="toggleSidebar()" class="lg:hidden text-gray-400 hover:text-white">
+        <i class="fas fa-times text-lg"></i>
+      </button>
+    </div>
+
+    <div class="p-3 border-b border-custom-border">
+      <div class="bg-custom-back-1 p-2.5 rounded-xl border border-custom-border flex items-center justify-between">
+        <div class="flex items-center gap-2 overflow-hidden">
+          <i class="fas fa-shield-halved text-blue-500"></i>
+          <span id="sidebarAppTitle" class="text-sm font-bold truncate">Ghost Rix</span>
+        </div>
+        <span id="sidebarAppVersion" class="px-2 py-0.5 text-[10px] bg-blue-600/30 text-blue-400 rounded-md border border-blue-500/30 font-mono">v1.2</span>
+      </div>
+    </div>
+
+    <!-- Navigation Menu Items -->
+    <nav class="flex-1 overflow-y-auto p-3 space-y-1 text-sm text-gray-300">
+      <a href="?page=manage-apps" onclick="navigateToTab('manage-apps', event)" id="nav-manage-apps" class="sidebar-link active flex items-center gap-3 px-3.5 py-2.5 rounded-lg cursor-pointer">
+        <i class="fas fa-th-large w-5 text-gray-400"></i> Manage Apps
+      </a>
+      <a href="?page=licenses" onclick="navigateToTab('licenses', event)" id="nav-licenses" class="sidebar-link flex items-center gap-3 px-3.5 py-2.5 rounded-lg cursor-pointer">
+        <i class="fas fa-key w-5 text-gray-400"></i> Licenses
+      </a>
+      <a href="?page=users" onclick="navigateToTab('users', event)" id="nav-users" class="sidebar-link flex items-center gap-3 px-3.5 py-2.5 rounded-lg cursor-pointer">
+        <i class="fas fa-users w-5 text-gray-400"></i> Users
+      </a>
+      <a href="?page=files" onclick="navigateToTab('files', event)" id="nav-files" class="sidebar-link flex items-center gap-3 px-3.5 py-2.5 rounded-lg cursor-pointer">
+        <i class="fas fa-cloud-arrow-down w-5 text-gray-400"></i> Files & Uploads
+      </a>
+      <a href="?page=vars" onclick="navigateToTab('vars', event)" id="nav-vars" class="sidebar-link flex items-center gap-3 px-3.5 py-2.5 rounded-lg cursor-pointer">
+        <i class="fas fa-database w-5 text-gray-400"></i> Variables
+      </a>
+      <a href="?page=sessions" onclick="navigateToTab('sessions', event)" id="nav-sessions" class="sidebar-link flex items-center gap-3 px-3.5 py-2.5 rounded-lg cursor-pointer">
+        <i class="fas fa-stopwatch w-5 text-gray-400"></i> Sessions
+      </a>
+      <a href="?page=logs" onclick="navigateToTab('logs', event)" id="nav-logs" class="sidebar-link flex items-center gap-3 px-3.5 py-2.5 rounded-lg cursor-pointer">
+        <i class="fas fa-scroll w-5 text-gray-400"></i> Live Audit Logs
+      </a>
+      <a href="?page=rules" onclick="navigateToTab('rules', event)" id="nav-rules" class="sidebar-link flex items-center gap-3 px-3.5 py-2.5 rounded-lg cursor-pointer">
+        <i class="fas fa-ban w-5 text-gray-400"></i> Rules / Blacklists
+      </a>
+      <a href="?page=tester" onclick="navigateToTab('tester', event)" id="nav-tester" class="sidebar-link flex items-center gap-3 px-3.5 py-2.5 rounded-lg cursor-pointer">
+        <i class="fas fa-vial w-5 text-gray-400"></i> API Simulator / Tester
+      </a>
+      <a href="?page=integration" onclick="navigateToTab('integration', event)" id="nav-integration" class="sidebar-link flex items-center gap-3 px-3.5 py-2.5 rounded-lg cursor-pointer">
+        <i class="fas fa-code w-5 text-gray-400"></i> SDK Integration
+      </a>
+      <a href="?page=settings" onclick="navigateToTab('settings', event)" id="nav-settings" class="sidebar-link flex items-center gap-3 px-3.5 py-2.5 rounded-lg cursor-pointer">
+        <i class="fas fa-cog w-5 text-gray-400"></i> Settings & Storage
+      </a>
+    </nav>
+
+    <div class="p-3 border-t border-custom-border text-xs text-gray-500 text-center">
+      <div class="text-green-400 text-[11px] font-semibold">🔒 Protected Admin Session</div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <div class="lg:pl-64 flex flex-col flex-1 min-h-screen">
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 mt-16 max-w-7xl w-full mx-auto space-y-6">
+
+      <!-- ==================== TAB 1: MANAGE APPS ==================== -->
+      <div id="tab-manage-apps" class="tab-pane space-y-6">
+        <div class="bg-custom-back-1 p-6 rounded-2xl border border-custom-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-bold text-white">Manage Applications</h1>
+            <p class="text-sm text-gray-400 mt-1">Applications are the backbone of all authentication data and video access.</p>
+          </div>
+          <button onclick="openModal('create-app-modal')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+            <i class="fas fa-plus"></i> Create App
+          </button>
+        </div>
+
+        <!-- Credentials Card -->
+        <div class="bg-custom-card p-6 rounded-2xl border border-custom-border space-y-4">
+          <div>
+            <h3 class="text-lg font-bold text-white">Application Credentials</h3>
+            <p class="text-xs text-gray-400 mt-0.5">Use these credentials in your Android app to connect to this API.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label class="text-xs text-gray-400">Application Name</label>
+              <div id="credName" class="text-sm font-mono bg-custom-back p-2.5 rounded-lg border border-custom-border mt-1 text-white font-semibold">Loading...</div>
+            </div>
+            <div>
+              <label class="text-xs text-gray-400">Owner ID</label>
+              <div id="credOwnerId" class="text-sm font-mono bg-custom-back p-2.5 rounded-lg border border-custom-border mt-1 text-white">Loading...</div>
+            </div>
+            <div>
+              <label class="text-xs text-gray-400">Application Secret</label>
+              <div id="credSecret" class="text-sm font-mono bg-custom-back p-2.5 rounded-lg border border-custom-border mt-1 text-white truncate" title="Application Secret">Loading...</div>
+            </div>
+            <div>
+              <label class="text-xs text-gray-400">Client Version</label>
+              <div id="credVersion" class="text-sm font-mono bg-custom-back p-2.5 rounded-lg border border-custom-border mt-1 text-white">Loading...</div>
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button onclick="copySnippet()" class="px-4 py-2 bg-custom-back hover:bg-custom-border text-blue-400 text-xs font-semibold rounded-lg border border-blue-500/30 flex items-center gap-2">
+              <i class="fas fa-code"></i> Copy Kotlin App Code Snippet
+            </button>
+          </div>
+        </div>
+
+        <!-- Apps Grid -->
+        <div>
+          <h3 class="text-lg font-bold text-white mb-4">My Applications</h3>
+          <div id="appsListContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 2: LICENSES ==================== -->
+      <div id="tab-licenses" class="tab-pane hidden space-y-6">
+        <div class="bg-custom-back-1 p-6 rounded-2xl border border-custom-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-bold text-white">Licenses</h1>
+            <p class="text-sm text-gray-400 mt-1">Generate and manage keys. Each key can have custom HWID lock rules, duration, and notes.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="openModal('create-key-modal')" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+              <i class="fas fa-plus"></i> Generate Keys
+            </button>
+            <button onclick="openModal('import-license-modal')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-lg shadow-emerald-600/20">
+              <i class="fas fa-file-import"></i> Import Keys (KeyAuth.cc)
+            </button>
+            <button onclick="openModal('extend-license-modal')" class="px-3 py-2 bg-custom-card hover:bg-custom-border text-gray-300 rounded-lg text-sm border border-custom-border">
+              <i class="fas fa-clock mr-1.5 text-blue-400"></i> Extend
+            </button>
+            <button onclick="openModal('delete-license-modal')" class="px-3 py-2 bg-custom-card hover:bg-red-900/30 text-red-400 rounded-lg text-sm border border-custom-border">
+              <i class="fas fa-trash mr-1.5"></i> Delete Keys
+            </button>
+            <button onclick="exportLicenses()" class="px-3 py-2 bg-custom-card hover:bg-custom-border text-gray-300 rounded-lg text-sm border border-custom-border" title="Export as JSON">
+              <i class="fas fa-file-code mr-1.5 text-blue-400"></i> JSON
+            </button>
+            <button onclick="exportKeysCSV()" class="px-3 py-2 bg-custom-card hover:bg-custom-border text-gray-300 rounded-lg text-sm border border-custom-border" title="Export as CSV table">
+              <i class="fas fa-file-csv mr-1.5 text-emerald-400"></i> CSV
+            </button>
+            <button onclick="exportKeysTxt()" class="px-3 py-2 bg-custom-card hover:bg-custom-border text-gray-300 rounded-lg text-sm border border-custom-border" title="Export raw keys list, 1 per line">
+              <i class="fas fa-file-lines mr-1.5 text-yellow-400"></i> TXT
+            </button>
+          </div>
+        </div>
+
+        <!-- Search Bar & Filters -->
+        <div class="flex flex-col sm:flex-row gap-3">
+          <input type="search" id="licenseSearch" onkeyup="renderLicenses()" oninput="renderLicenses()" placeholder="Search keys, notes, or bound HWID..." class="flex-1 bg-custom-card border border-custom-border rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500">
+          <select id="licenseAppFilter" onchange="renderLicenses()" class="bg-custom-card border border-custom-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 font-medium">
+            <option value="">All Applications</option>
+          </select>
+          <select id="licenseStatusFilter" onchange="renderLicenses()" class="bg-custom-card border border-custom-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
+            <option value="">All Statuses</option>
+            <option value="Not Used">Not Used</option>
+            <option value="Used">Used</option>
+            <option value="Paused">Paused</option>
+            <option value="Banned">Banned</option>
+          </select>
+          <select id="licenseHwidFilter" onchange="renderLicenses()" class="bg-custom-card border border-custom-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
+            <option value="">All HWID Rules</option>
+            <option value="locked">HWID Locked Only</option>
+            <option value="unlocked">HWID Unlocked / Free</option>
+          </select>
+        </div>
+
+        <!-- Licenses Grid -->
+        <div id="licensesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </div>
+
+      <!-- ==================== TAB 3: USERS ==================== -->
+      <div id="tab-users" class="tab-pane hidden space-y-6">
+        <div class="bg-custom-back-1 p-6 rounded-2xl border border-custom-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-bold text-white">Users</h1>
+            <p class="text-sm text-gray-400 mt-1">Users registered on your application with HWID locking, pause, ban, and password controls.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="openModal('create-user-modal')" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+              <i class="fas fa-user-plus"></i> Create User
+            </button>
+            <button onclick="openModal('import-user-modal')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-lg shadow-emerald-600/20">
+              <i class="fas fa-file-import"></i> Import Users (KeyAuth.cc)
+            </button>
+            <button onclick="resetAllHwids()" class="px-3 py-2 bg-custom-card hover:bg-purple-900/30 text-purple-400 rounded-lg text-sm border border-custom-border">
+              <i class="fas fa-rotate mr-1.5"></i> Reset All HWIDs
+            </button>
+            <button onclick="openModal('delete-users-modal')" class="px-3 py-2 bg-custom-card hover:bg-red-900/30 text-red-400 rounded-lg text-sm border border-custom-border">
+              <i class="fas fa-trash mr-1.5"></i> Delete Users
+            </button>
+            <button onclick="exportUsers()" class="px-3 py-2 bg-custom-card hover:bg-custom-border text-gray-300 rounded-lg text-sm border border-custom-border">
+              <i class="fas fa-file-export mr-1.5 text-green-400"></i> Export
+            </button>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="flex flex-col sm:flex-row gap-3">
+          <input type="search" id="userSearch" onkeyup="renderUsers()" oninput="renderUsers()" placeholder="Search users by name, HWID, IP or device..." class="flex-1 bg-custom-card border border-custom-border rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500">
+          <select id="userStatusFilter" onchange="renderUsers()" class="bg-custom-card border border-custom-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+            <option value="banned">Banned</option>
+          </select>
+        </div>
+
+        <!-- Users Grid -->
+        <div id="usersGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </div>
+
+      <!-- ==================== TAB 4: FILES & UPLOADS ==================== -->
+      <div id="tab-files" class="tab-pane hidden space-y-6">
+        <div class="bg-custom-back-1 p-6 rounded-2xl border border-custom-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-bold text-white">Files & Downloads</h1>
+            <p class="text-sm text-gray-400 mt-1">Host updates and secure files. Accessible by clients strictly with an active license.</p>
+          </div>
+          <button onclick="openModal('create-file-modal')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+            <i class="fas fa-upload"></i> Upload / Add File
+          </button>
+        </div>
+
+        <div class="bg-custom-card rounded-xl border border-custom-border overflow-hidden">
+          <table class="w-full text-left text-sm text-gray-300">
+            <thead class="bg-custom-back text-xs uppercase text-gray-400 border-b border-custom-border">
+              <tr>
+                <th class="p-3.5">File ID</th>
+                <th class="p-3.5">File Name</th>
+                <th class="p-3.5">Size</th>
+                <th class="p-3.5">Direct Download URL</th>
+                <th class="p-3.5 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="filesTableBody" class="divide-y divide-custom-border"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 5: VARIABLES ==================== -->
+      <div id="tab-vars" class="tab-pane hidden space-y-6">
+        <div class="bg-custom-back-1 p-6 rounded-2xl border border-custom-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-bold text-white">Application Variables</h1>
+            <p class="text-sm text-gray-400 mt-1">Dynamic parameters accessible via client SDK strictly with an active license.</p>
+          </div>
+          <button onclick="openModal('create-var-modal')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition flex items-center gap-2">
+            <i class="fas fa-plus"></i> Create Variable
+          </button>
+        </div>
+
+        <div class="bg-custom-card rounded-xl border border-custom-border overflow-hidden">
+          <table class="w-full text-left text-sm text-gray-300">
+            <thead class="bg-custom-back text-xs uppercase text-gray-400 border-b border-custom-border">
+              <tr>
+                <th class="p-3.5">Variable Name</th>
+                <th class="p-3.5">Value / Data</th>
+                <th class="p-3.5">Type</th>
+                <th class="p-3.5 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="varsTableBody" class="divide-y divide-custom-border"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 6: SESSIONS ==================== -->
+      <div id="tab-sessions" class="tab-pane hidden space-y-6">
+        <div class="bg-custom-back-1 p-6 rounded-2xl border border-custom-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-bold text-white">Active Device Sessions</h1>
+            <p class="text-sm text-gray-400 mt-1">Real-time connected sessions from Android devices with IP and hardware telemetry.</p>
+          </div>
+          <button onclick="killAllSessions()" class="px-3.5 py-2 bg-red-900/30 text-red-400 hover:bg-red-900/50 rounded-lg text-sm border border-red-500/30 flex items-center gap-2">
+            <i class="fas fa-power-off"></i> Terminate All Sessions
+          </button>
+        </div>
+        <div class="bg-custom-card rounded-xl border border-custom-border overflow-hidden">
+          <table class="w-full text-left text-sm text-gray-300">
+            <thead class="bg-custom-back text-xs uppercase text-gray-400 border-b border-custom-border">
+              <tr>
+                <th class="p-3">Session ID</th>
+                <th class="p-3">Status</th>
+                <th class="p-3">User / Key</th>
+                <th class="p-3">IP Address</th>
+                <th class="p-3">HWID</th>
+                <th class="p-3">Device Model</th>
+                <th class="p-3">Started</th>
+                <th class="p-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="sessionsTableBody" class="divide-y divide-custom-border font-mono text-xs"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 7: LIVE AUDIT & EVENT LOGS ==================== -->
+      <div id="tab-logs" class="tab-pane hidden space-y-6">
+        <div class="bg-custom-back-1 p-6 rounded-2xl border border-custom-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-bold text-white">Live Audit & Security Event Logs</h1>
+            <p class="text-sm text-gray-400 mt-1">Complete real-time telemetry: App opens, logins, HWID mismatches, video streams, and security alerts.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="exportLogsToCSV()" class="px-3.5 py-2 bg-custom-card hover:bg-custom-border text-gray-300 rounded-lg text-sm border border-custom-border flex items-center gap-2 transition">
+              <i class="fas fa-file-csv text-green-400"></i> Export CSV
+            </button>
+            <button onclick="clearLogs()" class="px-3.5 py-2 bg-red-900/30 text-red-400 hover:bg-red-900/50 rounded-lg text-sm border border-red-500/30 flex items-center gap-2 transition">
+              <i class="fas fa-trash"></i> Clear Logs
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter & Search Controls Bar -->
+        <div class="space-y-3">
+          <div class="flex items-center gap-2">
+            <div class="relative flex-1">
+              <i class="fas fa-search absolute left-4 top-3.5 text-gray-500 text-xs"></i>
+              <input type="search" id="logSearchInput" onkeyup="renderLogs()" oninput="renderLogs()" placeholder="Search application logs..." class="w-full bg-custom-card border border-custom-border rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition">
+            </div>
+            <button id="logFilterBtn" onclick="toggleLogFilterMenu()" class="p-2.5 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 rounded-xl border border-blue-500/30 transition shadow-sm" title="Filter by Event Category">
+              <i class="fas fa-filter text-sm"></i>
+            </button>
+            <button onclick="toggleLogViewMode()" class="p-2.5 bg-custom-card hover:bg-custom-border text-gray-300 rounded-xl border border-custom-border transition shadow-sm" title="Toggle Grid Boxes / Table View">
+              <i id="logViewModeIcon" class="fas fa-border-all text-sm"></i>
+            </button>
+            <button onclick="exportLogsToCSV()" class="p-2.5 bg-custom-card hover:bg-custom-border text-green-400 rounded-xl border border-custom-border transition shadow-sm" title="Download CSV">
+              <i class="fas fa-download text-sm"></i>
+            </button>
+            <button onclick="confirmClearOrDeleteLogs()" class="p-2.5 bg-red-900/30 text-red-400 hover:bg-red-900/50 rounded-xl border border-red-500/30 transition shadow-sm" title="Delete Logs">
+              <i class="fas fa-trash text-sm"></i>
+            </button>
+          </div>
+
+          <!-- Collapsible Category Filter -->
+          <div id="logFilterMenu" class="hidden bg-custom-card p-3 rounded-xl border border-custom-border flex flex-wrap items-center gap-3">
+            <span class="text-xs text-gray-400 font-semibold"><i class="fas fa-filter text-blue-400 mr-1.5"></i>Category Filter:</span>
+            <select id="logTypeFilter" onchange="renderLogs()" class="bg-custom-back border border-custom-border rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 font-medium">
+              <option value="">All Event Categories</option>
+              <option value="STREAM_ACCESS">Video Streaming (Active Plays)</option>
+              <option value="LOGIN_SUCCESS">Key Login (Success)</option>
+              <option value="LOGIN_FAILED">Key Login (Failed)</option>
+              <option value="HWID_MISMATCH">HWID Mismatches</option>
+              <option value="APP_INIT">APK Open / App Launches</option>
+              <option value="SECURITY_ALERT">Security Alerts</option>
+              <option value="VAR_ACCESS">Variable Access</option>
+              <option value="FILE_DOWNLOAD">File Downloads</option>
+              <option value="ADMIN_ACTION">Admin Actions</option>
+              <option value="CLIENT_LOG">Client App Logs</option>
+            </select>
+          </div>
+
+          <!-- Select All Checkbox & Bulk Actions Toolbar -->
+          <div class="flex items-center justify-between text-xs text-gray-400 px-1 pt-1">
+            <label class="flex items-center gap-2.5 cursor-pointer select-none">
+              <input type="checkbox" id="selectAllLogs" onchange="toggleSelectAllLogs(this.checked)" class="accent-blue-600 rounded bg-custom-back border-gray-600 w-4 h-4 cursor-pointer">
+              <span class="text-gray-300 font-semibold text-xs">Select All</span>
+            </label>
+            <div id="selectedLogsToolbar" class="hidden flex items-center gap-2.5">
+              <span id="selectedLogsCount" class="text-blue-400 font-semibold text-xs">0 selected</span>
+              <button onclick="deleteSelectedLogs()" class="px-3 py-1 bg-red-600/20 hover:bg-red-600/30 text-red-300 rounded-lg border border-red-500/30 font-semibold text-xs flex items-center gap-1.5 transition">
+                <i class="fas fa-trash text-[10px]"></i> Delete Selected
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1. BOXES / CARDS GRID CONTAINER -->
+        <div id="logsBoxesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+
+        <!-- 2. TABLE CONTAINER -->
+        <div id="logsTableContainer" class="hidden bg-custom-card rounded-xl border border-custom-border overflow-x-auto">
+          <table class="w-full text-left text-sm text-gray-300">
+            <thead class="bg-custom-back text-xs uppercase text-gray-400 border-b border-custom-border">
+              <tr>
+                <th class="p-3.5">Time</th>
+                <th class="p-3.5">Category</th>
+                <th class="p-3.5">User / Key</th>
+                <th class="p-3.5">Event Details</th>
+                <th class="p-3.5">IP Address</th>
+                <th class="p-3.5">Device</th>
+              </tr>
+            </thead>
+            <tbody id="logsTableBody" class="divide-y divide-custom-border font-mono text-xs"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 8: RULES / BLACKLISTS ==================== -->
+      <div id="tab-rules" class="tab-pane hidden space-y-6">
+        <div class="bg-custom-back-1 p-6 rounded-2xl border border-custom-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-bold text-white">Rules & Blacklists</h1>
+            <p class="text-sm text-gray-400 mt-1">Block malicious IP addresses, VPN ranges, or cracked device HWIDs automatically or manually.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="openModal('create-rule-modal')" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2">
+              <i class="fas fa-plus"></i> Add Blacklist Rule
+            </button>
+            <button onclick="clearAllRules()" class="px-3 py-2 bg-red-900/30 text-red-400 hover:bg-red-900/50 rounded-lg text-sm border border-red-500/30 flex items-center gap-2">
+              <i class="fas fa-trash"></i> Clear All Rules
+            </button>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+          <input type="search" id="ruleSearchInput" onkeyup="renderRules()" oninput="renderRules()" placeholder="Search blacklisted IPs, HWIDs, or reasons..." class="flex-1 bg-custom-card border border-custom-border rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500">
+          <select id="ruleTypeFilter" onchange="renderRules()" class="bg-custom-card border border-custom-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
+            <option value="">All Rule Types</option>
+            <option value="ip">Blacklisted IPs</option>
+            <option value="hwid">Blacklisted HWIDs</option>
+          </select>
+        </div>
+
+        <div class="bg-custom-card rounded-xl border border-custom-border overflow-hidden">
+          <table class="w-full text-left text-sm text-gray-300">
+            <thead class="bg-custom-back text-xs uppercase text-gray-400 border-b border-custom-border">
+              <tr>
+                <th class="p-3.5">Type</th>
+                <th class="p-3.5">Target Value (IP / HWID)</th>
+                <th class="p-3.5">Reason / Note</th>
+                <th class="p-3.5">Added Date</th>
+                <th class="p-3.5 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="rulesTableBody" class="divide-y divide-custom-border font-mono text-xs"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 9: API TESTER & SIMULATOR ==================== -->
+      <div id="tab-tester" class="tab-pane hidden space-y-6">
+        <div class="bg-custom-back-1 p-6 rounded-2xl border border-custom-border">
+          <h1 class="text-2xl font-bold text-white">KeyAuth API Protocol Tester & Simulator</h1>
+          <p class="text-sm text-gray-400 mt-1">Directly simulate client requests in real-time to test responses, HWID checks, and security gates without needing an Android emulator.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-custom-card p-6 rounded-2xl border border-custom-border space-y-4">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+              <i class="fas fa-play text-blue-500"></i> Request Builder
+            </h3>
+
+            <div>
+              <label class="text-xs text-gray-400 font-medium">Request Type (Action)</label>
+              <select id="testerType" onchange="updateTesterInputs()" class="w-full bg-custom-back border border-custom-border rounded-xl p-2.5 text-sm text-white mt-1">
+                <option value="init" selected>init (Initialize Session)</option>
+                <option value="license">license (Direct Key Login)</option>
+                <option value="login">login (Username & Password Login)</option>
+                <option value="var">var (Fetch Variable)</option>
+                <option value="file">file (Authorize & Fetch File)</option>
+                <option value="check">check (Heartbeat / Session Validity)</option>
+                <option value="log">log (Send Client Log)</option>
+              </select>
+            </div>
+
+            <div id="testerInputSession" class="space-y-1">
+              <label class="text-xs text-gray-400">Session ID</label>
+              <input type="text" id="testerSessionId" placeholder="Auto-filled after init or enter custom" class="w-full bg-custom-back border border-custom-border rounded-xl p-2.5 text-xs text-white font-mono">
+            </div>
+
+            <div id="testerInputKey" class="space-y-1">
+              <label class="text-xs text-gray-400">License Key</label>
+              <input type="text" id="testerKey" placeholder="e.g. Chki-XXXXXX-gn" class="w-full bg-custom-back border border-custom-border rounded-xl p-2.5 text-xs text-white font-mono">
+            </div>
+
+            <div id="testerInputHwid" class="space-y-1">
+              <label class="text-xs text-gray-400">Device HWID</label>
+              <input type="text" id="testerHwid" value="TEST-DEVICE-HWID-9988" class="w-full bg-custom-back border border-custom-border rounded-xl p-2.5 text-xs text-white font-mono">
+            </div>
+
+            <div id="testerInputUser" class="space-y-1 hidden">
+              <label class="text-xs text-gray-400">Username</label>
+              <input type="text" id="testerUsername" placeholder="e.g. testuser" class="w-full bg-custom-back border border-custom-border rounded-xl p-2.5 text-xs text-white">
+            </div>
+
+            <div id="testerInputPass" class="space-y-1 hidden">
+              <label class="text-xs text-gray-400">Password</label>
+              <input type="password" id="testerPassword" placeholder="e.g. mysecretpassword" class="w-full bg-custom-back border border-custom-border rounded-xl p-2.5 text-xs text-white">
+            </div>
+
+            <div id="testerInputVar" class="space-y-1 hidden">
+              <label class="text-xs text-gray-400">Variable Name (varid)</label>
+              <input type="text" id="testerVarId" placeholder="e.g. announcement" class="w-full bg-custom-back border border-custom-border rounded-xl p-2.5 text-xs text-white font-mono">
+            </div>
+
+            <div id="testerInputFile" class="space-y-1 hidden">
+              <label class="text-xs text-gray-400">File ID (fileid)</label>
+              <input type="text" id="testerFileId" placeholder="e.g. file_app_update" class="w-full bg-custom-back border border-custom-border rounded-xl p-2.5 text-xs text-white font-mono">
+            </div>
+
+            <div id="testerInputLog" class="space-y-1 hidden">
+              <label class="text-xs text-gray-400">Log Message</label>
+              <input type="text" id="testerLogMsg" placeholder="e.g. Video player opened successfully" class="w-full bg-custom-back border border-custom-border rounded-xl p-2.5 text-xs text-white">
+            </div>
+
+            <div class="flex gap-3 pt-2">
+              <button onclick="executeTesterRequest()" id="testerSubmitBtn" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2">
+                <i class="fas fa-paper-plane"></i> Send Test Request
+              </button>
+              <button onclick="fillTesterWithQuickKey()" class="px-4 py-3 bg-custom-back hover:bg-custom-border text-gray-300 rounded-xl text-xs border border-custom-border">
+                Auto-fill Key
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-custom-card p-6 rounded-2xl border border-custom-border space-y-4 flex flex-col">
+            <div class="flex items-center justify-between border-b border-custom-border pb-3">
+              <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                <i class="fas fa-terminal text-green-400"></i> Live Response Inspector
+              </h3>
+              <div class="flex items-center gap-2">
+                <span id="testerStatusBadge" class="px-2.5 py-0.5 rounded text-xs font-mono bg-gray-800 text-gray-400">Idle</span>
+                <span id="testerLatencyBadge" class="px-2.5 py-0.5 rounded text-xs font-mono bg-gray-800 text-gray-400">0 ms</span>
+              </div>
+            </div>
+
+            <div class="flex-1 bg-custom-back rounded-xl p-4 border border-custom-border overflow-auto min-h-[300px] relative">
+              <button onclick="copyTesterResponse()" class="absolute top-3 right-3 p-1.5 bg-custom-card hover:bg-custom-border text-gray-400 hover:text-white rounded border border-custom-border text-xs" title="Copy Response">
+                <i class="fas fa-copy"></i>
+              </button>
+              <pre id="testerResponseBody" class="font-mono text-xs text-gray-300 whitespace-pre-wrap">{
+  "status": "Ready",
+  "message": "Click 'Send Test Request' to simulate a client call."
+}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 10: SDK INTEGRATION GUIDES ==================== -->
+      <div id="tab-integration" class="tab-pane hidden space-y-6">
+        <div class="bg-custom-back-1 p-6 rounded-2xl border border-custom-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-bold text-white">Client SDK Integration Guides</h1>
+            <p class="text-sm text-gray-400 mt-1">Copy production-ready boilerplate code in Kotlin, Java, C++, C#, Python, or cURL for your app.</p>
+          </div>
+          <div class="flex gap-2">
+            <span class="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-lg border border-blue-500/30 text-xs font-mono">Protocol: KeyAuth 1.2</span>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2 border-b border-custom-border pb-3">
+          <button onclick="switchCodeLang('kotlin')" id="code-btn-kotlin" class="code-lang-btn px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold">Android Kotlin</button>
+          <button onclick="switchCodeLang('java')" id="code-btn-java" class="code-lang-btn px-4 py-2 bg-custom-card hover:bg-custom-border text-gray-400 rounded-lg text-xs font-semibold">Android Java</button>
+          <button onclick="switchCodeLang('cpp')" id="code-btn-cpp" class="code-lang-btn px-4 py-2 bg-custom-card hover:bg-custom-border text-gray-400 rounded-lg text-xs font-semibold">C++ / ImGui</button>
+          <button onclick="switchCodeLang('csharp')" id="code-btn-csharp" class="code-lang-btn px-4 py-2 bg-custom-card hover:bg-custom-border text-gray-400 rounded-lg text-xs font-semibold">C# (.NET)</button>
+          <button onclick="switchCodeLang('python')" id="code-btn-python" class="code-lang-btn px-4 py-2 bg-custom-card hover:bg-custom-border text-gray-400 rounded-lg text-xs font-semibold">Python</button>
+          <button onclick="switchCodeLang('curl')" id="code-btn-curl" class="code-lang-btn px-4 py-2 bg-custom-card hover:bg-custom-border text-gray-400 rounded-lg text-xs font-semibold">cURL / CLI</button>
+        </div>
+
+        <div class="bg-custom-card rounded-2xl border border-custom-border p-5 relative">
+          <div class="flex items-center justify-between pb-3 border-b border-custom-border mb-3">
+            <span id="codeLangTitle" class="text-xs font-bold text-gray-300 uppercase tracking-wider font-mono">Android Kotlin Integration</span>
+            <button onclick="copyCurrentCodeSnippet()" class="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 rounded-lg border border-blue-500/30 text-xs font-semibold flex items-center gap-2">
+              <i class="fas fa-copy"></i> Copy Code
+            </button>
+          </div>
+          <pre class="overflow-x-auto font-mono text-xs text-blue-200 bg-custom-back p-4 rounded-xl border border-custom-border max-h-[500px]"><code id="codeSnippetContent">Loading code snippets...</code></pre>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 11: SETTINGS & STORAGE ==================== -->
+      <div id="tab-settings" class="tab-pane hidden space-y-6">
+        <div class="bg-custom-back-1 p-6 rounded-2xl border border-custom-border">
+          <h1 class="text-2xl font-bold text-white">Application Security Settings & Database</h1>
+          <p class="text-sm text-gray-400 mt-1">Configure global security switches, stream authentication enforcement, and manage permanent database storage.</p>
+        </div>
+
+        <!-- DATABASE PERSISTENCE & STORAGE CARD -->
+        <div class="bg-custom-card p-6 rounded-xl border border-emerald-500/30 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-custom-border pb-4">
+            <div>
+              <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                <i class="fas fa-database text-emerald-400"></i> Permanent Database Persistence
+              </h3>
+              <p class="text-xs text-gray-400 mt-1">Keys, users, and variables are saved in persistent JSON storage (<code class="text-emerald-400 font-mono">keyauth_db.json</code>) so data is never lost.</p>
+            </div>
+            <div id="kvStatusBadge" class="px-3 py-1 text-xs rounded-lg font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              <i class="fas fa-check-circle mr-1"></i> Persistent DB Active (Auto-Saved)
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+            <button onclick="exportFullBackup()" class="p-3 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-xl border border-blue-500/30 text-sm font-semibold flex items-center justify-center gap-2">
+              <i class="fas fa-download"></i> Download Full JSON Backup
+            </button>
+            <button onclick="triggerRestoreBackup()" class="p-3 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-xl border border-green-500/30 text-sm font-semibold flex items-center justify-center gap-2">
+              <i class="fas fa-upload"></i> Restore from JSON Backup
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-custom-card p-6 rounded-xl border border-custom-border space-y-5">
+            <h3 class="text-lg font-bold text-white border-b border-custom-border pb-3">Access Controls & Anti-Hacking</h3>
+
+            <!-- STRICT PROXY KEY ENFORCEMENT SWITCH -->
+            <div class="flex items-center justify-between p-3 bg-blue-900/10 border border-blue-500/30 rounded-xl">
+              <div>
+                <div class="text-sm font-bold text-blue-300 flex items-center gap-2">
+                  <i class="fas fa-shield-halved text-blue-400"></i> Require Key For Video Streams / Proxy
+                </div>
+                <div class="text-xs text-gray-400 mt-0.5">Strictly blocks all proxy/video stream requests unless user is authenticated with a valid active license key.</div>
+              </div>
+              <input type="checkbox" id="settingRequireKeyForProxy" class="w-5 h-5 accent-blue-600">
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-sm font-semibold text-white">App Master Status</div>
+                <div class="text-xs text-gray-400">Killswitch: Prevent all user and client logins globally.</div>
+              </div>
+              <input type="checkbox" id="settingAppStatus" class="w-5 h-5 accent-blue-600">
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-sm font-semibold text-white">Global HWID Lock</div>
+                <div class="text-xs text-gray-400">Lock users to their hardware ID to prevent account sharing.</div>
+              </div>
+              <input type="checkbox" id="settingHwidLock" class="w-5 h-5 accent-blue-600">
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-sm font-semibold text-white">Force Non-Empty HWID</div>
+                <div class="text-xs text-gray-400">Reject clients attempting login with a blank/null HWID.</div>
+              </div>
+              <input type="checkbox" id="settingForceHwid" class="w-5 h-5 accent-blue-600">
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-sm font-semibold text-white">Block VPNs & Proxies</div>
+                <div class="text-xs text-gray-400">Block known VPN, Tor, and datacenter IP ranges automatically.</div>
+              </div>
+              <input type="checkbox" id="settingBlockVpn" class="w-5 h-5 accent-blue-600">
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-sm font-semibold text-white">APK Hash Integrity Check</div>
+                <div class="text-xs text-gray-400">Verifies whether the Android APK has been decompiled or modified.</div>
+              </div>
+              <input type="checkbox" id="settingHashCheck" class="w-5 h-5 accent-blue-600">
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-sm font-semibold text-white">Auto-Ban Brute Force Attacks</div>
+                <div class="text-xs text-gray-400">Automatically blacklist IP addresses after repeated failed login attempts.</div>
+              </div>
+              <input type="checkbox" id="settingAutoBan" checked class="w-5 h-5 accent-blue-600">
+            </div>
+          </div>
+
+          <div class="bg-custom-card p-6 rounded-xl border border-custom-border space-y-4">
+            <h3 class="text-lg font-bold text-white border-b border-custom-border pb-3">Application Metadata</h3>
+            <div>
+              <label class="text-xs text-gray-400">Application Name</label>
+              <input type="text" id="settingAppName" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-sm text-white mt-1">
+            </div>
+            <div>
+              <label class="text-xs text-gray-400">App Version</label>
+              <input type="text" id="settingAppVersion" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-sm text-white mt-1">
+            </div>
+            <div>
+              <label class="text-xs text-gray-400">Developer Note / Checksum</label>
+              <input type="text" id="settingAppHash" placeholder="Optional APK SHA256 checksum for Hash Check" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-sm text-white mt-1 font-mono">
+            </div>
+            <div>
+              <label class="text-xs text-gray-400">Discord Alert Webhook URL</label>
+              <div class="flex gap-2 mt-1">
+                <input type="url" id="settingDiscordWebhook" placeholder="https://discord.com/api/webhooks/..." class="flex-1 bg-custom-back border border-custom-border rounded-lg p-2.5 text-xs text-white font-mono">
+                <button type="button" onclick="testDiscordWebhook()" class="px-3 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 rounded-lg border border-indigo-500/30 text-xs font-semibold whitespace-nowrap">
+                  <i class="fab fa-discord mr-1"></i> Test
+                </button>
+              </div>
+              <p class="text-[11px] text-gray-500 mt-1">Receive instant Discord alerts for security violations, brute-force bans, and HWID mismatches.</p>
+            </div>
+            <button onclick="saveSettings()" class="w-full mt-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm transition">
+              Save Security Settings
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ==================== ALL INTERACTIVE MODALS ==================== -->
+
+  <!-- 1. CREATE KEY MODAL -->
+  <div id="create-key-modal" class="modal-backdrop hidden">
+    <div class="bg-custom-card border border-custom-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-custom-border pb-3">
+        <h3 class="text-lg font-bold text-white"><i class="fas fa-key text-blue-500 mr-2"></i>Generate License Keys</h3>
+        <button onclick="closeModal('create-key-modal')" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="text-gray-400 text-xs font-semibold">Target Application</label>
+          <select id="createKeyAppId" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 text-sm font-medium"></select>
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">License Amount (1 - 100)</label>
+          <input type="number" id="createKeyAmount" value="1" min="1" max="100" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">License Mask (* = Wildcard char)</label>
+          <input type="text" id="createKeyMask" value="Chki-******-gn" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 font-mono">
+        </div>
+        <div class="flex items-center justify-between pt-1">
+          <label class="flex items-center gap-2 text-xs text-gray-300">
+            <input type="checkbox" id="createKeyLower" class="accent-blue-600"> Lowercase Letters
+          </label>
+          <label class="flex items-center gap-2 text-xs text-gray-300">
+            <input type="checkbox" id="createKeyUpper" checked class="accent-blue-600"> Uppercase Letters
+          </label>
+        </div>
+        <div class="pt-1">
+          <label class="flex items-center gap-2 text-xs text-gray-300 bg-custom-back p-2.5 rounded-lg border border-custom-border">
+            <input type="checkbox" id="createKeyHwidLock" checked class="w-4 h-4 accent-blue-600">
+            <span><strong>Lock to Device Hardware ID</strong> (Uncheck to allow multi-device sharing)</span>
+          </label>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-gray-400 text-xs">Expiry Unit</label>
+            <select id="createKeyUnit" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+              <option value="Lifetime" selected>Lifetime</option>
+              <option value="Days">Days</option>
+              <option value="Weeks">Weeks</option>
+              <option value="Months">Months</option>
+              <option value="Years">Years</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-gray-400 text-xs">Expiry Duration</label>
+            <input type="number" id="createKeyDuration" value="1" min="1" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+          </div>
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">License Note (e.g. Student Name / Phone)</label>
+          <input type="text" id="createKeyNote" placeholder="Student name or reference" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-custom-border">
+        <button onclick="closeModal('create-key-modal')" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm">Cancel</button>
+        <button onclick="submitCreateKey()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm">Create License</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. EDIT KEY MODAL -->
+  <div id="edit-license-modal" class="modal-backdrop hidden">
+    <div class="bg-custom-card border border-custom-border rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-custom-border pb-3">
+        <h3 class="text-lg font-bold text-white"><i class="fas fa-pen-to-square text-blue-500 mr-2"></i>Edit License Key & HWID</h3>
+        <button onclick="closeModal('edit-license-modal')" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-3.5 text-sm">
+        <input type="hidden" id="editKeyOriginal">
+        <div>
+          <label class="text-gray-400 text-xs">License Key String</label>
+          <input type="text" id="editKeyString" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 font-mono text-sm">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-gray-400 text-xs">Status</label>
+            <select id="editKeyStatus" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+              <option value="Not Used">Not Used</option>
+              <option value="Used">Used</option>
+              <option value="Paused">Paused (Temporary Block)</option>
+              <option value="Banned">Banned</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-gray-400 text-xs">Level Tier</label>
+            <input type="number" id="editKeyLevel" value="1" min="1" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+          </div>
+        </div>
+        <div class="bg-custom-back p-3.5 rounded-xl border border-custom-border space-y-2.5">
+          <label class="flex items-center gap-2.5 text-xs text-white font-semibold cursor-pointer">
+            <input type="checkbox" id="editKeyHwidLock" class="w-4 h-4 accent-blue-600">
+            <span>Enforce Device HWID Lock on this Key</span>
+          </label>
+          <p class="text-[11px] text-gray-400">When checked, this specific key is locked to one phone only.</p>
+          <div class="pt-2 border-t border-custom-border/50 flex items-center justify-between gap-2">
+            <div class="text-xs truncate">
+              <span class="text-gray-500">Bound Device HWID:</span>
+              <span id="editKeyHwidDisplay" class="font-mono text-blue-400 ml-1">None</span>
+            </div>
+            <button type="button" onclick="resetKeyHwidFromModal()" class="px-2.5 py-1 text-xs bg-purple-600/20 text-purple-300 hover:bg-purple-600/30 rounded border border-purple-500/30 whitespace-nowrap">
+              <i class="fas fa-rotate mr-1"></i> Reset HWID
+            </button>
+          </div>
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">Custom Expiration Date & Time</label>
+          <input type="datetime-local" id="editKeyExpiryDate" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">Customer Note</label>
+          <input type="text" id="editKeyNote" placeholder="Student name or reference" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+        </div>
+        <div id="editKeyBanReasonContainer" class="hidden">
+          <label class="text-gray-400 text-xs">Ban Reason</label>
+          <input type="text" id="editKeyBanReason" placeholder="Reason for ban" class="w-full bg-custom-back border border-red-500/30 rounded-lg p-2.5 text-red-300 mt-1">
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-custom-border">
+        <button onclick="closeModal('edit-license-modal')" class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">Cancel</button>
+        <button onclick="submitEditKey()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm">Save Key Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. CREATE USER MODAL -->
+  <div id="create-user-modal" class="modal-backdrop hidden">
+    <div class="bg-custom-card border border-custom-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-custom-border pb-3">
+        <h3 class="text-lg font-bold text-white"><i class="fas fa-user-plus text-blue-500 mr-2"></i>Create New User</h3>
+        <button onclick="closeModal('create-user-modal')" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="text-gray-400 text-xs">Username</label>
+          <input type="text" id="createUsername" placeholder="e.g. student_01" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 font-mono">
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">Password (Optional)</label>
+          <input type="password" id="createUserPass" placeholder="Leave blank if key-only" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">Email (Optional)</label>
+          <input type="email" id="createUserEmail" placeholder="student@example.com" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">Expiry Date (Optional)</label>
+          <input type="date" id="createUserExpiry" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+        </div>
+        <div class="pt-1">
+          <label class="flex items-center gap-2 text-xs text-gray-300">
+            <input type="checkbox" id="createUserHwidAffected" checked class="accent-blue-600"> Lock to Hardware ID
+          </label>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-custom-border">
+        <button onclick="closeModal('create-user-modal')" class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">Cancel</button>
+        <button onclick="submitCreateUser()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm">Create User</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. EDIT USER MODAL -->
+  <div id="edit-user-modal" class="modal-backdrop hidden">
+    <div class="bg-custom-card border border-custom-border rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-custom-border pb-3">
+        <h3 class="text-lg font-bold text-white"><i class="fas fa-user-pen text-blue-500 mr-2"></i>Edit User Account</h3>
+        <button onclick="closeModal('edit-user-modal')" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-3 text-sm">
+        <input type="hidden" id="editUserOriginal">
+        <div>
+          <label class="text-gray-400 text-xs">Username</label>
+          <input type="text" id="editUserName" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 font-mono">
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">New Password (leave blank to keep current)</label>
+          <input type="password" id="editUserPass" placeholder="Enter new password" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-gray-400 text-xs">Status</label>
+            <select id="editUserStatus" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+              <option value="active">Active</option>
+              <option value="paused">Paused</option>
+              <option value="banned">Banned</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-gray-400 text-xs">Subscription Tier</label>
+            <input type="text" id="editUserSub" value="default" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+          </div>
+        </div>
+        <div class="bg-custom-back p-3 rounded-lg border border-custom-border space-y-2">
+          <label class="flex items-center gap-2 text-xs text-white">
+            <input type="checkbox" id="editUserHwidAffected" class="w-4 h-4 accent-blue-600">
+            <span>Enforce Device HWID Lock on this User</span>
+          </label>
+          <div class="flex items-center justify-between pt-1">
+            <div class="text-xs truncate">
+              <span class="text-gray-500">Device HWID:</span>
+              <span id="editUserHwidDisplay" class="font-mono text-blue-400 ml-1">None</span>
+            </div>
+            <button type="button" onclick="resetUserHwidFromModal()" class="px-2.5 py-1 text-xs bg-purple-600/20 text-purple-300 hover:bg-purple-600/30 rounded border border-purple-500/30">
+              Reset HWID
+            </button>
+          </div>
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">Expiry Date & Time</label>
+          <input type="datetime-local" id="editUserExpiryDate" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+        </div>
+        <div id="editUserBanReasonContainer" class="hidden">
+          <label class="text-gray-400 text-xs">Ban Reason</label>
+          <input type="text" id="editUserBanReason" placeholder="Reason for account ban" class="w-full bg-custom-back border border-red-500/30 rounded-lg p-2.5 text-red-300 mt-1">
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-custom-border">
+        <button onclick="closeModal('edit-user-modal')" class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">Cancel</button>
+        <button onclick="submitEditUser()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. IMPORT LICENSES MODAL -->
+  <div id="import-license-modal" class="modal-backdrop hidden">
+    <div class="bg-custom-card border border-custom-border rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-custom-border pb-3">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fas fa-file-import text-emerald-400"></i> Import License Keys
+        </h3>
+        <button onclick="closeModal('import-license-modal')" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-3.5 text-sm">
+        <div>
+          <label class="text-gray-400 text-xs font-semibold">Target Application</label>
+          <select id="importLicenseAppId" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 text-sm font-medium"></select>
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs font-semibold">Upload CSV / TXT File (KeyAuth.cc Export)</label>
+          <input type="file" id="importLicenseFileInput" accept=".csv,.txt" onchange="handleImportLicenseFile(event)" class="w-full bg-custom-back border border-custom-border rounded-lg p-2 text-xs text-gray-300 mt-1 cursor-pointer file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-blue-600 file:text-white">
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs font-semibold">Or Paste KeyAuth.cc CSV / Raw Keys</label>
+          <textarea id="importLicenseTextarea" rows="6" placeholder="Paste KeyAuth.cc CSV (key,note,expiry,status,level...) or 1 key per line" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 font-mono text-xs"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-custom-border">
+        <button onclick="closeModal('import-license-modal')" class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">Cancel</button>
+        <button onclick="submitImportLicenses()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm flex items-center gap-1.5">
+          <i class="fas fa-cloud-arrow-up"></i> Import License Keys
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. IMPORT USERS MODAL -->
+  <div id="import-user-modal" class="modal-backdrop hidden">
+    <div class="bg-custom-card border border-custom-border rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-custom-border pb-3">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fas fa-users-gear text-emerald-400"></i> Import User Accounts
+        </h3>
+        <button onclick="closeModal('import-user-modal')" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-3.5 text-sm">
+        <div>
+          <label class="text-gray-400 text-xs font-semibold">Target Application</label>
+          <select id="importUserAppId" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 text-sm font-medium"></select>
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs font-semibold">Upload KeyAuth.cc Users CSV File</label>
+          <input type="file" id="importUserFileInput" accept=".csv,.txt" onchange="handleImportUserFile(event)" class="w-full bg-custom-back border border-custom-border rounded-lg p-2 text-xs text-gray-300 mt-1 cursor-pointer file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-blue-600 file:text-white">
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs font-semibold">Or Paste KeyAuth.cc Users CSV</label>
+          <textarea id="importUserTextarea" rows="6" placeholder="Paste KeyAuth.cc users CSV (username,email,password,hwid,owner,createdate,lastlogin...)" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 font-mono text-xs"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-custom-border">
+        <button onclick="closeModal('import-user-modal')" class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">Cancel</button>
+        <button onclick="submitImportUsers()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm flex items-center gap-1.5">
+          <i class="fas fa-cloud-arrow-up"></i> Import User Accounts
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. CREATE VARIABLE MODAL -->
+  <div id="create-var-modal" class="modal-backdrop hidden">
+    <div class="bg-custom-card border border-custom-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-custom-border pb-3">
+        <h3 class="text-lg font-bold text-white"><i class="fas fa-database text-blue-500 mr-2"></i>Create Application Variable</h3>
+        <button onclick="closeModal('create-var-modal')" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="text-gray-400 text-xs font-semibold">Application Scope</label>
+          <select id="createVarAppId" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 text-sm font-medium">
+            <option value="all">Global (All Applications)</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">Variable Name</label>
+          <input type="text" id="createVarName" placeholder="e.g. announcement, telegram_link" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 font-mono">
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">Variable Value / Data</label>
+          <textarea id="createVarData" rows="3" placeholder="Enter variable content or json" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1"></textarea>
+        </div>
+        <div class="pt-1">
+          <label class="flex items-center gap-2 text-xs text-gray-300">
+            <input type="checkbox" id="createVarSecret" class="accent-blue-600"> Secret Variable (Masked in UI)
+          </label>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-custom-border">
+        <button onclick="closeModal('create-var-modal')" class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">Cancel</button>
+        <button onclick="submitCreateVar()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm">Save Variable</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. EDIT VARIABLE MODAL -->
+  <div id="edit-var-modal" class="modal-backdrop hidden">
+    <div class="bg-custom-card border border-custom-border rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-custom-border pb-3">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fas fa-pen-to-square text-blue-500"></i> Edit Application Variable
+        </h3>
+        <button onclick="closeModal('edit-var-modal')" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-3.5 text-sm">
+        <input type="hidden" id="editVarOriginalName">
+        <div>
+          <label class="text-gray-400 text-xs font-semibold">Application Scope</label>
+          <select id="editVarAppId" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 text-sm font-medium">
+            <option value="all">Global (All Applications)</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs font-semibold">Variable Name</label>
+          <input type="text" id="editVarName" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 font-mono text-sm">
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs font-semibold">Variable Value / Data</label>
+          <textarea id="editVarData" rows="6" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 font-mono text-xs"></textarea>
+        </div>
+        <div class="pt-1">
+          <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
+            <input type="checkbox" id="editVarSecret" class="accent-blue-600 rounded"> Secret Variable (Masked in UI)
+          </label>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-custom-border">
+        <button onclick="closeModal('edit-var-modal')" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm">Cancel</button>
+        <button onclick="submitEditVar()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. UPLOAD / ADD FILE MODAL -->
+  <div id="create-file-modal" class="modal-backdrop hidden">
+    <div class="bg-custom-card border border-custom-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-custom-border pb-3">
+        <h3 class="text-lg font-bold text-white"><i class="fas fa-cloud-arrow-up text-blue-500 mr-2"></i>Upload / Add Application File</h3>
+        <button onclick="closeModal('create-file-modal')" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="text-gray-400 text-xs font-semibold">Application Scope</label>
+          <select id="createFileAppId" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 text-sm font-medium">
+            <option value="all">Global (All Applications)</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">File ID</label>
+          <input type="text" id="createFileId" placeholder="e.g. file_app_update" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 font-mono">
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">File Display Name</label>
+          <input type="text" id="createFileName" placeholder="e.g. Redrix_Update.apk" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">File Size</label>
+          <input type="text" id="createFileSize" placeholder="e.g. 28.4 MB" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">Direct Download URL</label>
+          <input type="url" id="createFileUrl" placeholder="https://example.com/download.apk" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-custom-border">
+        <button onclick="closeModal('create-file-modal')" class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">Cancel</button>
+        <button onclick="submitCreateFile()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm">Save File</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. CREATE APP MODAL -->
+  <div id="create-app-modal" class="modal-backdrop hidden">
+    <div class="bg-custom-card border border-custom-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-custom-border pb-3">
+        <h3 class="text-lg font-bold text-white"><i class="fas fa-plus text-blue-500 mr-2"></i>Create New Application</h3>
+        <button onclick="closeModal('create-app-modal')" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-gray-400 text-xs">Application Name</label>
+            <input type="text" id="newAppName" placeholder="e.g. Redrix V2" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 font-semibold">
+          </div>
+          <div>
+            <label class="text-gray-400 text-xs">Client Version</label>
+            <input type="text" id="newAppVersion" value="1.0" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 font-mono">
+          </div>
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">Description</label>
+          <input type="text" id="newAppDesc" placeholder="Authentication & Video Engine" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+        </div>
+        <div class="bg-custom-back p-3 rounded-xl border border-custom-border space-y-2">
+          <label class="flex items-center gap-2 text-xs text-white cursor-pointer">
+            <input type="checkbox" id="newAppHwidLock" checked class="w-4 h-4 accent-blue-600">
+            <span>Enforce Device HWID Lock</span>
+          </label>
+          <label class="flex items-center gap-2 text-xs text-white cursor-pointer">
+            <input type="checkbox" id="newAppBlockVpn" class="w-4 h-4 accent-blue-600">
+            <span>Block VPNs & Proxy Networks</span>
+          </label>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-custom-border">
+        <button onclick="closeModal('create-app-modal')" class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">Cancel</button>
+        <button onclick="submitCreateApp()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm">Create Application</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11. ADD BLACKLIST RULE MODAL -->
+  <div id="create-rule-modal" class="modal-backdrop hidden">
+    <div class="bg-custom-card border border-custom-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-custom-border pb-3">
+        <h3 class="text-lg font-bold text-white"><i class="fas fa-ban text-red-500 mr-2"></i>Add Blacklist Rule</h3>
+        <button onclick="closeModal('create-rule-modal')" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="text-gray-400 text-xs">Rule Type</label>
+          <select id="createRuleType" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+            <option value="ip">IP Address</option>
+            <option value="hwid">Device HWID</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">Target Value</label>
+          <input type="text" id="createRuleValue" placeholder="e.g. 192.168.1.1 or HWID string" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1 font-mono">
+        </div>
+        <div>
+          <label class="text-gray-400 text-xs">Reason</label>
+          <input type="text" id="createRuleReason" value="Security violation / Unauthorized sharing" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-custom-border">
+        <button onclick="closeModal('create-rule-modal')" class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">Cancel</button>
+        <button onclick="submitCreateRule()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg text-sm">Add Rule</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 12. BAN MODAL -->
+  <div id="ban-modal" class="modal-backdrop hidden">
+    <div class="bg-custom-card border border-custom-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-custom-border pb-3">
+        <h3 class="text-lg font-bold text-white"><i class="fas fa-ban text-red-500 mr-2"></i>Ban <span id="banTargetName">Target</span></h3>
+        <button onclick="closeModal('ban-modal')" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="text-gray-400 text-xs">Ban Reason</label>
+          <input type="text" id="banReasonInput" value="Sharing keys / Terms violation" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-custom-border">
+        <button onclick="closeModal('ban-modal')" class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">Cancel</button>
+        <button onclick="submitBan()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg text-sm">Confirm Ban</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 13. EXTEND LICENSE MODAL -->
+  <div id="extend-license-modal" class="modal-backdrop hidden">
+    <div class="bg-custom-card border border-custom-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-custom-border pb-3">
+        <h3 class="text-lg font-bold text-white"><i class="fas fa-clock text-blue-500 mr-2"></i>Extend Licenses</h3>
+        <button onclick="closeModal('extend-license-modal')" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="text-gray-400 text-xs">Time Duration (Days)</label>
+          <input type="number" id="extendLicenseDays" value="30" min="1" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+        </div>
+        <p class="text-xs text-gray-400">Adds specified days to all unused and active licenses.</p>
+      </div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-custom-border">
+        <button onclick="closeModal('extend-license-modal')" class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">Cancel</button>
+        <button onclick="submitExtendLicenses()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm">Extend</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 14. DELETE LICENSE MODAL -->
+  <div id="delete-license-modal" class="modal-backdrop hidden">
+    <div class="bg-custom-card border border-custom-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-custom-border pb-3">
+        <h3 class="text-lg font-bold text-white"><i class="fas fa-trash text-red-500 mr-2"></i>Delete License Keys</h3>
+        <button onclick="closeModal('delete-license-modal')" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="text-gray-400 text-xs">Deletion Target</label>
+          <select id="deleteLicenseMode" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+            <option value="deleteallunused">Delete All Unused Keys</option>
+            <option value="deleteallused">Delete All Used Keys</option>
+            <option value="delkeys">Delete ALL Keys (Dangerous!)</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-custom-border">
+        <button onclick="closeModal('delete-license-modal')" class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">Cancel</button>
+        <button onclick="submitDeleteLicenses()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg text-sm">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 15. DELETE USERS MODAL -->
+  <div id="delete-users-modal" class="modal-backdrop hidden">
+    <div class="bg-custom-card border border-custom-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-custom-border pb-3">
+        <h3 class="text-lg font-bold text-white"><i class="fas fa-trash text-red-500 mr-2"></i>Delete Users</h3>
+        <button onclick="closeModal('delete-users-modal')" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="text-gray-400 text-xs">Deletion Target</label>
+          <select id="deleteUserMode" class="w-full bg-custom-back border border-custom-border rounded-lg p-2.5 text-white mt-1">
+            <option value="delexpusers">Delete All Expired Users</option>
+            <option value="unbanall">Unban All Users</option>
+            <option value="delusers">Delete ALL Users (Dangerous!)</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-3 border-t border-custom-border">
+        <button onclick="closeModal('delete-users-modal')" class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">Cancel</button>
+        <button onclick="submitDeleteUsers()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg text-sm">Execute</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESTORE BACKUP FILE PICKER -->
+  <input type="file" id="backupFileInput" onchange="handleBackupFile(event)" accept=".json" class="hidden">
+
+  <!-- ==================== FRONTEND JAVASCRIPT ==================== -->
+  <script>
+    let ADMIN_TOKEN = localStorage.getItem('ghostrix_admin_token') || 'ghostrix_secret_admin_2026';
+    let globalData = {
+      licenses: [],
+      users: [],
+      variables: [],
+      files: [],
+      sessions: [],
+      logs: [],
+      apps: []
+    };
+    let currentBanType = '';
+    let currentBanTarget = '';
+    let currentLoginMode = 'token';
+
+    function switchLoginMode(mode) {
+      currentLoginMode = mode;
+      const btnToken = document.getElementById('tabLoginToken');
+      const btnUser = document.getElementById('tabLoginUser');
+      const viewToken = document.getElementById('viewLoginToken');
+      const viewUser = document.getElementById('viewLoginUser');
+
+      if (mode === 'token') {
+        btnToken.className = 'flex-1 py-1.5 rounded-lg font-semibold bg-blue-600 text-white transition';
+        btnUser.className = 'flex-1 py-1.5 rounded-lg font-semibold text-gray-400 hover:text-white transition';
+        viewToken.classList.remove('hidden');
+        viewUser.classList.add('hidden');
+      } else {
+        btnUser.className = 'flex-1 py-1.5 rounded-lg font-semibold bg-blue-600 text-white transition';
+        btnToken.className = 'flex-1 py-1.5 rounded-lg font-semibold text-gray-400 hover:text-white transition';
+        viewUser.classList.remove('hidden');
+        viewToken.classList.add('hidden');
+      }
+    }
+
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const err = document.getElementById('loginError');
+      const btn = document.getElementById('loginBtn');
+      err.classList.add('hidden');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authorizing...';
+
+      let payload = {};
+      if (currentLoginMode === 'token') {
+        payload.token = document.getElementById('adminTokenInput').value.trim();
+      } else {
+        payload.username = document.getElementById('adminUserInput').value.trim();
+        payload.password = document.getElementById('adminPassInput').value.trim();
+      }
+
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          ADMIN_TOKEN = data.token || payload.token || 'ghostrix_secret_admin_2026';
+          localStorage.setItem('ghostrix_admin_token', ADMIN_TOKEN);
+          document.getElementById('loginOverlay').classList.add('hidden');
+          showToast('Welcome to KeyAuth Developer Admin!');
+          loadAllData();
+        } else {
+          err.classList.remove('hidden');
+          err.textContent = data.message || 'Invalid Secret Token or Credentials!';
+          btn.disabled = false;
+          btn.innerHTML = '<span>Authorize & Enter Console</span> <i class="fas fa-arrow-right text-xs"></i>';
+        }
+      } catch (ex) {
+        err.classList.remove('hidden');
+        err.textContent = 'Connection error. Please try again.';
+        btn.disabled = false;
+        btn.innerHTML = '<span>Authorize & Enter Console</span> <i class="fas fa-arrow-right text-xs"></i>';
+      }
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const bg = type === 'error' ? 'bg-red-600/90 text-white' : 'bg-blue-600/90 text-white';
+      const icon = type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check';
+      toast.className = 'pointer-events-auto flex items-center gap-2.5 px-4 py-2.5 rounded-xl shadow-2xl text-xs font-semibold backdrop-blur-md transition-all duration-300 ' + bg;
+      toast.innerHTML = '<i class="fas ' + icon + '"></i><span>' + message + '</span>';
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function toggleSidebar() {
+      const sb = document.getElementById('sidebar');
+      sb.classList.toggle('-translate-x-full');
+    }
+
+    function navigateToTab(tabId, e) {
+      if (e) {
+        if (e.button === 1 || e.ctrlKey || e.metaKey) return;
+        e.preventDefault();
+      }
+      showTab(tabId, true);
+    }
+
+    function showTab(tabId, updateUrl = true) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+      const activeTab = document.getElementById('tab-' + tabId);
+      if (activeTab) activeTab.classList.remove('hidden');
+
+      document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+      const navLink = document.getElementById('nav-' + tabId);
+      if (navLink) navLink.classList.add('active');
+
+      if (window.innerWidth < 1024) {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) sidebar.classList.add('-translate-x-full');
+      }
+
+      if (updateUrl && window.history && window.history.replaceState) {
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', tabId);
+        window.history.replaceState({ page: tabId }, '', window.location.pathname + '?' + params.toString());
+      }
+    }
+
+    async function authFetch(url, options = {}) {
+      const headers = Object.assign({}, options.headers || {}, {
+        'Authorization': 'Bearer ' + ADMIN_TOKEN,
+        'X-Admin-Token': ADMIN_TOKEN,
+        'Content-Type': 'application/json'
+      });
+      const fetchUrl = url + (url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(ADMIN_TOKEN);
+      return fetch(fetchUrl, Object.assign({}, options, { headers }));
+    }
+
+    function logoutAdmin() {
+      localStorage.removeItem('ghostrix_admin_token');
+      document.getElementById('loginOverlay').classList.remove('hidden');
+      showToast('Logged out');
+    }
+
+    async function loadAllData() {
+      try {
+        const ovRes = await authFetch('/api/admin/overview').then(r => r.json()).catch(() => ({}));
+
+        if (!ovRes || !ovRes.success) {
+          // Show login overlay if unauthorized
+          document.getElementById('loginOverlay').classList.remove('hidden');
+          return;
+        }
+
+        // Authenticated! Hide overlay
+        document.getElementById('loginOverlay').classList.add('hidden');
+
+        const [licRes, userRes, logRes, varRes, fileRes, sessRes, ruleRes] = await Promise.all([
+          authFetch('/api/admin/licenses').then(r => r.json()).catch(() => ({})),
+          authFetch('/api/admin/users').then(r => r.json()).catch(() => ({})),
+          authFetch('/api/admin/logs').then(r => r.json()).catch(() => ({})),
+          authFetch('/api/admin/vars').then(r => r.json()).catch(() => ({})),
+          authFetch('/api/admin/files').then(r => r.json()).catch(() => ({})),
+          authFetch('/api/admin/sessions').then(r => r.json()).catch(() => ({})),
+          authFetch('/api/admin/rules').then(r => r.json()).catch(() => ({}))
+        ]);
+
+        const app = ovRes.currentApp || {};
+        globalData.activeAppId = ovRes.activeAppId || app.id;
+        globalData.apps = ovRes.apps || [app];
+
+        // Update Header App Selector
+        const globalSelector = document.getElementById('globalAppSelector');
+        if (globalSelector && ovRes.apps) {
+          globalSelector.innerHTML = ovRes.apps.map(a => `<option value="${a.id}" ${a.id === globalData.activeAppId ? 'selected' : ''}>${a.name} (v${a.version})</option>`).join('');
+        }
+
+        const statusDot = document.getElementById('globalAppStatusDot');
+        if (statusDot) {
+          statusDot.className = app.status === 'Active' ? 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse' : 'w-2 h-2 rounded-full bg-amber-500 animate-ping';
+        }
+
+        if (document.getElementById('sidebarAppTitle')) document.getElementById('sidebarAppTitle').textContent = app.name || 'Ghostrix';
+        if (document.getElementById('sidebarAppVersion')) document.getElementById('sidebarAppVersion').textContent = 'v' + (app.version || '1.2');
+
+        if (document.getElementById('credName')) document.getElementById('credName').textContent = app.name || '';
+        if (document.getElementById('credOwnerId')) document.getElementById('credOwnerId').textContent = app.ownerid || '';
+        if (document.getElementById('credSecret')) document.getElementById('credSecret').textContent = app.secret || '';
+        if (document.getElementById('credVersion')) document.getElementById('credVersion').textContent = app.version || '';
+
+        // Populate settings fields
+        if (document.getElementById('settingAppName')) document.getElementById('settingAppName').value = app.name || '';
+        if (document.getElementById('settingAppVersion')) document.getElementById('settingAppVersion').value = app.version || '';
+        if (document.getElementById('settingAppStatus')) document.getElementById('settingAppStatus').checked = app.status === 'Active';
+        if (document.getElementById('settingHwidLock')) document.getElementById('settingHwidLock').checked = app.hwidLock !== false;
+        if (document.getElementById('settingForceHwid')) document.getElementById('settingForceHwid').checked = app.forceHwid !== false;
+        if (document.getElementById('settingBlockVpn')) document.getElementById('settingBlockVpn').checked = app.blockVpn === true;
+        if (document.getElementById('settingHashCheck')) document.getElementById('settingHashCheck').checked = app.hashCheck === true;
+        if (document.getElementById('settingAppHash')) document.getElementById('settingAppHash').value = app.appHash || '';
+        if (document.getElementById('settingDiscordWebhook')) document.getElementById('settingDiscordWebhook').value = app.discordWebhook || '';
+        if (document.getElementById('settingAutoBan')) document.getElementById('settingAutoBan').checked = app.autoBan !== false;
+        if (document.getElementById('settingRequireKeyForProxy')) document.getElementById('settingRequireKeyForProxy').checked = app.requireKeyForProxy === true;
+
+        if (licRes && licRes.success) globalData.licenses = licRes.licenses || [];
+        if (userRes && userRes.success) globalData.users = userRes.users || [];
+        if (logRes && logRes.success) globalData.logs = logRes.logs || [];
+        if (varRes && varRes.success) globalData.variables = varRes.variables || [];
+        if (fileRes && fileRes.success) globalData.files = fileRes.files || [];
+        if (sessRes && sessRes.success) globalData.sessions = sessRes.sessions || [];
+        if (ruleRes && ruleRes.success) globalData.rules = ruleRes.rules || [];
+
+        await loadApps();
+        renderLicenses();
+        renderUsers();
+        renderLogs();
+        renderVariables();
+        renderFiles();
+        renderSessions();
+        renderRules();
+        renderCodeSnippet();
+      } catch (e) {
+        console.error('Error loading dashboard data', e);
+      }
+    }
+
+    async function loadApps() {
+      const res = await authFetch('/api/admin/apps').then(r => r.json()).catch(() => ({}));
+      if (res && res.success) {
+        globalData.apps = res.apps || [];
+        globalData.activeAppId = res.activeAppId || (res.apps[0] && res.apps[0].id);
+
+        const createKeyAppSelect = document.getElementById('createKeyAppId');
+        if (createKeyAppSelect) {
+          createKeyAppSelect.innerHTML = res.apps.map(a => `<option value="${a.id}" ${a.id === globalData.activeAppId ? 'selected' : ''}>${a.name} (v${a.version})</option>`).join('');
+        }
+
+        const licAppFilter = document.getElementById('licenseAppFilter');
+        if (licAppFilter) {
+          const curVal = licAppFilter.value;
+          licAppFilter.innerHTML = '<option value="">All Applications</option>' + res.apps.map(a => `<option value="${a.id}" ${a.id === curVal ? 'selected' : ''}>${a.name}</option>`).join('');
+        }
+
+        const impLicApp = document.getElementById('importLicenseAppId');
+        if (impLicApp) {
+          impLicApp.innerHTML = res.apps.map(a => `<option value="${a.id}" ${a.id === globalData.activeAppId ? 'selected' : ''}>${a.name} (v${a.version})</option>`).join('');
+        }
+
+        const impUserApp = document.getElementById('importUserAppId');
+        if (impUserApp) {
+          impUserApp.innerHTML = res.apps.map(a => `<option value="${a.id}" ${a.id === globalData.activeAppId ? 'selected' : ''}>${a.name} (v${a.version})</option>`).join('');
+        }
+
+        const container = document.getElementById('appsListContainer');
+        if (container) {
+          container.innerHTML = res.apps.map(app => {
+            const isActive = app.id === globalData.activeAppId;
+            const isPaused = app.status === 'Paused';
+            const statusBadge = isPaused
+              ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold bg-amber-500/20 text-amber-300 rounded-md border border-amber-500/40"><span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>Paused</span>'
+              : '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold bg-emerald-500/20 text-emerald-300 rounded-md border border-emerald-500/30"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>Active</span>';
+
+            const keyCount = (globalData.licenses || []).filter(l => l.appId === app.id).length;
+            const userCount = (globalData.users || []).filter(u => u.appId === app.id).length;
+            const borderCls = isActive ? 'border-blue-500/50 bg-[#121626] shadow-lg shadow-blue-500/10' : 'border-custom-border bg-custom-card';
+            const switchBtnCls = isActive ? 'bg-blue-600 text-white' : 'bg-blue-600/20 text-blue-300 hover:bg-blue-600/30 border border-blue-500/30';
+
+            return `
+              <div class="p-5 rounded-2xl border ${borderCls} space-y-3.5 transition-all">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-white text-base">${app.name}</span>
+                    <span class="px-2 py-0.5 text-[10px] font-mono bg-blue-500/20 text-blue-300 rounded border border-blue-500/30">v${app.version}</span>
+                  </div>
+                  ${statusBadge}
+                </div>
+                <p class="text-xs text-gray-400 line-clamp-2">${app.description || 'Course & Video Security Engine'}</p>
+                <div class="grid grid-cols-2 gap-2 text-xs text-gray-400 bg-custom-back p-2.5 rounded-lg border border-custom-border">
+                  <div>Keys: <strong class="text-white">${keyCount}</strong></div>
+                  <div>Users: <strong class="text-white">${userCount}</strong></div>
+                  <div class="truncate">Owner: <span class="font-mono text-gray-300">${app.ownerid}</span></div>
+                  <div>HWID: <span class="${app.hwidLock !== false ? 'text-green-400' : 'text-gray-400'}">${app.hwidLock !== false ? 'Locked' : 'Free'}</span></div>
+                </div>
+                <div class="flex items-center gap-1.5 pt-2 border-t border-custom-border text-xs">
+                  <button onclick="onSwitchApp('${app.id}')" class="flex-1 py-1.5 px-2.5 rounded-lg font-semibold transition ${switchBtnCls}">
+                    ${isActive ? '<i class="fas fa-check mr-1"></i>Active App' : 'Switch To'}
+                  </button>
+                  <button onclick="pauseApp('${app.id}')" class="py-1.5 px-2.5 bg-amber-600/20 text-amber-400 hover:bg-amber-600/30 rounded-lg border border-amber-500/30" title="Toggle Pause">
+                    <i class="fas ${isPaused ? 'fa-play' : 'fa-pause'}"></i>
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+    }
+
+    async function onSwitchApp(appId) {
+      if (!appId) return;
+      await authFetch('/api/admin/apps/action', { method: 'POST', body: JSON.stringify({ action: 'select', appId }) });
+      showToast('Switched application');
+      loadAllData();
+    }
+
+    async function pauseApp(appId) {
+      await authFetch('/api/admin/apps/action', { method: 'POST', body: JSON.stringify({ action: 'pause', appId }) });
+      showToast('Toggled application status');
+      loadAllData();
+    }
+
+    async function submitCreateApp() {
+      const name = document.getElementById('newAppName').value.trim();
+      const version = document.getElementById('newAppVersion').value.trim() || '1.0';
+      const description = document.getElementById('newAppDesc').value.trim();
+      const hwidLock = document.getElementById('newAppHwidLock').checked;
+      const blockVpn = document.getElementById('newAppBlockVpn').checked;
+
+      if (!name) return showToast('Application name required', 'error');
+
+      await authFetch('/api/admin/apps/action', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'create', name, version, description, hwidLock, blockVpn })
+      });
+      closeModal('create-app-modal');
+      showToast('Created Application: ' + name);
+      loadAllData();
+    }
+
+    // Licenses Renderer
+    function renderLicenses() {
+      const q = (document.getElementById('licenseSearch').value || '').toLowerCase().trim();
+      const statusFilter = document.getElementById('licenseStatusFilter').value;
+      const hwidFilter = document.getElementById('licenseHwidFilter').value;
+      const appFilter = document.getElementById('licenseAppFilter') ? document.getElementById('licenseAppFilter').value : '';
+
+      const filtered = (globalData.licenses || []).filter(l => {
+        const matchQ = l.key.toLowerCase().includes(q) || (l.note || '').toLowerCase().includes(q) || (l.hwid || '').toLowerCase().includes(q);
+        const matchStatus = !statusFilter || l.status === statusFilter;
+        const isLocked = l.hwidLock !== false;
+        const matchHwid = !hwidFilter || (hwidFilter === 'locked' ? isLocked : !isLocked);
+        const matchApp = !appFilter || l.appId === appFilter;
+        return matchQ && matchStatus && matchHwid && matchApp;
+      });
+
+      const container = document.getElementById('licensesGrid');
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-500 text-sm">No licenses found. Click <strong>Generate Keys</strong> to create some!</div>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(l => {
+        const isPaused = l.status === 'Paused';
+        const isBanned = l.status === 'Banned';
+        const isUsed = l.status === 'Used';
+
+        let statusBadge = '';
+        if (isPaused) {
+          statusBadge = '<span class="px-2 py-0.5 text-xs bg-amber-500/20 text-amber-300 rounded border border-amber-500/40">Paused</span>';
+        } else if (isBanned) {
+          statusBadge = '<span class="px-2 py-0.5 text-xs bg-rose-500/20 text-rose-300 rounded border border-rose-500/30">Banned</span>';
+        } else if (isUsed) {
+          statusBadge = `<span class="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-300 rounded border border-blue-500/30">Used (${l.usedby || 'User'})</span>`;
+        } else {
+          statusBadge = '<span class="px-2 py-0.5 text-xs bg-emerald-500/20 text-emerald-300 rounded border border-emerald-500/30">Not Used</span>';
+        }
+
+        const hwidBadge = l.hwidLock !== false
+          ? '<span class="px-2 py-0.5 text-[10px] bg-purple-500/20 text-purple-300 rounded border border-purple-500/30">HWID Locked</span>'
+          : '<span class="px-2 py-0.5 text-[10px] bg-gray-700/50 text-gray-300 rounded border border-gray-600/30">Free HWID</span>';
+
+        return `
+          <div class="p-5 rounded-xl border border-custom-border bg-custom-card space-y-3">
+            <div class="flex items-center justify-between gap-1">
+              <span class="font-mono text-sm font-bold text-white select-all truncate">${l.key}</span>
+              <div class="flex items-center gap-1.5 flex-wrap justify-end">
+                ${hwidBadge}
+                ${statusBadge}
+              </div>
+            </div>
+            <div class="text-xs text-gray-400 space-y-1">
+              <div>Level: <span class="text-white">${l.level || 1}</span> | Expiry: <span class="text-white">${l.unit || 'Lifetime'}</span></div>
+              <div>Note: <span class="text-gray-300 font-semibold">${l.note || 'None'}</span></div>
+              <div class="truncate">Bound HWID: <span class="font-mono text-blue-400">${l.hwid ? l.hwid.substring(0, 20) + '...' : 'Not Bound Yet'}</span></div>
+            </div>
+            <div class="flex flex-wrap gap-1.5 pt-2 border-t border-custom-border">
+              <button onclick="navigator.clipboard.writeText('${l.key}'); showToast('Key copied!');" class="p-1.5 text-xs bg-custom-back hover:bg-custom-border text-gray-300 rounded border border-custom-border" title="Copy Key"><i class="fas fa-copy"></i></button>
+              <button onclick="openEditKeyModal('${l.key}')" class="flex-1 py-1 text-xs bg-blue-600/20 text-blue-300 hover:bg-blue-600/30 rounded border border-blue-500/30 font-semibold"><i class="fas fa-pen-to-square mr-1"></i>Edit</button>
+              <button onclick="resetKeyHwid('${l.key}')" class="p-1.5 text-xs bg-purple-600/20 text-purple-300 hover:bg-purple-600/30 rounded border border-purple-500/30" title="Reset HWID"><i class="fas fa-rotate"></i></button>
+              <button onclick="toggleKeyPause('${l.key}')" class="p-1.5 text-xs bg-amber-600/20 text-amber-400 rounded border border-amber-500/30" title="Pause / Resume"><i class="fas ${isPaused ? 'fa-play' : 'fa-pause'}"></i></button>
+              <button onclick="deleteSingleLicense('${l.key}')" class="p-1.5 text-xs bg-red-900/30 text-red-400 hover:bg-red-900/50 rounded" title="Delete"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function submitCreateKey() {
+      const body = {
+        appId: document.getElementById('createKeyAppId').value || globalData.activeAppId,
+        amount: document.getElementById('createKeyAmount').value,
+        mask: document.getElementById('createKeyMask').value,
+        lowercaseLetters: document.getElementById('createKeyLower').checked,
+        capitalLetters: document.getElementById('createKeyUpper').checked,
+        hwidLock: document.getElementById('createKeyHwidLock').checked,
+        expiryUnit: document.getElementById('createKeyUnit').value,
+        duration: document.getElementById('createKeyDuration').value,
+        note: document.getElementById('createKeyNote').value
+      };
+      await authFetch('/api/admin/licenses/create', { method: 'POST', body: JSON.stringify(body) });
+      closeModal('create-key-modal');
+      showToast('Generated License Keys Successfully!');
+      loadAllData();
+    }
+
+    function openEditKeyModal(key) {
+      const lic = globalData.licenses.find(l => l.key === key);
+      if (!lic) return showToast('Key not found', 'error');
+
+      document.getElementById('editKeyOriginal').value = lic.key;
+      document.getElementById('editKeyString').value = lic.key;
+      document.getElementById('editKeyStatus').value = lic.status;
+      document.getElementById('editKeyLevel').value = lic.level || 1;
+      document.getElementById('editKeyHwidLock').checked = lic.hwidLock !== false;
+      document.getElementById('editKeyHwidDisplay').textContent = lic.hwid || 'None';
+      document.getElementById('editKeyNote').value = lic.note || '';
+
+      const expDate = lic.expires ? new Date(lic.expires).toISOString().slice(0, 16) : '';
+      document.getElementById('editKeyExpiryDate').value = expDate;
+
+      openModal('edit-license-modal');
+    }
+
+    async function submitEditKey() {
+      const origKey = document.getElementById('editKeyOriginal').value;
+      const body = {
+        action: 'edit',
+        key: origKey,
+        newKey: document.getElementById('editKeyString').value.trim(),
+        status: document.getElementById('editKeyStatus').value,
+        level: document.getElementById('editKeyLevel').value,
+        hwidLock: document.getElementById('editKeyHwidLock').checked,
+        note: document.getElementById('editKeyNote').value.trim(),
+        expiryTimestamp: document.getElementById('editKeyExpiryDate').value ? new Date(document.getElementById('editKeyExpiryDate').value).getTime() : 0
+      };
+
+      await authFetch('/api/admin/licenses/action', { method: 'POST', body: JSON.stringify(body) });
+      closeModal('edit-license-modal');
+      showToast('Key updated');
+      loadAllData();
+    }
+
+    async function resetKeyHwid(key) {
+      await authFetch('/api/admin/licenses/action', { method: 'POST', body: JSON.stringify({ action: 'reset_hwid', key }) });
+      showToast('HWID reset for license ' + key);
+      loadAllData();
+    }
+
+    async function resetKeyHwidFromModal() {
+      const key = document.getElementById('editKeyOriginal').value;
+      await authFetch('/api/admin/licenses/action', { method: 'POST', body: JSON.stringify({ action: 'reset_hwid', key }) });
+      document.getElementById('editKeyHwidDisplay').textContent = 'None';
+      showToast('HWID reset');
+      loadAllData();
+    }
+
+    async function toggleKeyPause(key) {
+      await authFetch('/api/admin/licenses/action', { method: 'POST', body: JSON.stringify({ action: 'pause', key }) });
+      showToast('Toggled key status');
+      loadAllData();
+    }
+
+    async function deleteSingleLicense(key) {
+      if (!confirm('Delete license ' + key + '?')) return;
+      await authFetch('/api/admin/licenses/action', { method: 'POST', body: JSON.stringify({ action: 'delete_single', key }) });
+      showToast('Key deleted');
+      loadAllData();
+    }
+
+    // Users Renderer
+    function renderUsers() {
+      const q = (document.getElementById('userSearch').value || '').toLowerCase().trim();
+      const statusFilter = document.getElementById('userStatusFilter').value;
+      const filtered = (globalData.users || []).filter(u => {
+        const matchQ = u.username.toLowerCase().includes(q) || (u.hwid || '').toLowerCase().includes(q) || (u.ip || '').toLowerCase().includes(q);
+        const matchStatus = !statusFilter || u.status === statusFilter;
+        return matchQ && matchStatus;
+      });
+
+      const container = document.getElementById('usersGrid');
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-500 text-sm">No users registered yet.</div>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(u => {
+        const statusBadge = u.status === 'active'
+          ? '<span class="px-2 py-0.5 text-xs bg-green-500/20 text-green-400 rounded">Active</span>'
+          : u.status === 'paused'
+          ? '<span class="px-2 py-0.5 text-xs bg-yellow-500/20 text-yellow-400 rounded">Paused</span>'
+          : '<span class="px-2 py-0.5 text-xs bg-red-500/20 text-red-400 rounded">Banned</span>';
+
+        return `
+          <div class="bg-custom-card p-5 rounded-xl border border-custom-border space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-sm font-bold text-white truncate max-w-[200px]"><i class="fas fa-user-circle text-blue-500 mr-1.5"></i>${u.username}</span>
+              ${statusBadge}
+            </div>
+            <div class="text-xs text-gray-400 space-y-1">
+              <div>HWID Lock: <span class="${u.hwidAffected !== false ? 'text-green-400' : 'text-gray-400'} font-semibold">${u.hwidAffected !== false ? 'Enabled' : 'Disabled'}</span></div>
+              <div class="truncate">HWID: <span class="font-mono text-gray-300">${u.hwid || 'Not Bound'}</span></div>
+              <div>Last IP: <span class="font-mono text-blue-400">${u.ip || '127.0.0.1'}</span></div>
+              <div>Device: <span class="text-gray-300">${u.device || 'Android Device'}</span></div>
+            </div>
+            <div class="flex gap-1.5 pt-2 border-t border-custom-border">
+              <button onclick="openEditUserModal('${u.username}')" class="flex-1 py-1 text-xs bg-blue-600/20 text-blue-300 hover:bg-blue-600/30 rounded border border-blue-500/30 font-semibold"><i class="fas fa-pen-to-square mr-1"></i>Edit</button>
+              <button onclick="resetUserHwid('${u.username}')" class="p-1.5 text-xs bg-purple-600/20 text-purple-300 hover:bg-purple-600/30 rounded border border-purple-500/30" title="Reset HWID"><i class="fas fa-rotate"></i></button>
+              <button onclick="toggleUserPause('${u.username}')" class="p-1.5 text-xs bg-yellow-600/20 text-yellow-400 rounded border border-yellow-500/30" title="Pause"><i class="fas fa-pause"></i></button>
+              <button onclick="deleteSingleUser('${u.username}')" class="p-1.5 text-xs bg-red-900/30 text-red-400 hover:bg-red-900/50 rounded" title="Delete"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openEditUserModal(username) {
+      const u = globalData.users.find(usr => usr.username === username);
+      if (!u) return showToast('User not found', 'error');
+
+      document.getElementById('editUserOriginal').value = u.username;
+      document.getElementById('editUserName').value = u.username;
+      document.getElementById('editUserPass').value = '';
+      document.getElementById('editUserStatus').value = u.status || 'active';
+      document.getElementById('editUserSub').value = u.subscription || 'default';
+      document.getElementById('editUserHwidAffected').checked = u.hwidAffected !== false;
+      document.getElementById('editUserHwidDisplay').textContent = u.hwid || 'None';
+      const expDate = u.expires ? new Date(u.expires).toISOString().slice(0, 16) : '';
+      document.getElementById('editUserExpiryDate').value = expDate;
+
+      openModal('edit-user-modal');
+    }
+
+    async function submitEditUser() {
+      const origName = document.getElementById('editUserOriginal').value;
+      const body = {
+        action: 'edit',
+        username: origName,
+        newUsername: document.getElementById('editUserName').value.trim(),
+        password: document.getElementById('editUserPass').value || undefined,
+        status: document.getElementById('editUserStatus').value,
+        subscription: document.getElementById('editUserSub').value.trim(),
+        hwidAffected: document.getElementById('editUserHwidAffected').checked,
+        expiryTimestamp: document.getElementById('editUserExpiryDate').value ? new Date(document.getElementById('editUserExpiryDate').value).getTime() : 0
+      };
+
+      await authFetch('/api/admin/users/action', { method: 'POST', body: JSON.stringify(body) });
+      closeModal('edit-user-modal');
+      showToast('User account updated');
+      loadAllData();
+    }
+
+    async function resetUserHwid(username) {
+      await authFetch('/api/admin/users/action', { method: 'POST', body: JSON.stringify({ action: 'reset_hwid', username }) });
+      showToast('HWID reset for ' + username);
+      loadAllData();
+    }
+
+    async function resetUserHwidFromModal() {
+      const username = document.getElementById('editUserOriginal').value;
+      await authFetch('/api/admin/users/action', { method: 'POST', body: JSON.stringify({ action: 'reset_hwid', username }) });
+      document.getElementById('editUserHwidDisplay').textContent = 'None';
+      showToast('HWID reset');
+      loadAllData();
+    }
+
+    async function toggleUserPause(username) {
+      await authFetch('/api/admin/users/action', { method: 'POST', body: JSON.stringify({ action: 'pause', username }) });
+      showToast('Toggled pause for ' + username);
+      loadAllData();
+    }
+
+    async function deleteSingleUser(username) {
+      if (!confirm('Delete user ' + username + '?')) return;
+      await authFetch('/api/admin/users/action', { method: 'POST', body: JSON.stringify({ action: 'delete_single', username }) });
+      showToast('User deleted');
+      loadAllData();
+    }
+
+    async function resetAllHwids() {
+      if (!confirm('Reset HWID for ALL users and licenses?')) return;
+      await authFetch('/api/admin/users/action', { method: 'POST', body: JSON.stringify({ action: 'reset_all_hwids' }) });
+      showToast('Reset all HWIDs');
+      loadAllData();
+    }
+
+    async function submitCreateUser() {
+      const body = {
+        action: 'create',
+        username: document.getElementById('createUsername').value.trim(),
+        password: document.getElementById('createUserPass').value,
+        email: document.getElementById('createUserEmail').value,
+        expiry: document.getElementById('createUserExpiry').value,
+        hwidAffected: document.getElementById('createUserHwidAffected').checked
+      };
+      if (!body.username) return showToast('Username required', 'error');
+      await authFetch('/api/admin/users/action', { method: 'POST', body: JSON.stringify(body) });
+      closeModal('create-user-modal');
+      showToast('User created');
+      loadAllData();
+    }
+
+    // Live Logs View
+    let currentLogViewMode = 'boxes';
+
+    function toggleLogViewMode() {
+      currentLogViewMode = currentLogViewMode === 'boxes' ? 'table' : 'boxes';
+      const icon = document.getElementById('logViewModeIcon');
+      if (icon) icon.className = currentLogViewMode === 'boxes' ? 'fas fa-border-all text-sm' : 'fas fa-list text-sm';
+      renderLogs();
+    }
+
+    function toggleLogFilterMenu() {
+      const menu = document.getElementById('logFilterMenu');
+      if (menu) menu.classList.toggle('hidden');
+    }
+
+    function toggleSelectAllLogs(checked) {
+      document.querySelectorAll('.log-item-checkbox').forEach(cb => cb.checked = checked);
+      onLogSelectChange();
+    }
+
+    function onLogSelectChange() {
+      const selected = document.querySelectorAll('.log-item-checkbox:checked');
+      const countEl = document.getElementById('selectedLogsCount');
+      const toolbar = document.getElementById('selectedLogsToolbar');
+      if (countEl) countEl.textContent = selected.length + ' selected';
+      if (toolbar) toolbar.classList.toggle('hidden', selected.length === 0);
+    }
+
+    function renderLogs() {
+      const q = (document.getElementById('logSearchInput').value || '').toLowerCase().trim();
+      const typeFilter = document.getElementById('logTypeFilter') ? document.getElementById('logTypeFilter').value : '';
+
+      const filtered = (globalData.logs || []).filter(l => {
+        const matchQ = (l.message || '').toLowerCase().includes(q) || (l.username || '').toLowerCase().includes(q) || (l.ip || '').toLowerCase().includes(q) || (l.device || '').toLowerCase().includes(q);
+        const matchType = !typeFilter || l.type === typeFilter;
+        return matchQ && matchType;
+      });
+
+      const boxesContainer = document.getElementById('logsBoxesContainer');
+      const tableContainer = document.getElementById('logsTableContainer');
+      const tbody = document.getElementById('logsTableBody');
+
+      if (currentLogViewMode === 'boxes') {
+        boxesContainer.classList.remove('hidden');
+        tableContainer.classList.add('hidden');
+      } else {
+        boxesContainer.classList.add('hidden');
+        tableContainer.classList.remove('hidden');
+      }
+
+      if (filtered.length === 0) {
+        boxesContainer.innerHTML = '<div class="col-span-full py-12 text-center text-gray-500 text-sm bg-custom-card rounded-2xl border border-custom-border p-8">No live activity logs recorded yet.</div>';
+        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-gray-500">No logs found.</td></tr>';
+        return;
+      }
+
+      boxesContainer.innerHTML = filtered.map((log, idx) => {
+        const logId = log.id || ('log_' + idx);
+        let badgeColor = 'text-blue-400 bg-blue-500/10 border-blue-500/20';
+        let badgeLabel = log.type || 'LOG';
+        let badgeIcon = 'fas fa-info-circle';
+
+        if (log.type === 'LOGIN_SUCCESS') {
+          badgeColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
+          badgeLabel = 'KEY LOGIN SUCCESS';
+          badgeIcon = 'fas fa-check-circle';
+        } else if (log.type === 'LOGIN_FAILED') {
+          badgeColor = 'text-red-400 bg-red-500/10 border-red-500/30';
+          badgeLabel = 'KEY LOGIN FAILED';
+          badgeIcon = 'fas fa-times-circle';
+        } else if (log.type === 'HWID_MISMATCH') {
+          badgeColor = 'text-amber-400 bg-amber-500/10 border-amber-500/30';
+          badgeLabel = 'HWID MISMATCH';
+          badgeIcon = 'fas fa-fingerprint';
+        } else if (log.type === 'APP_INIT') {
+          badgeColor = 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30';
+          badgeLabel = 'APK OPENED';
+          badgeIcon = 'fas fa-mobile-screen';
+        } else if (log.type === 'STREAM_ACCESS') {
+          badgeColor = 'text-purple-400 bg-purple-500/10 border-purple-500/30';
+          badgeLabel = 'VIDEO STREAMING';
+          badgeIcon = 'fas fa-play';
+        } else if (log.type === 'SECURITY_ALERT') {
+          badgeColor = 'text-red-400 bg-red-500/10 border-red-500/30';
+          badgeLabel = 'SECURITY ALERT';
+          badgeIcon = 'fas fa-shield-halved';
+        }
+
+        const isStream = log.type === 'STREAM_ACCESS';
+
+        return `
+          <div class="bg-custom-card p-4 rounded-xl border border-custom-border hover:border-gray-600/50 transition-all space-y-2.5">
+            <div class="flex items-center justify-between">
+              <input type="checkbox" data-log-id="${logId}" onchange="onLogSelectChange()" class="log-item-checkbox accent-blue-600 rounded bg-custom-back border-gray-600 cursor-pointer w-4 h-4">
+              <span class="text-[11px] px-2 py-0.5 rounded-full border font-mono font-semibold flex items-center gap-1.5 ${badgeColor}">
+                <i class="${badgeIcon} text-[10px]"></i> ${badgeLabel}
+              </span>
+            </div>
+            <div class="text-xs">
+              <span class="text-gray-400">${isStream ? 'Video Activity:' : 'Event:'}</span> 
+              <span class="text-gray-200 ml-1 break-words font-medium ${isStream ? 'text-purple-200' : ''}">${escapeHtml(log.message || '')}</span>
+            </div>
+            <div class="flex items-center justify-between text-xs pt-1.5 border-t border-white/5 text-gray-400">
+              <div>User / Key: <strong class="text-blue-300 font-mono">${escapeHtml(log.username || 'Guest')}</strong></div>
+              <div>${new Date(log.time || Date.now()).toLocaleTimeString()}</div>
+            </div>
+            <div class="flex items-center justify-between text-[11px] text-gray-500">
+              <div class="truncate">Device: ${escapeHtml(log.device || 'Android')}</div>
+              <div class="font-mono">${escapeHtml(log.ip || '127.0.0.1')}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      tbody.innerHTML = filtered.map(log => {
+        let badgeColor = 'text-blue-400';
+        if (log.type === 'LOGIN_SUCCESS') badgeColor = 'text-emerald-400 font-bold';
+        else if (log.type === 'LOGIN_FAILED' || log.type === 'SECURITY_ALERT') badgeColor = 'text-red-400 font-bold';
+        else if (log.type === 'HWID_MISMATCH') badgeColor = 'text-amber-400 font-bold';
+        else if (log.type === 'STREAM_ACCESS') badgeColor = 'text-purple-400 font-bold';
+        else if (log.type === 'APP_INIT') badgeColor = 'text-cyan-400 font-bold';
+
+        return `
+        <tr class="hover:bg-custom-back">
+          <td class="p-3 text-gray-400 whitespace-nowrap">${new Date(log.time || Date.now()).toLocaleTimeString()}</td>
+          <td class="p-3 ${badgeColor} whitespace-nowrap font-mono">${escapeHtml(log.type || 'LOG')}</td>
+          <td class="p-3 font-semibold text-white whitespace-nowrap font-mono">${escapeHtml(log.username || 'Guest')}</td>
+          <td class="p-3 text-gray-200 break-all font-medium">${escapeHtml(log.message || '')}</td>
+          <td class="p-3 text-gray-400 font-mono whitespace-nowrap">${escapeHtml(log.ip || '127.0.0.1')}</td>
+          <td class="p-3 text-gray-400 whitespace-nowrap">${escapeHtml(log.device || 'Android')}</td>
+        </tr>
+      `}).join('');
+    }
+
+    async function clearLogs() {
+      if (!confirm('Clear all logs?')) return;
+      await authFetch('/api/admin/logs', { method: 'POST', body: JSON.stringify({ action: 'clear' }) });
+      showToast('Logs cleared');
+      loadAllData();
+    }
+
+    async function deleteSelectedLogs() {
+      const selected = Array.from(document.querySelectorAll('.log-item-checkbox:checked')).map(cb => cb.dataset.logId).filter(Boolean);
+      if (!selected.length) return showToast('No logs selected', 'error');
+      await authFetch('/api/admin/logs', { method: 'POST', body: JSON.stringify({ action: 'delete_selected', ids: selected }) });
+      showToast('Deleted ' + selected.length + ' logs');
+      loadAllData();
+    }
+
+    function confirmClearOrDeleteLogs() {
+      const selected = document.querySelectorAll('.log-item-checkbox:checked');
+      if (selected.length > 0) deleteSelectedLogs();
+      else clearLogs();
+    }
+
+    function exportLogsToCSV() {
+      if (!globalData.logs.length) return showToast('No logs to export', 'error');
+      const rows = ['Timestamp,Type,User,Message,IP,Device'];
+      globalData.logs.forEach(l => {
+        rows.push(`"${new Date(l.time).toISOString()}","${l.type || ''}","${l.username || ''}","${(l.message || '').replace(/"/g, '""')}","${l.ip || ''}","${l.device || ''}"`);
+      });
+      const blob = new Blob([rows.join('\r\n')], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'keyauth_security_logs.csv';
+      a.click();
+      showToast('Exported logs CSV');
+    }
+
+    // Variables Renderer
+    function renderVariables() {
+      const tbody = document.getElementById('varsTableBody');
+      if (!globalData.variables || !globalData.variables.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-gray-500">No variables created yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = globalData.variables.map(v => `
+        <tr class="hover:bg-custom-back">
+          <td class="p-3.5 font-mono font-semibold text-blue-400">${escapeHtml(v.name)}</td>
+          <td class="p-3.5 font-mono text-xs text-white break-all max-w-[320px]">${v.isSecret ? '••••••••••••••' : escapeHtml(v.data || '')}</td>
+          <td class="p-3.5 text-xs text-gray-400">${v.isSecret ? '<span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300">Secret</span>' : 'Public'}</td>
+          <td class="p-3.5 text-right whitespace-nowrap space-x-2">
+            <button onclick="openEditVarModal('${v.name}')" class="p-1.5 text-xs text-blue-400 hover:text-blue-300" title="Edit"><i class="fas fa-pen-to-square"></i></button>
+            <button onclick="navigator.clipboard.writeText('${escapeHtml(v.data || '')}'); showToast('Copied variable data');" class="p-1.5 text-xs text-gray-400 hover:text-white" title="Copy"><i class="fas fa-copy"></i></button>
+            <button onclick="deleteVar('${v.name}')" class="p-1.5 text-xs text-red-400 hover:text-red-300" title="Delete"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function submitCreateVar() {
+      const body = {
+        action: 'add',
+        name: document.getElementById('createVarName').value.trim(),
+        data: document.getElementById('createVarData').value.trim(),
+        isSecret: document.getElementById('createVarSecret').checked,
+        appId: document.getElementById('createVarAppId').value
+      };
+      if (!body.name) return showToast('Variable name required', 'error');
+      await authFetch('/api/admin/vars', { method: 'POST', body: JSON.stringify(body) });
+      closeModal('create-var-modal');
+      showToast('Variable saved');
+      loadAllData();
+    }
+
+    function openEditVarModal(name) {
+      const v = globalData.variables.find(x => x.name === name);
+      if (!v) return showToast('Variable not found', 'error');
+      document.getElementById('editVarOriginalName').value = v.name;
+      document.getElementById('editVarName').value = v.name;
+      document.getElementById('editVarData').value = v.data || '';
+      document.getElementById('editVarSecret').checked = v.isSecret === true;
+      openModal('edit-var-modal');
+    }
+
+    async function submitEditVar() {
+      const body = {
+        action: 'edit',
+        originalName: document.getElementById('editVarOriginalName').value,
+        newName: document.getElementById('editVarName').value.trim(),
+        data: document.getElementById('editVarData').value,
+        isSecret: document.getElementById('editVarSecret').checked,
+        appId: document.getElementById('editVarAppId').value
+      };
+      await authFetch('/api/admin/vars', { method: 'POST', body: JSON.stringify(body) });
+      closeModal('edit-var-modal');
+      showToast('Variable updated');
+      loadAllData();
+    }
+
+    async function deleteVar(name) {
+      if (!confirm('Delete variable ' + name + '?')) return;
+      await authFetch('/api/admin/vars', { method: 'POST', body: JSON.stringify({ action: 'delete', name }) });
+      showToast('Variable deleted');
+      loadAllData();
+    }
+
+    // Files Renderer
+    function renderFiles() {
+      const tbody = document.getElementById('filesTableBody');
+      if (!globalData.files || !globalData.files.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-gray-500">No application files hosted.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = globalData.files.map(f => `
+        <tr class="hover:bg-custom-back">
+          <td class="p-3.5 font-mono text-blue-400 font-semibold">${f.id}</td>
+          <td class="p-3.5 font-semibold text-white">${f.name}</td>
+          <td class="p-3.5 text-gray-400 text-xs">${f.size || 'N/A'}</td>
+          <td class="p-3.5 font-mono text-xs text-blue-400 truncate max-w-[280px]"><a href="${f.url}" target="_blank" class="hover:underline">${f.url}</a></td>
+          <td class="p-3.5 text-right whitespace-nowrap space-x-2">
+            <button onclick="navigator.clipboard.writeText('${f.id}'); showToast('Copied File ID');" class="p-1.5 text-xs text-gray-400 hover:text-white"><i class="fas fa-copy"></i></button>
+            <a href="${f.url}" download target="_blank" class="p-1.5 text-xs text-green-400 hover:text-green-300"><i class="fas fa-download"></i></a>
+            <button onclick="deleteFile('${f.id}')" class="p-1.5 text-xs text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function submitCreateFile() {
+      const body = {
+        action: 'add',
+        id: document.getElementById('createFileId').value.trim(),
+        name: document.getElementById('createFileName').value.trim(),
+        size: document.getElementById('createFileSize').value.trim(),
+        url: document.getElementById('createFileUrl').value.trim(),
+        appId: document.getElementById('createFileAppId').value
+      };
+      if (!body.id || !body.name || !body.url) return showToast('All fields required', 'error');
+      await authFetch('/api/admin/files', { method: 'POST', body: JSON.stringify(body) });
+      closeModal('create-file-modal');
+      showToast('File saved');
+      loadAllData();
+    }
+
+    async function deleteFile(id) {
+      if (!confirm('Delete file ' + id + '?')) return;
+      await authFetch('/api/admin/files', { method: 'POST', body: JSON.stringify({ action: 'delete', id }) });
+      showToast('File deleted');
+      loadAllData();
+    }
+
+    // Sessions Renderer
+    function renderSessions() {
+      const tbody = document.getElementById('sessionsTableBody');
+      if (!globalData.sessions || !globalData.sessions.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-gray-500">No active device sessions.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = globalData.sessions.map(s => `
+        <tr class="hover:bg-custom-back">
+          <td class="p-3 text-blue-400 font-semibold">${s.id}</td>
+          <td class="p-3"><span class="px-2 py-0.5 rounded ${s.authenticated ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'} text-[10px]">${s.authenticated ? 'Authed' : 'Init'}</span></td>
+          <td class="p-3 text-white font-semibold">${s.username || s.key || 'Guest'}</td>
+          <td class="p-3 text-gray-400">${s.ip || '127.0.0.1'}</td>
+          <td class="p-3 text-gray-400 truncate max-w-[120px]">${s.hwid || 'N/A'}</td>
+          <td class="p-3 text-gray-400">${s.device || 'Android'}</td>
+          <td class="p-3 text-gray-400">${new Date(s.started).toLocaleTimeString()}</td>
+          <td class="p-3 text-right">
+            <button onclick="killSession('${s.id}')" class="px-2 py-1 text-xs bg-red-900/30 text-red-400 hover:bg-red-900/50 rounded font-semibold"><i class="fas fa-power-off mr-1"></i>Kill</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function killSession(sessionId) {
+      await authFetch('/api/admin/sessions/action', { method: 'POST', body: JSON.stringify({ action: 'kill_single', sessionId }) });
+      showToast('Session terminated');
+      loadAllData();
+    }
+
+    async function killAllSessions() {
+      if (!confirm('Kill ALL active device sessions?')) return;
+      await authFetch('/api/admin/sessions/action', { method: 'POST', body: JSON.stringify({ action: 'kill_all' }) });
+      showToast('Terminated all sessions');
+      loadAllData();
+    }
+
+    // Rules / Blacklists Renderer
+    function renderRules() {
+      const tbody = document.getElementById('rulesTableBody');
+      if (!globalData.rules || !globalData.rules.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-gray-500">No blacklist rules active.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = globalData.rules.map(r => `
+        <tr class="hover:bg-custom-back">
+          <td class="p-3.5 font-bold uppercase text-xs ${r.type === 'ip' ? 'text-orange-400' : 'text-purple-400'}">${r.type}</td>
+          <td class="p-3.5 font-mono text-white font-semibold">${r.value}</td>
+          <td class="p-3.5 text-gray-300">${r.reason || 'Blacklisted'}</td>
+          <td class="p-3.5 text-gray-400 text-xs">${new Date(r.created).toLocaleDateString()}</td>
+          <td class="p-3.5 text-right whitespace-nowrap">
+            <button onclick="deleteRule('${r.id || r.value}')" class="p-1.5 text-xs text-red-400 hover:text-red-300 bg-red-900/20 rounded border border-red-500/30"><i class="fas fa-trash mr-1"></i>Remove</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function submitCreateRule() {
+      const body = {
+        action: 'add',
+        type: document.getElementById('createRuleType').value,
+        value: document.getElementById('createRuleValue').value.trim(),
+        reason: document.getElementById('createRuleReason').value.trim()
+      };
+      if (!body.value) return showToast('Value required', 'error');
+      await authFetch('/api/admin/rules', { method: 'POST', body: JSON.stringify(body) });
+      closeModal('create-rule-modal');
+      showToast('Blacklist rule created');
+      loadAllData();
+    }
+
+    async function deleteRule(val) {
+      await authFetch('/api/admin/rules', { method: 'POST', body: JSON.stringify({ action: 'delete', id: val, value: val }) });
+      showToast('Rule removed');
+      loadAllData();
+    }
+
+    async function clearAllRules() {
+      if (!confirm('Clear all rules?')) return;
+      await authFetch('/api/admin/rules', { method: 'POST', body: JSON.stringify({ action: 'clear' }) });
+      showToast('Cleared all rules');
+      loadAllData();
+    }
+
+    // Settings
+    async function saveSettings() {
+      const body = {
+        name: document.getElementById('settingAppName').value.trim(),
+        version: document.getElementById('settingAppVersion').value.trim(),
+        status: document.getElementById('settingAppStatus').checked ? 'Active' : 'Paused',
+        hwidLock: document.getElementById('settingHwidLock').checked,
+        forceHwid: document.getElementById('settingForceHwid').checked,
+        blockVpn: document.getElementById('settingBlockVpn').checked,
+        hashCheck: document.getElementById('settingHashCheck').checked,
+        appHash: document.getElementById('settingAppHash').value.trim(),
+        discordWebhook: document.getElementById('settingDiscordWebhook').value.trim(),
+        autoBan: document.getElementById('settingAutoBan').checked,
+        requireKeyForProxy: document.getElementById('settingRequireKeyForProxy').checked
+      };
+
+      await authFetch('/api/admin/settings', { method: 'POST', body: JSON.stringify(body) });
+      showToast('Security settings saved successfully!');
+      loadAllData();
+    }
+
+    async function testDiscordWebhook() {
+      const url = document.getElementById('settingDiscordWebhook').value.trim();
+      if (!url) return showToast('Enter Discord webhook URL first', 'error');
+      const res = await authFetch('/api/admin/discord/test', { method: 'POST', body: JSON.stringify({ url }) }).then(r => r.json());
+      if (res && res.success) showToast('Test webhook sent to Discord!');
+      else showToast(res.message || 'Webhook failed', 'error');
+    }
+
+    // Full Backup & Restore
+    async function exportFullBackup() {
+      const res = await authFetch('/api/admin/backup').then(r => r.json());
+      if (res && res.database) {
+        const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(res.database, null, 2));
+        const dl = document.createElement('a');
+        dl.setAttribute('href', dataStr);
+        dl.setAttribute('download', 'ghostrix_keyauth_full_backup.json');
+        dl.click();
+        showToast('Database backup JSON exported');
+      }
+    }
+
+    function triggerRestoreBackup() {
+      document.getElementById('backupFileInput').click();
+    }
+
+    function handleBackupFile(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        try {
+          const parsed = JSON.parse(ev.target.result);
+          if (!confirm('Restore full database from this file? Current data will be replaced.')) return;
+          const res = await authFetch('/api/admin/backup', { method: 'POST', body: JSON.stringify({ data: parsed }) }).then(r => r.json());
+          if (res.success) {
+            showToast('Database restored successfully!');
+            loadAllData();
+          } else {
+            showToast(res.message || 'Restore failed', 'error');
+          }
+        } catch (ex) {
+          showToast('Invalid JSON file format', 'error');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Code Generator & Tester
+    let currentCodeLang = 'kotlin';
+    function switchCodeLang(lang) {
+      currentCodeLang = lang;
+      document.querySelectorAll('.code-lang-btn').forEach(btn => {
+        btn.className = 'code-lang-btn px-4 py-2 bg-custom-card hover:bg-custom-border text-gray-400 rounded-lg text-xs font-semibold';
+      });
+      document.getElementById('code-btn-' + lang).className = 'code-lang-btn px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold';
+      renderCodeSnippet();
+    }
+
+    function renderCodeSnippet() {
+      const app = (globalData.apps || []).find(a => a.id === globalData.activeAppId) || globalData.apps[0] || {};
+      const host = window.location.host;
+      const url = `${window.location.protocol}//${host}/api/1.2/`;
+      const titleEl = document.getElementById('codeLangTitle');
+      const contentEl = document.getElementById('codeSnippetContent');
+
+      if (currentCodeLang === 'kotlin') {
+        titleEl.textContent = 'Android Kotlin (OkHttp / Retrofit)';
+        contentEl.textContent = `// 1. Initialize KeyAuth Client
+KeyAuthApp.init(
+    name = "${app.name || 'redrix'}",
+    ownerid = "${app.ownerid || 'usr_rput5p1f'}",
+    secret = "${app.secret || ''}",
+    version = "${app.version || '1.2'}",
+    url = "${url}"
+)
+
+// 2. Direct License Key Login
+val loginSuccess = KeyAuthApp.license(key = "YOUR_LICENSE_KEY_HERE")
+if (loginSuccess) {
+    Log.d("KeyAuth", "Authorized! HWID: " + KeyAuthApp.user_data.hwid)
+    val announcement = KeyAuthApp.getVar("announcement")
+    val updateApk = KeyAuthApp.getFile("file_app_update")
+} else {
+    Log.e("KeyAuth", "Login Failed: " + KeyAuthApp.response.message)
+}`;
+      } else if (currentCodeLang === 'java') {
+        titleEl.textContent = 'Android Java (OkHttp)';
+        contentEl.textContent = `KeyAuthApp.init("${app.name || 'redrix'}", "${app.ownerid || 'usr_rput5p1f'}", "${app.secret || ''}", "${app.version || '1.2'}", "${url}");
+boolean success = KeyAuthApp.license("YOUR_LICENSE_KEY_HERE");`;
+      } else if (currentCodeLang === 'python') {
+        titleEl.textContent = 'Python 3 (Requests)';
+        contentEl.textContent = `import requests
+res = requests.post("${url}", data={"type": "init", "name": "${app.name}", "ownerid": "${app.ownerid}", "secret": "${app.secret}", "version": "${app.version}"})
+print(res.json())`;
+      } else if (currentCodeLang === 'curl') {
+        titleEl.textContent = 'cURL / Shell CLI';
+        contentEl.textContent = `curl -X POST "${url}" \\
+  -d "type=init" \\
+  -d "name=${app.name}" \\
+  -d "ownerid=${app.ownerid}" \\
+  -d "secret=${app.secret}" \\
+  -d "version=${app.version}"`;
+      }
+    }
+
+    function copySnippet() {
+      const app = (globalData.apps || []).find(a => a.id === globalData.activeAppId) || globalData.apps[0] || {};
+      const url = `${window.location.protocol}//${window.location.host}/api/1.2/`;
+      const code = `KeyAuthApp.init(name = "${app.name}", ownerid = "${app.ownerid}", secret = "${app.secret}", version = "${app.version}", url = "${url}")`;
+      navigator.clipboard.writeText(code);
+      showToast('Copied Kotlin snippet');
+    }
+
+    function copyCurrentCodeSnippet() {
+      navigator.clipboard.writeText(document.getElementById('codeSnippetContent').textContent);
+      showToast('Code copied');
+    }
+
+    // Tester
+    function updateTesterInputs() {
+      const t = document.getElementById('testerType').value;
+      document.getElementById('testerInputKey').classList.toggle('hidden', !['license', 'var', 'file'].includes(t));
+      document.getElementById('testerInputHwid').classList.toggle('hidden', !['init', 'license', 'login'].includes(t));
+      document.getElementById('testerInputUser').classList.toggle('hidden', t !== 'login');
+      document.getElementById('testerInputPass').classList.toggle('hidden', t !== 'login');
+      document.getElementById('testerInputVar').classList.toggle('hidden', t !== 'var');
+      document.getElementById('testerInputFile').classList.toggle('hidden', t !== 'file');
+      document.getElementById('testerInputLog').classList.toggle('hidden', t !== 'log');
+    }
+
+    function fillTesterWithQuickKey() {
+      if (globalData.licenses.length) {
+        document.getElementById('testerKey').value = globalData.licenses[0].key;
+        showToast('Autofilled: ' + globalData.licenses[0].key);
+      } else {
+        showToast('No active keys found', 'error');
+      }
+    }
+
+    async function executeTesterRequest() {
+      const t = document.getElementById('testerType').value;
+      const btn = document.getElementById('testerSubmitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+
+      const app = (globalData.apps || []).find(a => a.id === globalData.activeAppId) || globalData.apps[0] || {};
+      const params = new URLSearchParams();
+      params.set('type', t);
+      params.set('name', app.name || 'redrix');
+      params.set('ownerid', app.ownerid || 'usr_rput5p1f');
+      params.set('secret', app.secret || '');
+      params.set('version', app.version || '1.2');
+
+      const sess = document.getElementById('testerSessionId').value.trim();
+      if (sess) params.set('sessionid', sess);
+      const hwid = document.getElementById('testerHwid').value.trim();
+      if (hwid) params.set('hwid', hwid);
+      const key = document.getElementById('testerKey').value.trim();
+      if (key && ['license', 'var', 'file'].includes(t)) params.set('key', key);
+      if (t === 'var') params.set('varid', document.getElementById('testerVarId').value.trim() || 'announcement');
+      if (t === 'file') params.set('fileid', document.getElementById('testerFileId').value.trim() || 'file_app_update');
+      if (t === 'log') params.set('message', document.getElementById('testerLogMsg').value.trim() || 'Client Test Log');
+
+      const t0 = performance.now();
+      try {
+        const res = await fetch('/api/1.2/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString()
+        });
+        const latency = Math.round(performance.now() - t0);
+        const json = await res.json();
+
+        document.getElementById('testerStatusBadge').textContent = res.status + ' OK';
+        document.getElementById('testerStatusBadge').className = 'px-2.5 py-0.5 rounded text-xs font-mono bg-green-500/20 text-green-400';
+        document.getElementById('testerLatencyBadge').textContent = latency + ' ms';
+        document.getElementById('testerResponseBody').textContent = JSON.stringify(json, null, 2);
+
+        if (json.sessionid) document.getElementById('testerSessionId').value = json.sessionid;
+        showToast('Request completed (' + latency + 'ms)');
+      } catch (ex) {
+        document.getElementById('testerResponseBody').textContent = 'Error: ' + ex.message;
+        showToast('Request failed', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Test Request';
+        loadAllData();
+      }
+    }
+
+    function copyTesterResponse() {
+      navigator.clipboard.writeText(document.getElementById('testerResponseBody').textContent);
+      showToast('Response copied');
+    }
+
+    // CSV & File Import
+    function handleImportLicenseFile(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        document.getElementById('importLicenseTextarea').value = ev.target.result;
+        showToast('Loaded ' + file.name);
+      };
+      reader.readAsText(file);
+    }
+
+    async function submitImportLicenses() {
+      const text = document.getElementById('importLicenseTextarea').value.trim();
+      const appId = document.getElementById('importLicenseAppId').value;
+      if (!text) return showToast('Paste or select CSV file', 'error');
+
+      const res = await authFetch('/api/admin/licenses/import', { method: 'POST', body: JSON.stringify({ csv: text, appId }) }).then(r => r.json());
+      if (res && res.success) {
+        closeModal('import-license-modal');
+        showToast('Imported ' + res.count + ' keys!');
+        loadAllData();
+      } else {
+        showToast('Import failed', 'error');
+      }
+    }
+
+    function handleImportUserFile(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        document.getElementById('importUserTextarea').value = ev.target.result;
+        showToast('Loaded ' + file.name);
+      };
+      reader.readAsText(file);
+    }
+
+    async function submitImportUsers() {
+      const text = document.getElementById('importUserTextarea').value.trim();
+      const appId = document.getElementById('importUserAppId').value;
+      if (!text) return showToast('Paste or select CSV file', 'error');
+
+      const res = await authFetch('/api/admin/users/import', { method: 'POST', body: JSON.stringify({ csv: text, appId }) }).then(r => r.json());
+      if (res && res.success) {
+        closeModal('import-user-modal');
+        showToast('Imported ' + res.count + ' users!');
+        loadAllData();
+      } else {
+        showToast('Import failed', 'error');
+      }
+    }
+
+    function exportLicenses() {
+      const blob = new Blob([JSON.stringify(globalData.licenses, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'keyauth_licenses.json';
+      a.click();
+      showToast('Exported licenses JSON');
+    }
+
+    function exportUsers() {
+      const blob = new Blob([JSON.stringify(globalData.users, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'keyauth_users.json';
+      a.click();
+      showToast('Exported users JSON');
+    }
+
+    function exportKeysTxt() {
+      if (!globalData.licenses.length) return showToast('No licenses to export', 'error');
+      const blob = new Blob([globalData.licenses.map(l => l.key).join('\n')], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'licenses_list.txt';
+      a.click();
+      showToast('Exported keys TXT');
+    }
+
+    function exportKeysCSV() {
+      if (!globalData.licenses.length) return showToast('No licenses to export', 'error');
+      const rows = ['Key,Status,Level,Duration,Unit,HWID_Locked,Bound_HWID,Note,Created,Expires'];
+      globalData.licenses.forEach(l => {
+        rows.push(`"${l.key}","${l.status}","${l.level}","${l.duration}","${l.unit || 'Lifetime'}","${l.hwidLock !== false}","${l.hwid || ''}","${(l.note || '').replace(/"/g, '""')}","${new Date(l.gendate).toISOString()}","${l.expires ? new Date(l.expires).toISOString() : 'Never'}"`);
+      });
+      const blob = new Blob([rows.join('\r\n')], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'licenses.csv';
+      a.click();
+      showToast('Exported keys CSV');
+    }
+
+    function handleGlobalSearch(val) {
+      val = (val || '').toLowerCase().trim();
+      if (!val) return;
+      if (val.includes('key') || val.includes('lic')) showTab('licenses');
+      else if (val.includes('user')) showTab('users');
+      else if (val.includes('log')) showTab('logs');
+      else if (val.includes('file')) showTab('files');
+      else if (val.includes('var')) showTab('vars');
+      else if (val.includes('set')) showTab('settings');
+      else if (val.includes('rule')) showTab('rules');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const page = urlParams.get('page');
+      if (page) showTab(page, false);
+      loadAllData();
+    });
+  </script>
+</body>
+</html>

@@ -11,6 +11,26 @@
       "destination": "/icons/:path*"
     },
     {
+      "source": "/api/1.2/:path*",
+      "destination": "/api/proxy.js"
+    },
+    {
+      "source": "/api/1.2",
+      "destination": "/api/proxy.js"
+    },
+    {
+      "source": "/api/admin/:path*",
+      "destination": "/api/proxy.js"
+    },
+    {
+      "source": "/admin",
+      "destination": "/api/proxy.js"
+    },
+    {
+      "source": "/app",
+      "destination": "/api/proxy.js"
+    },
+    {
       "source": "/api/portals",
       "destination": "/api/proxy.js"
     },

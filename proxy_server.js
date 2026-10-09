@@ -6,6 +6,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { Readable } = require('stream');
+const keyauth = require('./keyauth_engine');
 
 const PORT = process.env.PORT || 3000;
 const BASE_DIR = __dirname;
@@ -70,6 +71,382 @@ function saveSessions(sessions) {
   }
 }
 
+// ==========================================
+// ADMIN CREDENTIALS & USER ACCESS CONTROL
+// ==========================================
+const ADMIN_CREDENTIALS = {
+  user: 'admin@1234',
+  pass: 'Darshan@1334'
+};
+
+const ADMIN_DATA_FILE = process.env.VERCEL ? path.join('/tmp', 'admin_data.json') : path.join(BASE_DIR, 'admin_data.json');
+let adminStore = {
+  settings: {
+    requireApproval: false
+  },
+  users: {},
+  totalRequests: 0,
+  globalLiveLogs: [],
+  activeSessions: []
+};
+
+const adminSessions = new Set();
+const videoTitlesCache = new Map();
+
+function loadAdminData() {
+  try {
+    if (fs.existsSync(ADMIN_DATA_FILE)) {
+      const data = JSON.parse(fs.readFileSync(ADMIN_DATA_FILE, 'utf8'));
+      if (data && typeof data === 'object') {
+        if (data.settings) adminStore.settings = data.settings;
+        if (data.users) adminStore.users = data.users;
+        if (typeof data.totalRequests === 'number') adminStore.totalRequests = data.totalRequests;
+        if (Array.isArray(data.globalLiveLogs)) adminStore.globalLiveLogs = data.globalLiveLogs;
+        if (Array.isArray(data.activeSessions)) {
+          data.activeSessions.forEach(t => adminSessions.add(t));
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[Admin Data Error] Could not read admin_data.json:', err.message);
+  }
+}
+loadAdminData();
+
+let adminSaveTimer = null;
+function scheduleSaveAdminStore() {
+  if (adminSaveTimer) return;
+  adminSaveTimer = setTimeout(() => {
+    adminSaveTimer = null;
+    try {
+      adminStore.activeSessions = Array.from(adminSessions);
+      fs.writeFileSync(ADMIN_DATA_FILE, JSON.stringify(adminStore, null, 2), 'utf8');
+    } catch (err) {
+      console.error('[Admin Save Error] Could not save admin_data.json:', err.message);
+    }
+  }, 2500);
+}
+
+function extractUserIdentity(req, parsedUrl) {
+  const hUser = req.headers['x-user-id'] || 
+                req.headers['x-app-user'] || 
+                req.headers['x-device-id'] || 
+                req.headers['x-auth-user'];
+  if (hUser && typeof hUser === 'string' && hUser.trim().length > 0) {
+    return hUser.trim();
+  }
+
+  // Check incoming request URL (e.g. /proxy?url=...&uid=student1)
+  try {
+    const incUrl = new URL(req.url || '/', 'http://localhost');
+    const incUser = incUrl.searchParams.get('uid') || 
+                    incUrl.searchParams.get('user') || 
+                    incUrl.searchParams.get('userId') || 
+                    incUrl.searchParams.get('deviceId') ||
+                    incUrl.searchParams.get('app_user');
+    if (incUser && typeof incUser === 'string' && incUser.trim().length > 0) {
+      return incUser.trim();
+    }
+  } catch(e) {}
+
+  if (parsedUrl && parsedUrl.searchParams) {
+    const qUser = parsedUrl.searchParams.get('uid') || 
+                  parsedUrl.searchParams.get('user') || 
+                  parsedUrl.searchParams.get('userId') || 
+                  parsedUrl.searchParams.get('deviceId') ||
+                  parsedUrl.searchParams.get('app_user');
+    if (qUser && typeof qUser === 'string' && qUser.trim().length > 0) {
+      return qUser.trim();
+    }
+  }
+
+  const rawUid = req.headers['user-id'] || req.headers['User-ID'];
+  if (rawUid && rawUid !== '0' && rawUid !== '-2' && rawUid !== 'undefined') {
+    return `AppUser_${rawUid}`;
+  }
+
+  const forwarded = req.headers['x-forwarded-for'];
+  const rawIp = forwarded ? forwarded.split(',')[0].trim() : (req.socket?.remoteAddress || '127.0.0.1');
+  const cleanIp = rawIp.replace(/^::ffff:/, '');
+  return `Client_${cleanIp.replace(/[^a-zA-Z0-9]/g, '_').slice(-8) || 'Default'}`;
+}
+
+function ensureUserRecord(userId, clientIp) {
+  if (!adminStore.users[userId]) {
+    adminStore.users[userId] = {
+      id: userId,
+      name: userId,
+      status: adminStore.settings.requireApproval ? 'pending' : 'approved',
+      firstSeen: new Date().toISOString(),
+      lastSeen: new Date().toISOString(),
+      lastIp: clientIp,
+      lastVideo: null,
+      totalRequests: 0,
+      logs: []
+    };
+    scheduleSaveAdminStore();
+  }
+}
+
+function checkUserAccess(userId, clientIp) {
+  ensureUserRecord(userId, clientIp);
+  const user = adminStore.users[userId];
+  if (user.status === 'blocked') {
+    return { allowed: false, status: 'blocked', reason: 'User / Device is blocked by Admin.' };
+  }
+  if (adminStore.settings.requireApproval && user.status !== 'approved') {
+    return { allowed: false, status: 'pending', reason: 'Device requires Admin Approval. Contact administrator to activate.' };
+  }
+  return { allowed: true, status: user.status };
+}
+
+function isVideoChunk(urlStr) {
+  if (!urlStr || typeof urlStr !== 'string') return false;
+  const pathWithoutQuery = urlStr.split('?')[0].toLowerCase();
+  if (pathWithoutQuery.endsWith('.ts') ||
+      pathWithoutQuery.endsWith('.m4s') ||
+      pathWithoutQuery.endsWith('.aac') ||
+      pathWithoutQuery.endsWith('.mp3') ||
+      pathWithoutQuery.endsWith('.key') ||
+      pathWithoutQuery.endsWith('.svg') ||
+      pathWithoutQuery.endsWith('.png') ||
+      pathWithoutQuery.endsWith('.jpg') ||
+      pathWithoutQuery.endsWith('.jpeg') ||
+      pathWithoutQuery.endsWith('.webp') ||
+      pathWithoutQuery.endsWith('.woff2') ||
+      pathWithoutQuery.endsWith('.woff') ||
+      pathWithoutQuery.endsWith('.css') ||
+      pathWithoutQuery.endsWith('.ico') ||
+      (pathWithoutQuery.includes('master-') && pathWithoutQuery.endsWith('.ts'))) {
+    return true;
+  }
+  return false;
+}
+
+function cleanVideoName(targetUrlStr, explicitTitle = null) {
+  if (explicitTitle && typeof explicitTitle === 'string' && explicitTitle.trim().length > 0) {
+    return explicitTitle.trim();
+  }
+  if (!targetUrlStr || typeof targetUrlStr !== 'string') return null;
+
+  try {
+    const dummyUrl = new URL(targetUrlStr, 'http://dummy.com');
+
+    // 1. Explicit title query parameters
+    const titleParams = ['title', 'video_name', 'vTitle', 'name', 'lecture_name', 'course_title', 'topic'];
+    for (const p of titleParams) {
+      const v = dummyUrl.searchParams.get(p);
+      if (v && v.trim().length > 0) return decodeURIComponent(v.trim());
+    }
+
+    // 2. Check video_id param in videoTitlesCache
+    const vidParamMatch = targetUrlStr.match(/[?&]video_?[iI]d=([0-9a-zA-Z_-]+)/);
+    if (vidParamMatch && videoTitlesCache.has(vidParamMatch[1])) {
+      return videoTitlesCache.get(vidParamMatch[1]);
+    }
+
+    // 3. ClassX / Dhyey / AppX video URL structure:
+    // e.g. /videos/dhyeyliveapp-data/3991178-1783485249/hls-e2c62e/720p/master.m3u8
+    const videosMatch = dummyUrl.pathname.match(/\/videos\/([^\/]+)\/([^\/]+)(?:\/hls-[^\/]+)?(?:\/([0-9]+p))?/i);
+    if (videosMatch) {
+      const folder = videosMatch[1]; // e.g. dhyeyliveapp-data
+      const videoIds = videosMatch[2]; // e.g. 3991178-1783485249
+      const quality = videosMatch[3] ? ` [${videosMatch[3]}]` : '';
+
+      const firstId = videoIds.split('-')[0];
+      if (firstId && videoTitlesCache.has(firstId)) {
+        return `${videoTitlesCache.get(firstId)}${quality}`;
+      }
+      if (videoTitlesCache.has(videoIds)) {
+        return `${videoTitlesCache.get(videoIds)}${quality}`;
+      }
+
+      return `${videoIds}${quality}`;
+    }
+
+    // 4. Secure player token
+    if (dummyUrl.pathname.includes('/secure-player') || dummyUrl.pathname.includes('/combined-img-player')) {
+      const tok = dummyUrl.searchParams.get('token');
+      return tok ? `Secure Course Stream [Token: ${tok.slice(0, 10)}...]` : 'Secure Course Video';
+    }
+
+    // 5. M3U8 Master Playlist
+    if (dummyUrl.pathname.endsWith('.m3u8')) {
+      const parts = dummyUrl.pathname.split('/').filter(Boolean);
+      const cleanParts = parts.filter(p => !p.endsWith('.m3u8') && !p.startsWith('hls-'));
+      if (cleanParts.length > 0) {
+        return cleanParts.slice(-2).join(' / ');
+      }
+      return 'Course Video Stream';
+    }
+  } catch (e) {}
+
+  return null;
+}
+
+function extractClientKey(req, parsedUrl) {
+  const hKey = req.headers['x-license-key'] || req.headers['x-key'] || req.headers['x-auth-key'];
+  if (hKey && typeof hKey === 'string' && hKey.trim().length > 0) return hKey.trim();
+
+  try {
+    const incUrl = new URL(req.url || '/', 'http://localhost');
+    const qIncKey = incUrl.searchParams.get('key') || 
+                    incUrl.searchParams.get('license') || 
+                    incUrl.searchParams.get('license_key') ||
+                    incUrl.searchParams.get('auth_key');
+    if (qIncKey && typeof qIncKey === 'string' && qIncKey.trim().length > 0) return qIncKey.trim();
+  } catch (e) {}
+
+  if (parsedUrl && parsedUrl.searchParams) {
+    const qKey = parsedUrl.searchParams.get('key') || 
+                 parsedUrl.searchParams.get('license') || 
+                 parsedUrl.searchParams.get('license_key');
+    if (qKey && typeof qKey === 'string' && qKey.trim().length > 0) return qKey.trim();
+  }
+
+  let sessId = (req.headers['x-session-id'] || '').trim();
+  if (!sessId) {
+    try {
+      const incUrl = new URL(req.url || '/', 'http://localhost');
+      sessId = (incUrl.searchParams.get('sessionid') || incUrl.searchParams.get('session') || '').trim();
+    } catch (e) {}
+  }
+  if (!sessId && parsedUrl && parsedUrl.searchParams) {
+    sessId = (parsedUrl.searchParams.get('sessionid') || '').trim();
+  }
+
+  if (sessId) {
+    try {
+      const db = keyauth.getDB();
+      const sess = (db.sessions || []).find(s => s.id === sessId);
+      if (sess && sess.key) return sess.key;
+    } catch(e) {}
+  }
+
+  return null;
+}
+
+// Debounce map for video streaming audit logs (prevents spamming while playing)
+const recentStreamLogs = new Map();
+
+function recordRequest(userId, req, targetUrlStr, status = 200, explicitVideoTitle = null, userKey = null) {
+  try {
+    const forwarded = req.headers['x-forwarded-for'];
+    const rawIp = forwarded ? forwarded.split(',')[0].trim() : (req.socket?.remoteAddress || '127.0.0.1');
+    const clientIp = rawIp.replace(/^::ffff:/, '');
+    ensureUserRecord(userId, clientIp);
+    const user = adminStore.users[userId];
+    const now = new Date().toISOString();
+
+    user.lastSeen = now;
+    user.lastIp = clientIp;
+    user.totalRequests = (user.totalRequests || 0) + 1;
+    adminStore.totalRequests = (adminStore.totalRequests || 0) + 1;
+
+    // Check if target is a raw media chunk (.ts segment, key, css, image, etc.)
+    const isChunk = isVideoChunk(targetUrlStr);
+
+    let parsedUrl = null;
+    try { parsedUrl = new URL(targetUrlStr); } catch (e) {}
+
+    // Resolve client key
+    const resolvedKey = userKey || extractClientKey(req, parsedUrl) || (user && user.key) || null;
+    if (resolvedKey) {
+      user.key = resolvedKey;
+    }
+
+    // Resolve clean video title
+    const videoTitle = cleanVideoName(targetUrlStr, explicitVideoTitle);
+    if (videoTitle) {
+      user.lastVideo = videoTitle;
+    }
+
+    // CRITICAL: NEVER print raw .ts segment chunks or signature URLs in the logs!
+    if (isChunk) {
+      scheduleSaveAdminStore();
+      return null;
+    }
+
+    // Only log video playback events (m3u8 manifests, video details JSON, secure player pages)
+    const isVideoPlayback = !!videoTitle || targetUrlStr.includes('.m3u8') || targetUrlStr.includes('fetchVideoDetails') || targetUrlStr.includes('/secure-player');
+
+    if (isVideoPlayback) {
+      const displayTitle = videoTitle || 'Course Video Stream';
+      const userIdentifier = resolvedKey || userId;
+      const debounceKey = `${userIdentifier}_${displayTitle}`;
+      const lastLogged = recentStreamLogs.get(debounceKey) || 0;
+      const nowMs = Date.now();
+
+      // Debounce: Log only once per video per user within 60 seconds
+      if (nowMs - lastLogged > 60000) {
+        recentStreamLogs.set(debounceKey, nowMs);
+
+        // Prune old debounce entries periodically
+        if (recentStreamLogs.size > 500) {
+          for (const [k, t] of recentStreamLogs.entries()) {
+            if (nowMs - t > 300000) recentStreamLogs.delete(k);
+          }
+        }
+
+        // Clean user log entry: only Video Name and User Key
+        const cleanMessage = `Playing Video: "${displayTitle}" | Key: ${resolvedKey || 'N/A'}`;
+
+        // Forward clean event to KeyAuth Audit Logs
+        keyauth.addLog(
+          keyauth.getDB(),
+          'STREAM_ACCESS',
+          resolvedKey || userId,
+          cleanMessage,
+          clientIp,
+          user.hwid || "",
+          req.headers['user-agent'] || ""
+        );
+
+        const logItem = {
+          id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          timestamp: now,
+          method: req.method || 'GET',
+          url: targetUrlStr.split('?')[0], // Clean URL without long signature tokens
+          status: status || 200,
+          videoTitle: displayTitle,
+          key: resolvedKey || null,
+          ip: clientIp,
+          userId: userId
+        };
+
+        if (!user.logs) user.logs = [];
+        user.logs.unshift(logItem);
+        if (user.logs.length > 150) user.logs.length = 150;
+
+        if (!adminStore.globalLiveLogs) adminStore.globalLiveLogs = [];
+        adminStore.globalLiveLogs.unshift(logItem);
+        if (adminStore.globalLiveLogs.length > 100) adminStore.globalLiveLogs.length = 100;
+      }
+    }
+
+    scheduleSaveAdminStore();
+    return null;
+  } catch (err) {
+    console.error('[RecordRequest Error]:', err.message);
+  }
+}
+
+function isAdminAuthenticated(req) {
+  const authHeader = req.headers['authorization'] || '';
+  if (authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7).trim();
+    if (adminSessions.has(token)) return true;
+  }
+  const tokenHeader = req.headers['x-admin-token'];
+  if (tokenHeader && adminSessions.has(tokenHeader)) return true;
+
+  const cookieHeader = req.headers['cookie'] || '';
+  const match = cookieHeader.match(/admin_token=([^;]+)/);
+  if (match && adminSessions.has(match[1])) return true;
+
+  return false;
+}
+
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'application/javascript; charset=utf-8',
@@ -94,11 +471,9 @@ function rewriteM3U8(content, baseUrlStr) {
       if (!trimmed) return line;
 
       // Handle URI attributes in tags like #EXT-X-KEY:METHOD=AES-128,URI="..."
-      if (trimmed.startsWith('#') && trimmed.includes('URI="')) {
+      if (trimmed.startsWith('#') && (trimmed.includes('URI="') || trimmed.includes("URI='"))) {
         return trimmed.replace(/URI=["']([^"']+)["']/g, (m, uri) => {
-          if (!uri.includes('/') && !uri.includes('.') && !uri.startsWith('http')) {
-            return m;
-          }
+          if (!uri || uri.startsWith('data:') || uri.startsWith('/proxy?')) return m;
           let absUri = uri;
           try {
             absUri = new URL(uri, baseUrl).href;
@@ -188,6 +563,37 @@ async function forwardUpstream(targetUrlStr, req, res) {
       targetUrl = new URL(targetUrlStr);
     } catch (e) {
       sendResponse(res, 400, { 'Content-Type': 'text/plain' }, 'Invalid Target URL: ' + targetUrlStr);
+      return;
+    }
+
+    // Extract user identity and enforce access control permissions
+    const userId = extractUserIdentity(req, targetUrl);
+    const forwarded = req.headers['x-forwarded-for'];
+    const rawIp = forwarded ? forwarded.split(',')[0].trim() : (req.socket?.remoteAddress || '127.0.0.1');
+    const clientIp = rawIp.replace(/^::ffff:/, '');
+
+    // 1. KeyAuth License & Session Gatekeeper
+    const keyAccess = keyauth.validateClientAccess(req, targetUrl);
+    if (!keyAccess.allowed) {
+      sendResponse(res, keyAccess.status || 403, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, JSON.stringify({
+        status: keyAccess.status || 403,
+        success: false,
+        error: "Access Denied",
+        message: keyAccess.reason || "Valid active license key required by admin to access video streams!",
+        userId: userId
+      }));
+      return;
+    }
+
+    // 2. Admin approval check
+    const access = checkUserAccess(userId, clientIp);
+    if (!access.allowed) {
+      sendResponse(res, 403, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, JSON.stringify({
+        status: 403,
+        error: "Access Denied",
+        message: access.reason || "Device permission required by admin",
+        userId: userId
+      }));
       return;
     }
 
@@ -357,6 +763,7 @@ async function forwardUpstream(targetUrlStr, req, res) {
       let m3u8Text = await upstreamRes.text();
       let rewritten = rewriteM3U8(m3u8Text, targetUrlStr);
       responseHeaders['Content-Type'] = 'application/vnd.apple.mpegurl';
+      recordRequest(userId, req, targetUrlStr, upstreamRes.status, null, keyAccess ? keyAccess.key : null);
       sendResponse(res, upstreamRes.status, responseHeaders, rewritten);
       return;
     }
@@ -368,6 +775,7 @@ async function forwardUpstream(targetUrlStr, req, res) {
       if (html.trim().startsWith('#EXTM3U')) {
         let rewritten = rewriteM3U8(html, targetUrlStr);
         responseHeaders['Content-Type'] = 'application/vnd.apple.mpegurl';
+        recordRequest(userId, req, targetUrlStr, upstreamRes.status, null, keyAccess ? keyAccess.key : null);
         sendResponse(res, upstreamRes.status, responseHeaders, rewritten);
         return;
       }
@@ -719,6 +1127,7 @@ async function forwardUpstream(targetUrlStr, req, res) {
         html = injection + html;
       }
 
+      recordRequest(userId, req, targetUrlStr, upstreamRes.status);
       sendResponse(res, upstreamRes.status, responseHeaders, html);
       return;
     }
@@ -754,11 +1163,32 @@ async function forwardUpstream(targetUrlStr, req, res) {
         js = js.replace(/url\.uri\.includes\("ck\."\)\s*\?\s*key_cache\s*:\s*url\.uri/g, 'uriStr.includes("ck.") ? key_cache : uriStr');
       }
 
+      recordRequest(userId, req, targetUrlStr, upstreamRes.status);
       sendResponse(res, upstreamRes.status, responseHeaders, js);
       return;
     }
 
+    // Case 3.5: Video Details JSON inspection (auto-captures title & video details for logging)
+    if (targetUrl.pathname.includes('/get/fetchVideoDetailsById') || targetUrl.pathname.includes('fetchVideoDetails')) {
+      let jsonText = await upstreamRes.text();
+      let extractedTitle = null;
+      try {
+        const parsed = JSON.parse(jsonText);
+        extractedTitle = parsed?.data?.Title || parsed?.data?.title || parsed?.data?.video_name || parsed?.data?.name;
+        const vidMatch = targetUrlStr.match(/[?&]video_?[iI]d=([0-9a-zA-Z_-]+)/);
+        const vidId = vidMatch ? vidMatch[1] : null;
+        if (extractedTitle && vidId) {
+          videoTitlesCache.set(vidId, extractedTitle);
+        }
+      } catch (e) {}
+
+      recordRequest(userId, req, targetUrlStr, upstreamRes.status, extractedTitle, keyAccess ? keyAccess.key : null);
+      sendResponse(res, upstreamRes.status, responseHeaders, jsonText);
+      return;
+    }
+
     // Case 4: Binary Streams, TS chunks, CSS, Images, Video MP4
+    recordRequest(userId, req, targetUrlStr, upstreamRes.status, null, keyAccess ? keyAccess.key : null);
     sendResponse(res, upstreamRes.status, responseHeaders);
     if (upstreamRes.body) {
       if (typeof res.write === 'function') {
@@ -788,7 +1218,6 @@ async function forwardUpstream(targetUrlStr, req, res) {
       res.end();
     }
   } catch (err) {
-    console.warn('[Proxy Warning]:', err.message, 'Target:', targetUrlStr);
     if (!res.headersSent && !res.writableEnded) {
       if (/\.(svg|png|jpe?g|webp|gif|css|woff2?)(\?|$)/i.test(targetUrlStr)) {
         sendResponse(res, 204, { 'Content-Type': 'image/svg+xml' }, '');
@@ -802,6 +1231,38 @@ async function forwardUpstream(targetUrlStr, req, res) {
       }));
     }
   }
+}
+
+function readRequestBody(req) {
+  return new Promise((resolve) => {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      if (!body) return resolve({});
+      try {
+        const contentType = req.headers['content-type'] || '';
+        if (contentType.includes('application/json')) {
+          return resolve(JSON.parse(body));
+        } else if (contentType.includes('application/x-www-form-urlencoded')) {
+          const sp = new URLSearchParams(body);
+          const obj = {};
+          for (const [k, v] of sp.entries()) obj[k] = v;
+          return resolve(obj);
+        } else {
+          try {
+            return resolve(JSON.parse(body));
+          } catch(e) {
+            const sp = new URLSearchParams(body);
+            const obj = {};
+            for (const [k, v] of sp.entries()) obj[k] = v;
+            return resolve(obj);
+          }
+        }
+      } catch(err) {
+        resolve({});
+      }
+    });
+  });
 }
 
 async function handleRequest(req, res) {
@@ -822,6 +1283,29 @@ async function handleRequest(req, res) {
   // Handle dummy placeholder images
   if (parsedUrl.pathname.includes('a855f7') || parsedUrl.pathname.includes('placeholder') || parsedUrl.search.includes('No+Image') || parsedUrl.href.includes('No+Image')) {
     sendResponse(res, 200, { 'Content-Type': 'image/png', 'Access-Control-Allow-Origin': '*' }, DUMMY_PNG);
+    return;
+  }
+
+  // 1.0 KeyAuth 1.2 SDK Protocol (/api/1.2/) - Android App & Client SDKs
+  if (parsedUrl.pathname === '/api/1.2' || parsedUrl.pathname === '/api/1.2/' || parsedUrl.pathname.startsWith('/api/1.2/')) {
+    const body = await readRequestBody(req);
+    await keyauth.handleKeyAuthProtocol(req, res, parsedUrl, body);
+    return;
+  }
+
+  // 1.1 Web Admin Dashboard (/admin, /admin.html, /app)
+  if (parsedUrl.pathname === '/admin' || parsedUrl.pathname === '/admin/' || parsedUrl.pathname === '/admin.html' || parsedUrl.pathname === '/app' || parsedUrl.pathname === '/app/') {
+    const adminPath = path.join(BASE_DIR, 'admin.html');
+    if (fs.existsSync(adminPath)) {
+      sendResponse(res, 200, { 'Content-Type': 'text/html; charset=utf-8' }, fs.readFileSync(adminPath));
+      return;
+    }
+  }
+
+  // 1.2 KeyAuth & Ghostrix Admin Management APIs (/api/admin/*)
+  if (parsedUrl.pathname.startsWith('/api/admin/')) {
+    const body = await readRequestBody(req);
+    await keyauth.handleAdminApi(req, res, parsedUrl, body);
     return;
   }
 
@@ -846,6 +1330,38 @@ async function handleRequest(req, res) {
       return;
     }
     await forwardUpstream(targetUrlStr, req, res);
+    return;
+  }
+
+  // 1.4 App / APK Telemetry & Device Verification Endpoints
+  if (parsedUrl.pathname === '/api/app/verify') {
+    const uid = parsedUrl.searchParams.get('uid') || parsedUrl.searchParams.get('deviceId') || 'Guest';
+    const forwarded = req.headers['x-forwarded-for'];
+    const rawIp = forwarded ? forwarded.split(',')[0].trim() : (req.socket?.remoteAddress || '127.0.0.1');
+    const clientIp = rawIp.replace(/^::ffff:/, '');
+    const access = checkUserAccess(uid, clientIp);
+    sendResponse(res, 200, { 'Content-Type': 'application/json' }, JSON.stringify(access));
+    return;
+  }
+
+  if (parsedUrl.pathname === '/api/app/track') {
+    let bodyData = '';
+    req.on('data', chunk => { bodyData += chunk; });
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(bodyData || '{}');
+        const uid = payload.uid || payload.userId || payload.deviceId || 'App_User';
+        const vTitle = payload.videoTitle || payload.title || payload.video_name;
+        const vId = payload.videoId;
+        if (vTitle && vId) {
+          videoTitlesCache.set(String(vId), vTitle);
+        }
+        recordRequest(uid, req, payload.url || `/video?id=${vId || ''}&title=${encodeURIComponent(vTitle || '')}`, 200, vTitle);
+        sendResponse(res, 200, { 'Content-Type': 'application/json' }, JSON.stringify({ success: true }));
+      } catch (e) {
+        sendResponse(res, 400, { 'Content-Type': 'application/json' }, JSON.stringify({ success: false }));
+      }
+    });
     return;
   }
 

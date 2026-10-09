@@ -2169,6 +2169,7 @@
     let allLoadedCourses = [];
     let navStack = [];
     let currentCourseId = null;
+    let currentCourseName = '';
 
     const API_MAP = {
       courses: ["/get/courselistnewv2?exam_id=&start={start}", "/get/courselist?start={start}", "/get/allcourse?start={start}"],
@@ -2846,6 +2847,7 @@
       lastScrollY = window.scrollY;
       CURRENT_COURSE = c.id;
       currentCourseId = c.id;
+      currentCourseName = c.course_name || '';
       navStack = [];
       document.getElementById("headerTitle").innerText = c.course_name;
       document.getElementById("backBtn").style.display = "flex";
@@ -3250,6 +3252,23 @@
         const player = document.getElementById("player");
         const vid = document.getElementById("video");
 
+        // Notify Admin Live Watch Radar
+        try {
+          const vTitle = (data?.Title || data?.title || data?.video_name || `Lesson #${videoId}`);
+          const cTitle = currentCourseName || (typeof CURRENT_COURSE !== 'undefined' && CURRENT_COURSE ? `Course #${CURRENT_COURSE}` : '');
+          _rawFetch('/api/tadmin/ping-watch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              videoId: videoId,
+              videoTitle: vTitle,
+              courseId: CURRENT_COURSE || currentCourseId || '',
+              courseTitle: cTitle,
+              academy: 'DHYEY Live'
+            })
+          }).catch(function(){});
+        } catch(e) {}
+
         // 1. Primary: AppX secure-player
         const securePlayerUrl = resolveSecurePlayerUrl(data, null);
         if (securePlayerUrl) {
@@ -3346,6 +3365,24 @@
         }
 
         if (!data) { host.innerHTML = "<p style='padding:20px;text-align:center;opacity:0.5'>No video data</p>"; return; }
+
+        // Notify Admin Live Watch Radar
+        try {
+          const vTitle = item?.Title || item?.title || data?.Title || data?.title || data?.video_name || `Lesson #${vidId}`;
+          const cTitle = currentCourseName || (typeof CURRENT_COURSE !== 'undefined' && CURRENT_COURSE ? `Course #${CURRENT_COURSE}` : '');
+          _rawFetch('/api/app/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              uid: (typeof getHeaders === 'function' && getHeaders()?.['user-id']) ? `Student_${getHeaders()['user-id']}` : 'Web_Student',
+              videoId: vidId,
+              videoTitle: vTitle,
+              courseId: currentCourseId || CURRENT_COURSE || '',
+              courseTitle: cTitle,
+              academy: 'DHYEY Live'
+            })
+          }).catch(function(){});
+        } catch(e) {}
 
         // 1. Primary: AppX secure-player (ALWAYS use secure-player when token or player URL exists)
         const securePlayerUrl = resolveSecurePlayerUrl(data, item);
