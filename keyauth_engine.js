@@ -246,15 +246,30 @@ function migrateDBSchema(db) {
   return db;
 }
 
+const BACKUP_DB_FILE = path.join(path.dirname(DB_FILE), 'keyauth_db.backup.json');
+
 // Load database from file on startup
 function loadDatabase() {
   try {
     if (fs.existsSync(DB_FILE)) {
       const raw = fs.readFileSync(DB_FILE, 'utf8');
-      const parsed = JSON.parse(raw);
-      inMemoryStore = migrateDBSchema(parsed);
-      console.log(`[KeyAuth] Loaded persistent DB from ${DB_FILE} (${inMemoryStore.licenses.length} keys, ${inMemoryStore.users.length} users)`);
-      return inMemoryStore;
+      if (raw && raw.trim().length > 0) {
+        const parsed = JSON.parse(raw);
+        inMemoryStore = migrateDBSchema(parsed);
+        console.log(`[KeyAuth] Loaded persistent DB from ${DB_FILE} (${inMemoryStore.licenses.length} keys, ${inMemoryStore.users.length} users)`);
+        return inMemoryStore;
+      }
+    }
+    // Fallback to backup file if main file is missing or empty
+    if (fs.existsSync(BACKUP_DB_FILE)) {
+      const rawBackup = fs.readFileSync(BACKUP_DB_FILE, 'utf8');
+      if (rawBackup && rawBackup.trim().length > 0) {
+        const parsedBackup = JSON.parse(rawBackup);
+        inMemoryStore = migrateDBSchema(parsedBackup);
+        console.log(`[KeyAuth] Restored from backup DB file: ${BACKUP_DB_FILE}`);
+        saveDatabaseSync();
+        return inMemoryStore;
+      }
     }
   } catch (err) {
     console.error('[KeyAuth DB Load Error]:', err.message);
@@ -270,7 +285,9 @@ function scheduleSave() {
   saveTimer = setTimeout(() => {
     saveTimer = null;
     try {
-      fs.writeFileSync(DB_FILE, JSON.stringify(inMemoryStore, null, 2), 'utf8');
+      const serialized = JSON.stringify(inMemoryStore, null, 2);
+      fs.writeFileSync(DB_FILE, serialized, 'utf8');
+      try { fs.writeFileSync(BACKUP_DB_FILE, serialized, 'utf8'); } catch (_) {}
     } catch (err) {
       console.error('[KeyAuth DB Save Error]:', err.message);
     }
@@ -279,7 +296,9 @@ function scheduleSave() {
 
 function saveDatabaseSync() {
   try {
-    fs.writeFileSync(DB_FILE, JSON.stringify(inMemoryStore, null, 2), 'utf8');
+    const serialized = JSON.stringify(inMemoryStore, null, 2);
+    fs.writeFileSync(DB_FILE, serialized, 'utf8');
+    try { fs.writeFileSync(BACKUP_DB_FILE, serialized, 'utf8'); } catch (_) {}
   } catch (err) {
     console.error('[KeyAuth DB Sync Save Error]:', err.message);
   }

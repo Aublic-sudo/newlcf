@@ -1,0 +1,530 @@
+{
+  "activeAppId": "ghost_app_1",
+  "apps": [
+    {
+      "id": "ghost_app_1",
+      "name": "Ghost",
+      "ownerid": "usr_34se87p0",
+      "secret": "4880a366c23746f5abaca00a6cc321ff1ecb4872666b1da4253d17656dae42a8",
+      "version": "1.0",
+      "status": "Active",
+      "description": "Ghost Secure Android Application",
+      "standing": "Good",
+      "hwidLock": true,
+      "forceHwid": true,
+      "blockVpn": false,
+      "hashCheck": false,
+      "appHash": "",
+      "discordWebhook": "",
+      "autoBan": true,
+      "requireKeyForProxy": true,
+      "created": 1791520000000,
+      "strictVersionCheck": false,
+      "downloadUrl": ""
+    },
+    {
+      "id": "redrix_app_1",
+      "name": "redrix",
+      "ownerid": "usr_rput5p1f",
+      "secret": "b99828e85635e0cbb569b9732c35b75abc1eebacbdd3fe4aaf08afde3dbdcada",
+      "version": "1.2",
+      "status": "Active",
+      "description": "Redrix Ultimate Course & Secure Authentication Engine",
+      "standing": "Good",
+      "hwidLock": true,
+      "forceHwid": true,
+      "blockVpn": false,
+      "hashCheck": false,
+      "appHash": "",
+      "discordWebhook": "",
+      "autoBan": true,
+      "requireKeyForProxy": false,
+      "created": 1791519723678,
+      "strictVersionCheck": false,
+      "downloadUrl": ""
+    }
+  ],
+  "licenses": [
+    {
+      "key": "GHOST-VIP-7788",
+      "appId": "ghost_app_1",
+      "appName": "Ghost",
+      "level": 1,
+      "duration": 315569260,
+      "unit": "Lifetime",
+      "note": "Ghost VIP Access",
+      "status": "Not Used",
+      "hwidLock": true,
+      "hwid": "",
+      "usedby": "",
+      "usedon": 1791529147473,
+      "gendate": 1791520000000,
+      "expires": 2107089027404,
+      "banReason": ""
+    },
+    {
+      "key": "Redrix-NEX7B6-VIP",
+      "appId": "redrix_app_1",
+      "appName": "redrix",
+      "level": 1,
+      "duration": 315569260,
+      "unit": "Lifetime",
+      "note": "Test Student 01",
+      "status": "Used",
+      "hwidLock": true,
+      "hwid": "HWID-PHONE-9900",
+      "usedby": "Redrix-NEX7B6-VIP",
+      "usedon": 1791519776730,
+      "gendate": 1791519767404,
+      "expires": 2107089027404,
+      "banReason": ""
+    }
+  ],
+  "users": [
+    {
+      "username": "Redrix-NEX7B6-VIP",
+      "appId": "redrix_app_1",
+      "appName": "redrix",
+      "password": "",
+      "email": "",
+      "subscription": "default",
+      "level": 1,
+      "expires": 2107089027404,
+      "hwid": "HWID-PHONE-9900",
+      "hwidAffected": true,
+      "status": "active",
+      "ip": "127.0.0.1",
+      "device": "Android Device",
+      "lastLogin": 1791520908726,
+      "created": 1791519776731,
+      "banReason": "",
+      "banExpires": 0
+    },
+    {
+      "username": "GHOST-VIP-7788",
+      "appId": "ghost_app_1",
+      "appName": "Ghost",
+      "password": "",
+      "email": "",
+      "subscription": "default",
+      "level": 1,
+      "expires": 2107089027404,
+      "hwid": "",
+      "hwidAffected": true,
+      "status": "active",
+      "ip": "127.0.0.1",
+      "device": "Android Device",
+      "lastLogin": 1791521785877,
+      "created": 1791521785877,
+      "banReason": "",
+      "banExpires": 0
+    }
+  ],
+  "tokens": [],
+  "subscriptions": [
+    {
+      "name": "default",
+      "level": 1
+    }
+  ],
+  "sessions": [
+    {
+      "id": "sess_mnmv4hf762f",
+      "appId": "redrix_app_1",
+      "appName": "redrix",
+      "authenticated": false,
+      "username": "",
+      "key": "",
+      "hwid": "",
+      "ip": "127.0.0.1",
+      "device": "Android Device",
+      "started": 1791519763124,
+      "lastPing": 1791519763124
+    },
+    {
+      "id": "sess_8k7ykjx3spc",
+      "appId": "redrix_app_1",
+      "appName": "redrix",
+      "authenticated": false,
+      "username": "",
+      "key": "",
+      "hwid": "HWID-PHONE-9900",
+      "ip": "127.0.0.1",
+      "device": "Android Device",
+      "started": 1791520888034,
+      "lastPing": 1791520888034
+    },
+    {
+      "id": "sess_bzir8rz5xd",
+      "appId": "redrix_app_1",
+      "appName": "redrix",
+      "authenticated": false,
+      "username": "",
+      "key": "",
+      "hwid": "GHOST-DEVICE-TEST-01",
+      "ip": "127.0.0.1",
+      "device": "Android Device",
+      "started": 1791521676100,
+      "lastPing": 1791521676100
+    },
+    {
+      "id": "sess_2bt831wd0h5",
+      "appId": "redrix_app_1",
+      "appName": "redrix",
+      "authenticated": false,
+      "username": "",
+      "key": "",
+      "hwid": "GHOST-DEVICE-TEST-01",
+      "ip": "127.0.0.1",
+      "device": "Android Device",
+      "started": 1791521689075,
+      "lastPing": 1791521689075
+    },
+    {
+      "id": "sess_zfxmnhxh9mm",
+      "appId": "ghost_app_1",
+      "appName": "Ghost",
+      "authenticated": false,
+      "username": "",
+      "key": "",
+      "hwid": "GHOST-DEVICE-TEST-01",
+      "ip": "127.0.0.1",
+      "device": "Android Device",
+      "started": 1791521747772,
+      "lastPing": 1791521747772
+    },
+    {
+      "id": "sess_trfyxbyqqce",
+      "appId": "ghost_app_1",
+      "appName": "Ghost",
+      "authenticated": false,
+      "username": "",
+      "key": "",
+      "hwid": "",
+      "ip": "127.0.0.1",
+      "device": "Android Device",
+      "started": 1791524835961,
+      "lastPing": 1791524835961
+    },
+    {
+      "id": "sess_jopuuutptj",
+      "appId": "ghost_app_1",
+      "appName": "Ghost",
+      "authenticated": true,
+      "username": "GHOST-VIP-7788",
+      "key": "GHOST-VIP-7788",
+      "hwid": "TEST-DEVICE-01",
+      "ip": "127.0.0.1",
+      "device": "Android Device",
+      "started": 1791529143888,
+      "lastPing": 1791529147473
+    }
+  ],
+  "files": [
+    {
+      "id": "ghost_update",
+      "name": "Ghost_V1.1_Update.apk",
+      "size": "18.2 MB",
+      "url": "https://example.com/ghost-update.apk",
+      "appId": "all",
+      "uploaded": 1791529147473
+    },
+    {
+      "id": "file_app_update",
+      "name": "Redrix_Course_Player_V1.2.apk",
+      "size": "24.5 MB",
+      "url": "https://example.com/app-release.apk",
+      "appId": "all",
+      "uploaded": 1791519723678
+    }
+  ],
+  "variables": [
+    {
+      "name": "stream_server",
+      "data": "https://transcoded-videos.classx.co.in",
+      "isSecret": false,
+      "appId": "all"
+    },
+    {
+      "name": "telegram_channel",
+      "data": "https://t.me/GhostVIPSupport",
+      "isSecret": false,
+      "appId": "all"
+    },
+    {
+      "name": "announcement",
+      "data": "Welcome to Ghost Secure Portal! All streams are secured with KeyAuth 1.2.",
+      "isSecret": false,
+      "appId": "all"
+    },
+    {
+      "name": "proxy_endpoint",
+      "data": "/proxy?url=",
+      "isSecret": false,
+      "appId": "all"
+    }
+  ],
+  "rules": [],
+  "logs": [
+    {
+      "id": "log_1791542036546_607",
+      "type": "ADMIN_ACTION",
+      "username": "Admin",
+      "message": "Switched active app to: Ghost",
+      "ip": "127.0.0.1",
+      "hwid": "",
+      "device": "Android Device",
+      "time": 1791542036546
+    },
+    {
+      "id": "log_1791529157521_63",
+      "type": "FILE_DOWNLOAD",
+      "username": "GHOST-VIP-7788",
+      "message": "Downloaded file: [Redrix_Course_Player_V1.2.apk] (24.5 MB)",
+      "ip": "127.0.0.1",
+      "hwid": "",
+      "device": "Android Device",
+      "time": 1791529157522
+    },
+    {
+      "id": "log_1791529151693_671",
+      "type": "VAR_ACCESS",
+      "username": "GHOST-VIP-7788",
+      "message": "Accessed variable: [announcement]",
+      "ip": "127.0.0.1",
+      "hwid": "",
+      "device": "Android Device",
+      "time": 1791529151693
+    },
+    {
+      "id": "log_1791529147473_401",
+      "type": "LOGIN_SUCCESS",
+      "username": "GHOST-VIP-7788",
+      "message": "Key Login Success: Key [GHOST-VIP-7788] authenticated | HWID: TEST-DEVICE-01 | Duration: Lifetime",
+      "ip": "127.0.0.1",
+      "hwid": "TEST-DEVICE-01",
+      "device": "Android Device",
+      "time": 1791529147473
+    },
+    {
+      "id": "log_1791529143888_631",
+      "type": "APP_INIT",
+      "username": "APK Client",
+      "message": "APK Opened / App Initialized [Ghost v1.0] | HWID: N/A",
+      "ip": "127.0.0.1",
+      "hwid": "",
+      "device": "Android Device",
+      "time": 1791529143888
+    },
+    {
+      "id": "log_1791524835961_582",
+      "type": "APP_INIT",
+      "username": "APK Client",
+      "message": "APK Opened / App Initialized [Ghost v1.0] | HWID: N/A",
+      "ip": "127.0.0.1",
+      "hwid": "",
+      "device": "Android Device",
+      "time": 1791524835961
+    },
+    {
+      "id": "log_1791521799664_646",
+      "type": "STREAM_ACCESS",
+      "username": "GHOST-VIP-7788",
+      "message": "Playing Video: \"3991178-1783485249 [720p]\" | Key: GHOST-VIP-7788",
+      "ip": "127.0.0.1",
+      "hwid": "",
+      "device": "curl/7.88.1",
+      "time": 1791521799664
+    },
+    {
+      "id": "log_1791521785877_117",
+      "type": "LOGIN_SUCCESS",
+      "username": "GHOST-VIP-7788",
+      "message": "Key Login Success: Key [GHOST-VIP-7788] authenticated | HWID: GHOST-PHONE-1 | Duration: Lifetime",
+      "ip": "127.0.0.1",
+      "hwid": "GHOST-PHONE-1",
+      "device": "Android Device",
+      "time": 1791521785877
+    },
+    {
+      "id": "log_1791521751899_291",
+      "type": "LOGIN_FAILED",
+      "username": "GHOST-VIP-7788",
+      "message": "Key Login Failed: Key [GHOST-VIP-7788] belongs to another app [Ghost]",
+      "ip": "127.0.0.1",
+      "hwid": "GHOST-DEVICE-TEST-01",
+      "device": "Android Device",
+      "time": 1791521751899
+    },
+    {
+      "id": "log_1791521747772_50",
+      "type": "APP_INIT",
+      "username": "GhostUser",
+      "message": "APK Opened / App Initialized [Ghost v1.0] | HWID: GHOST-DEVICE-TEST-01",
+      "ip": "127.0.0.1",
+      "hwid": "GHOST-DEVICE-TEST-01",
+      "device": "Android Device",
+      "time": 1791521747772
+    },
+    {
+      "id": "log_1791521691492_747",
+      "type": "LOGIN_FAILED",
+      "username": "GHOST-VIP-7788",
+      "message": "Key Login Failed: License key [GHOST-VIP-7788] does not exist",
+      "ip": "127.0.0.1",
+      "hwid": "GHOST-DEVICE-TEST-01",
+      "device": "Android Device",
+      "time": 1791521691492
+    },
+    {
+      "id": "log_1791521689076_951",
+      "type": "APP_INIT",
+      "username": "GhostUser",
+      "message": "APK Opened / App Initialized [redrix v1.2] | HWID: GHOST-DEVICE-TEST-01",
+      "ip": "127.0.0.1",
+      "hwid": "GHOST-DEVICE-TEST-01",
+      "device": "Android Device",
+      "time": 1791521689076
+    },
+    {
+      "id": "log_1791521683332_782",
+      "type": "LOGIN_FAILED",
+      "username": "GHOST-VIP-7788",
+      "message": "Key Login Failed: License key [GHOST-VIP-7788] does not exist",
+      "ip": "127.0.0.1",
+      "hwid": "GHOST-DEVICE-TEST-01",
+      "device": "Android Device",
+      "time": 1791521683332
+    },
+    {
+      "id": "log_1791521676100_488",
+      "type": "APP_INIT",
+      "username": "TestUser",
+      "message": "APK Opened / App Initialized [redrix v1.2] | HWID: GHOST-DEVICE-TEST-01",
+      "ip": "127.0.0.1",
+      "hwid": "GHOST-DEVICE-TEST-01",
+      "device": "Android Device",
+      "time": 1791521676100
+    },
+    {
+      "id": "log_1791521009601_525",
+      "type": "STREAM_ACCESS",
+      "username": "Redrix-NEX7B6-VIP",
+      "message": "Playing Video: \"Physics Chapter 1 Kinematics\" | Key: Redrix-NEX7B6-VIP",
+      "ip": "127.0.0.1",
+      "hwid": "",
+      "device": "curl/7.88.1",
+      "time": 1791521009601
+    },
+    {
+      "id": "log_1791520924793_464",
+      "type": "STREAM_ACCESS",
+      "username": "Client_27_0_0_1",
+      "message": "Playing Video: \"3991178-1783485249 [720p]\" | Key: N/A",
+      "ip": "127.0.0.1",
+      "hwid": "",
+      "device": "curl/7.88.1",
+      "time": 1791520924793
+    },
+    {
+      "id": "log_1791520908726_262",
+      "type": "LOGIN_SUCCESS",
+      "username": "Redrix-NEX7B6-VIP",
+      "message": "Key Login Success: Key [Redrix-NEX7B6-VIP] authenticated | HWID: HWID-PHONE-9900 | Duration: Lifetime",
+      "ip": "127.0.0.1",
+      "hwid": "HWID-PHONE-9900",
+      "device": "Android Device",
+      "time": 1791520908726
+    },
+    {
+      "id": "log_1791520898367_609",
+      "type": "HWID_MISMATCH",
+      "username": "Redrix-NEX7B6-VIP",
+      "message": "Key Login Blocked: HWID Mismatch! Registered: [HWID-PHONE-9900] vs Device: [HWID-UNKNOWN-PHONE]",
+      "ip": "127.0.0.1",
+      "hwid": "HWID-UNKNOWN-PHONE",
+      "device": "[HWID-UNKNOWN-PHONE]",
+      "time": 1791520898367
+    },
+    {
+      "id": "log_1791520894977_654",
+      "type": "LOGIN_FAILED",
+      "username": "Redrix-INVALID-KEY",
+      "message": "Key Login Failed: License key [Redrix-INVALID-KEY] does not exist",
+      "ip": "127.0.0.1",
+      "hwid": "HWID-PHONE-9900",
+      "device": "Android Device",
+      "time": 1791520894977
+    },
+    {
+      "id": "log_1791520888035_885",
+      "type": "APP_INIT",
+      "username": "Student_Darshan",
+      "message": "APK Opened / App Initialized [redrix v1.2] | HWID: HWID-PHONE-9900",
+      "ip": "127.0.0.1",
+      "hwid": "HWID-PHONE-9900",
+      "device": "Android Device",
+      "time": 1791520888035
+    },
+    {
+      "id": "log_1791519785522_645",
+      "type": "HWID_MISMATCH",
+      "username": "Redrix-NEX7B6-VIP",
+      "message": "HWID Mismatch! Key is bound to [HWID-PHONE-9900] but device presented [HWID-ANOTHER-PHONE]",
+      "ip": "127.0.0.1",
+      "hwid": "HWID-ANOTHER-PHONE",
+      "device": "Android Device",
+      "time": 1791519785522
+    },
+    {
+      "id": "log_1791519780549_321",
+      "type": "VAR_ACCESS",
+      "username": "Redrix-NEX7B6-VIP",
+      "message": "Accessed variable: [announcement]",
+      "ip": "127.0.0.1",
+      "hwid": "",
+      "device": "Android Device",
+      "time": 1791519780549
+    },
+    {
+      "id": "log_1791519776731_685",
+      "type": "LOGIN_SUCCESS",
+      "username": "Redrix-NEX7B6-VIP",
+      "message": "User logged in with license [Redrix-NEX7B6-VI...] | HWID: HWID-PHONE-9900",
+      "ip": "127.0.0.1",
+      "hwid": "HWID-PHONE-9900",
+      "device": "Android Device",
+      "time": 1791519776731
+    },
+    {
+      "id": "log_1791519772190_970",
+      "type": "SECURITY_ALERT",
+      "username": "Unknown",
+      "message": "Unauthorized attempt to read variable: [announcement]",
+      "ip": "127.0.0.1",
+      "hwid": "",
+      "device": "Android Device",
+      "time": 1791519772190
+    },
+    {
+      "id": "log_1791519767404_284",
+      "type": "ADMIN_ACTION",
+      "username": "Admin",
+      "message": "Generated 1 license keys for [redrix] (HWID Lock: ON, Expiry: Lifetime)",
+      "ip": "127.0.0.1",
+      "hwid": "",
+      "device": "Android Device",
+      "time": 1791519767404
+    },
+    {
+      "id": "log_1791519763124_897",
+      "type": "APP_INIT",
+      "username": "Client",
+      "message": "App Launched [redrix v1.2] | Device: Android Device",
+      "ip": "127.0.0.1",
+      "hwid": "",
+      "device": "Android Device",
+      "time": 1791519763124
+    }
+  ]
+}
