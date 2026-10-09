@@ -84,13 +84,13 @@
         <button type="button" id="tabLoginUser" onclick="switchLoginMode('user')" class="flex-1 py-1.5 rounded-lg font-semibold text-gray-400 hover:text-white transition">User & Password</button>
       </div>
 
-      <form onsubmit="handleLoginSubmit(event)" class="space-y-4 text-left">
+      <form onsubmit="handleLoginSubmit(event)" autocomplete="on" class="space-y-4 text-left">
         <!-- Token Login View -->
         <div id="viewLoginToken" class="space-y-1">
           <label class="text-xs text-gray-400 font-medium">Admin Secret Token / Key</label>
           <div class="relative mt-1">
             <i class="fas fa-key absolute left-3.5 top-3.5 text-gray-500 text-sm"></i>
-            <input type="password" id="adminTokenInput" placeholder="ghostrix_secret_admin_2026 or Darshan@1334"
+            <input type="password" id="adminTokenInput" name="admin_secret_token" autocomplete="current-password" placeholder="ghostrix_secret_admin_2026 or Darshan@1334"
               class="w-full bg-[#09090d] border border-[#26263d] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition font-mono">
           </div>
         </div>
@@ -101,7 +101,7 @@
             <label class="text-xs text-gray-400 font-medium">Username</label>
             <div class="relative mt-1">
               <i class="fas fa-user absolute left-3.5 top-3.5 text-gray-500 text-sm"></i>
-              <input type="text" id="adminUserInput" placeholder="admin@1234"
+              <input type="text" id="adminUserInput" name="username" autocomplete="username" placeholder="admin@1234"
                 class="w-full bg-[#09090d] border border-[#26263d] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition">
             </div>
           </div>
@@ -109,7 +109,7 @@
             <label class="text-xs text-gray-400 font-medium">Password</label>
             <div class="relative mt-1">
               <i class="fas fa-lock absolute left-3.5 top-3.5 text-gray-500 text-sm"></i>
-              <input type="password" id="adminPassInput" placeholder="Darshan@1334"
+              <input type="password" id="adminPassInput" name="password" autocomplete="current-password" placeholder="Darshan@1334"
                 class="w-full bg-[#09090d] border border-[#26263d] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition">
             </div>
           </div>
@@ -137,8 +137,8 @@
         <i class="fas fa-bars text-lg"></i>
       </button>
       <div class="relative w-64 md:w-80 hidden sm:block">
-        <i class="fas fa-search absolute left-3 top-3 text-gray-500 text-sm"></i>
-        <input type="search" id="globalSearch" oninput="handleGlobalSearch(this.value)" placeholder="Search pages, licenses, users, logs..." class="w-full bg-custom-back border border-custom-border text-sm rounded-lg pl-9 pr-4 py-1.5 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition">
+        <i class="fas fa-search absolute left-3 top-3 text-gray-500 text-sm pointer-events-none"></i>
+        <input type="search" id="globalSearch" name="search_global_query_no_autofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" readonly onfocus="this.removeAttribute('readonly')" onmousedown="this.removeAttribute('readonly')" ontouchstart="this.removeAttribute('readonly')" oninput="handleGlobalSearch(this.value)" placeholder="Search pages, licenses, users, logs..." class="w-full bg-custom-back border border-custom-border text-sm rounded-lg pl-9 pr-4 py-1.5 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition">
       </div>
     </div>
 
@@ -315,7 +315,7 @@
 
         <!-- Search Bar & Filters -->
         <div class="flex flex-col sm:flex-row gap-3">
-          <input type="search" id="licenseSearch" onkeyup="renderLicenses()" oninput="renderLicenses()" placeholder="Search keys, notes, or bound HWID..." class="flex-1 bg-custom-card border border-custom-border rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500">
+          <input type="search" id="licenseSearch" name="search_license_query_no_autofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" readonly onfocus="this.removeAttribute('readonly')" onmousedown="this.removeAttribute('readonly')" ontouchstart="this.removeAttribute('readonly')" onkeyup="renderLicenses()" oninput="renderLicenses()" placeholder="Search keys, notes, or bound HWID..." class="flex-1 bg-custom-card border border-custom-border rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500">
           <select id="licenseAppFilter" onchange="renderLicenses()" class="bg-custom-card border border-custom-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 font-medium">
             <option value="">All Applications</option>
           </select>
@@ -365,7 +365,7 @@
 
         <!-- Search Bar -->
         <div class="flex flex-col sm:flex-row gap-3">
-          <input type="search" id="userSearch" onkeyup="renderUsers()" oninput="renderUsers()" placeholder="Search users by name, HWID, IP or device..." class="flex-1 bg-custom-card border border-custom-border rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500">
+          <input type="search" id="userSearch" name="search_user_query_no_autofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" readonly onfocus="this.removeAttribute('readonly')" onmousedown="this.removeAttribute('readonly')" ontouchstart="this.removeAttribute('readonly')" onkeyup="renderUsers()" oninput="renderUsers()" placeholder="Search users by name, HWID, IP or device..." class="flex-1 bg-custom-card border border-custom-border rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500">
           <select id="userStatusFilter" onchange="renderUsers()" class="bg-custom-card border border-custom-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
             <option value="">All Statuses</option>
             <option value="active">Active</option>
@@ -484,8 +484,30 @@
         <div class="space-y-3">
           <div class="flex items-center gap-2">
             <div class="relative flex-1">
-              <i class="fas fa-search absolute left-4 top-3.5 text-gray-500 text-xs"></i>
-              <input type="search" id="logSearchInput" onkeyup="renderLogs()" oninput="renderLogs()" placeholder="Search application logs..." class="w-full bg-custom-card border border-custom-border rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition">
+              <i class="fas fa-search absolute left-4 top-3.5 text-gray-500 text-xs pointer-events-none"></i>
+              <input type="search"
+                id="logSearchInput"
+                name="search_filter_logs_prevent_autofill"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
+                data-lpignore="true"
+                data-1p-ignore="true"
+                data-bwignore="true"
+                data-form-type="other"
+                data-private="true"
+                readonly
+                onfocus="this.removeAttribute('readonly')"
+                onmousedown="this.removeAttribute('readonly')"
+                ontouchstart="this.removeAttribute('readonly')"
+                onkeyup="onLogSearchInput(this)"
+                oninput="onLogSearchInput(this)"
+                placeholder="Search application logs..."
+                class="w-full bg-custom-card border border-custom-border rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition">
+              <button type="button" id="clearLogSearchBtn" onclick="clearLogSearch()" class="hidden absolute right-3.5 top-3 text-gray-400 hover:text-white text-xs p-1 rounded-full hover:bg-white/10 transition" title="Clear Search">
+                <i class="fas fa-times"></i>
+              </button>
             </div>
             <button id="logFilterBtn" onclick="toggleLogFilterMenu()" class="p-2.5 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 rounded-xl border border-blue-500/30 transition shadow-sm" title="Filter by Event Category">
               <i class="fas fa-filter text-sm"></i>
@@ -573,7 +595,7 @@
         </div>
 
         <div class="flex flex-col sm:flex-row gap-3">
-          <input type="search" id="ruleSearchInput" onkeyup="renderRules()" oninput="renderRules()" placeholder="Search blacklisted IPs, HWIDs, or reasons..." class="flex-1 bg-custom-card border border-custom-border rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500">
+          <input type="search" id="ruleSearchInput" name="search_rule_query_no_autofill" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" readonly onfocus="this.removeAttribute('readonly')" onmousedown="this.removeAttribute('readonly')" ontouchstart="this.removeAttribute('readonly')" onkeyup="renderRules()" oninput="renderRules()" placeholder="Search blacklisted IPs, HWIDs, or reasons..." class="flex-1 bg-custom-card border border-custom-border rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500">
           <select id="ruleTypeFilter" onchange="renderRules()" class="bg-custom-card border border-custom-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
             <option value="">All Rule Types</option>
             <option value="ip">Blacklisted IPs</option>
@@ -1563,6 +1585,14 @@
         params.set('page', tabId);
         window.history.replaceState({ page: tabId }, '', window.location.pathname + '?' + params.toString());
       }
+
+      if (tabId === 'logs') {
+        const logInput = document.getElementById('logSearchInput');
+        if (logInput && !userInteractedWithLogSearch && document.activeElement !== logInput) {
+          logInput.value = '';
+        }
+        renderLogs();
+      }
     }
 
     async function authFetch(url, options = {}) {
@@ -2049,6 +2079,28 @@
 
     // Live Logs View
     let currentLogViewMode = 'boxes';
+    let userInteractedWithLogSearch = false;
+
+    function onLogSearchInput(el) {
+      userInteractedWithLogSearch = true;
+      const clearBtn = document.getElementById('clearLogSearchBtn');
+      if (clearBtn) {
+        clearBtn.classList.toggle('hidden', !el.value);
+      }
+      renderLogs();
+    }
+
+    function clearLogSearch() {
+      const el = document.getElementById('logSearchInput');
+      if (el) {
+        el.value = '';
+        userInteractedWithLogSearch = true;
+        const clearBtn = document.getElementById('clearLogSearchBtn');
+        if (clearBtn) clearBtn.classList.add('hidden');
+        renderLogs();
+        el.focus();
+      }
+    }
 
     function toggleLogViewMode() {
       currentLogViewMode = currentLogViewMode === 'boxes' ? 'table' : 'boxes';
@@ -2076,7 +2128,16 @@
     }
 
     function renderLogs() {
-      const q = (document.getElementById('logSearchInput').value || '').toLowerCase().trim();
+      const logSearchEl = document.getElementById('logSearchInput');
+      // Anti-Autofill Guard: If a browser password manager auto-inserted a credential without user typing, clear it immediately
+      if (logSearchEl && !userInteractedWithLogSearch && document.activeElement !== logSearchEl && logSearchEl.value) {
+        logSearchEl.value = '';
+      }
+      const q = (logSearchEl ? logSearchEl.value : '').toLowerCase().trim();
+      const clearBtn = document.getElementById('clearLogSearchBtn');
+      if (clearBtn) {
+        clearBtn.classList.toggle('hidden', !q);
+      }
       const typeFilter = document.getElementById('logTypeFilter') ? document.getElementById('logTypeFilter').value : '';
 
       const filtered = (globalData.logs || []).filter(l => {
@@ -2740,6 +2801,17 @@ print(res.json())`;
       const page = urlParams.get('page');
       if (page) showTab(page, false);
       loadAllData();
+
+      // Periodic check during first 3 seconds to wipe any late password manager autofill in search fields
+      [300, 800, 1500, 2500].forEach(delay => {
+        setTimeout(() => {
+          const logInput = document.getElementById('logSearchInput');
+          if (logInput && !userInteractedWithLogSearch && document.activeElement !== logInput && logInput.value) {
+            logInput.value = '';
+            renderLogs();
+          }
+        }, delay);
+      });
     });
   </script>
 </body>
